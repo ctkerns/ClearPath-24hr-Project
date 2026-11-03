@@ -28,6 +28,8 @@ export type Issue = {
   /** A summary of the linked material, so the list does not need a second request. */
   material: { id: string; title: string; channel: Channel }
   affiliate?: string
+  /** For affiliate content: the internal person who takes over the issue after its due date (PRD section 4). */
+  affiliateManager?: string
   owner: string
   dueAt: string
   openedAt: string
@@ -53,4 +55,57 @@ export function dueBucket(issue: Issue): DueBucket | undefined {
   if (issue.status === 'resolved') return undefined
   if (isOverdue(issue)) return 'overdue'
   return Date.parse(issue.dueAt) - Date.now() <= 7 * 86_400_000 ? 'week' : 'later'
+}
+
+/** One remediation step (PRD F12). The kind decides which button the step offers. */
+export type IssueAction = {
+  id: string
+  kind: 'pause' | 'restore' | 'new_version' | 'notice' | 'confirm_fix' | 'take_down' | 'find_author'
+  label: string
+  done: boolean
+  doneBy?: string
+  doneAt?: string
+}
+
+/** The activity log. Like the material history, it is append-only. */
+export type IssueEvent = { at: string; actor: string; text: string; comment?: boolean }
+
+export type IssueDetail = {
+  id: string
+  /** What is wrong, in one or two sentences. */
+  summary: string
+  rule?: { id: string; title: string }
+  /** The approval condition that the live item breaks, for "Condition broken" issues. */
+  condition?: string
+  liveItem?: {
+    connector: string
+    externalId?: string
+    url?: string
+    /** platform_id is certain. similarity can be wrong, so the tool never pauses on it (PRD F10). */
+    match: 'platform_id' | 'similarity'
+    similarity?: number
+    checkedAt: string
+    paused: boolean
+    fields: { label: string; text: string }[]
+  }
+  /** The last approved version, to compare with. Unapproved content has none. */
+  approved?: { version: number; approvalId: string; fields: { label: string; text: string }[] }
+  actions: IssueAction[]
+  /** The AI draft of the affiliate notice or correction email. A person edits and sends it. */
+  notice?: { to: string; cc?: string; subject: string; body: string; sentAt?: string; sentBy?: string }
+  activity: IssueEvent[]
+}
+
+export function useIssueDetail(id: string) {
+  return useQuery({
+    queryKey: ['issue-detail', id],
+    queryFn: async (): Promise<IssueDetail | null> => {
+      const res = await fetch(`/demo/issues/${id}.json`)
+      // Vite answers a missing file with index.html, so check the type too.
+      if (res.status === 404 || !res.headers.get('content-type')?.includes('json')) return null
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    },
+    staleTime: Infinity,
+  })
 }

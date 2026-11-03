@@ -479,5 +479,66 @@
     "resolvedShort": "Done {{date}}",
     "empty": "No issues match these filters.",
     "loadError": "Issues did not load. Reload the page to try again."
+  },
+  "issue": {
+    "notFound": "This issue does not exist, or you do not have access to it.",
+    "noSeed": "This demo issue has no seeded details yet.",
+    "noSeedLink": "Open the LendWise disclosure issue, which has full details",
+    "startWork": "Start work",
+    "reopen": "Reopen",
+    "resolve": {
+      "button": "Resolve",
+      "title": "Resolve this issue",
+      "description": "Say how the problem was fixed. Auditors read this note later, so be specific.",
+      "openActions_one": "{{count}} action is not done. Resolve only if the problem is fixed another way.",
+      "openActions_other": "{{count}} actions are not done. Resolve only if the problem is fixed another way.",
+      "noteLabel": "How was it fixed?",
+      "submit": "Resolve issue"
+    },
+    "live": {
+      "heading": "Live content",
+      "platformId": "Platform ID",
+      "checked": "checked {{time}}",
+      "paused": "Paused",
+      "similarity": "Matched by similarity ({{percent}}%), so it can be the wrong material. Check the page before you act. The tool does not pause content that it matched by similarity.",
+      "conditionBroken": "Approval condition broken:",
+      "comparedTo": "Compared with approved version {{version}} ({{approvalId}})",
+      "legendRemoved": "Removed",
+      "legendAdded": "Added",
+      "noApproved": "No approved version to compare with. Nobody submitted this content for review."
+    },
+    "actions": {
+      "heading": "Actions · {{done}} of {{count}} done",
+      "upload": "Upload new version",
+      "reviewDraft": "Review draft",
+      "markDone": "Mark done",
+      "doneBy": "Done by {{who}}, {{time}}"
+    },
+    "notice": {
+      "aiNote": "AI drafted this notice from the affiliate template. Read it and edit it before you send it.",
+      "to": "To",
+      "cc": "Cc",
+      "subject": "Subject",
+      "body": "Message",
+      "cancel": "Cancel",
+      "send": "Send notice",
+      "sentTo": "Sent to {{to}}"
+    },
+    "activity": {
+      "heading": "Activity"
+    },
+    "panel": {
+      "manager": "Affiliate manager",
+      "managerNote": "Takes over the issue if it is not fixed by the due date.",
+      "opened": "Opened",
+      "resolved": "Resolved",
+      "material": "Material",
+      "rule": "Rule"
+    },
+    "log": {
+      "status": "Changed the status to {{status}}.",
+      "actionDone": "Marked done: {{action}}.",
+      "noticeSent": "Sent the correction notice to {{to}}."
+    }
   }
 }

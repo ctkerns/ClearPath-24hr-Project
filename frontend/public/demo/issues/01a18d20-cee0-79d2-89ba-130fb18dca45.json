@@ -1,0 +1,82 @@
+{
+  "id": "01a18d20-cee0-79d2-89ba-130fb18dca45",
+  "summary": "Monitoring found a Meta ad that nobody submitted for review. It created a material with source \"found live\" and paused the ad. Submit it for review, or take it down.",
+  "rule": {
+    "id": "UDAAP-03",
+    "title": "No guarantees of approval or speed"
+  },
+  "liveItem": {
+    "connector": "Meta ads",
+    "externalId": "23851234567890",
+    "match": "platform_id",
+    "checkedAt": "2026-10-30T14:02:00Z",
+    "paused": true,
+    "fields": [
+      {
+        "label": "Primary text",
+        "text": "Need cash fast? Loans approved in 5 minutes, no credit check needed."
+      },
+      {
+        "label": "Headline",
+        "text": "Loans approved in 5 minutes"
+      },
+      {
+        "label": "Call to action",
+        "text": "Apply now"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "a1",
+      "kind": "pause",
+      "label": "Pause the ad on Meta",
+      "done": true,
+      "doneBy": "Monitoring",
+      "doneAt": "2026-10-30T14:05:00Z"
+    },
+    {
+      "id": "a2",
+      "kind": "find_author",
+      "label": "Find out who launched the ad",
+      "done": true,
+      "doneBy": "Priya Shah",
+      "doneAt": "2026-10-31T10:20:00Z"
+    },
+    {
+      "id": "a3",
+      "kind": "take_down",
+      "label": "Delete the ad on Meta",
+      "done": false
+    },
+    {
+      "id": "a4",
+      "kind": "new_version",
+      "label": "Or submit it for review",
+      "done": false
+    }
+  ],
+  "activity": [
+    {
+      "at": "2026-10-30T14:02:00Z",
+      "actor": "Monitoring",
+      "text": "Found ad 23851234567890 on Meta, which no material matches. Created a material with source \"found live\"."
+    },
+    {
+      "at": "2026-10-30T14:05:00Z",
+      "actor": "Monitoring",
+      "text": "Paused the ad on Meta. Opened this issue and assigned it to Priya Shah, the default owner of the Meta ad account. Due Nov 1."
+    },
+    {
+      "at": "2026-10-30T15:40:00Z",
+      "actor": "Priya Shah",
+      "text": "Changed the status to In progress."
+    },
+    {
+      "at": "2026-10-31T10:20:00Z",
+      "actor": "Priya Shah",
+      "comment": true,
+      "text": "An agency contractor launched this from an old test campaign. It must not run: \"no credit check\" is not true for this product. I will delete it after Legal confirms we do not need to keep it."
+    }
+  ]
+}

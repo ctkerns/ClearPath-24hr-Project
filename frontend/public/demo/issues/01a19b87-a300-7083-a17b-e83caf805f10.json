@@ -1,0 +1,70 @@
+{
+  "id": "01a19b87-a300-7083-a17b-e83caf805f10",
+  "summary": "The LendWise blog post no longer shows disclosure D-4 (cash back rewards terms). The approval has a condition that the post must show D-4 next to the reward amount.",
+  "rule": {
+    "id": "D-4 v2",
+    "title": "Cash back card rewards terms"
+  },
+  "condition": "Show disclosure D-4 directly below the reward amount.",
+  "liveItem": {
+    "connector": "Web crawler",
+    "url": "https://lendwise.example/blog/best-cash-back-cards-2026",
+    "match": "similarity",
+    "similarity": 0.91,
+    "checkedAt": "2026-11-02T09:10:00Z",
+    "paused": false,
+    "fields": [
+      {
+        "label": "Page text",
+        "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Apply in minutes and get a decision fast."
+      }
+    ]
+  },
+  "approved": {
+    "version": 1,
+    "approvalId": "CP-2026-0131-v1",
+    "fields": [
+      {
+        "label": "Page text",
+        "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Apply in minutes and get a decision fast."
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "a1",
+      "kind": "notice",
+      "label": "Send a correction notice to LendWise",
+      "done": false
+    },
+    {
+      "id": "a2",
+      "kind": "confirm_fix",
+      "label": "Check the live page after LendWise fixes it",
+      "done": false
+    }
+  ],
+  "notice": {
+    "to": "Tara Nguyen <tara@lendwise.example>",
+    "cc": "Marcus Lee",
+    "subject": "Correction needed: ClearPath Cash Back Visa post (CP-2026-0131-v1)",
+    "body": "Hi Tara,\n\nOur monitoring checked your post \"Best cash back cards of 2026\" on Nov 2 and found that it no longer shows the required rewards terms disclosure.\n\nWhat to fix:\n- Add this text directly below the 2% cash back amount: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\"\n\nPlease make the change by Nov 3. The approved version is CP-2026-0131-v1. Reply to this email when it is done, and we will check the page again.\n\nThank you,\nJordan Kim\nCompliance, ClearPath Credit Union"
+  },
+  "activity": [
+    {
+      "at": "2026-11-02T09:10:00Z",
+      "actor": "Monitoring",
+      "text": "Crawled the LendWise referral URL. Matched it to Cash back card, affiliate post by similarity (91%)."
+    },
+    {
+      "at": "2026-11-02T09:12:00Z",
+      "actor": "Monitoring",
+      "text": "Found that approval condition \"Show disclosure D-4\" is broken. Opened this issue and assigned it to Tara Nguyen (LendWise). Due Nov 3."
+    },
+    {
+      "at": "2026-11-02T09:12:00Z",
+      "actor": "AI reviewer",
+      "text": "Drafted a correction notice to LendWise."
+    }
+  ]
+}

@@ -1,16 +1,10 @@
-import { Bot, ClipboardCheck, Lock, Radar, Route as RouteIcon, type LucideIcon } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { formatDateTime } from '@/i18n/format'
 import type { MaterialDetail } from './material-detail-data'
+import { systemActors } from './system-actors'
 
-/** System authors get an icon instead of initials, so people and automation never look alike. */
-const systemActors: Record<string, LucideIcon> = {
-  'Rule check': ClipboardCheck,
-  'AI reviewer': Bot,
-  Routing: RouteIcon,
-  Monitoring: Radar,
-}
 
 /** The audit log (PRD F2): every event, oldest first, with exact times. Append-only, so there are no edit controls. */
 export function HistoryTab({ detail }: { detail: MaterialDetail }) {
