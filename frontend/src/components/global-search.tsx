@@ -3,7 +3,7 @@ import { useNavigate, type LinkProps } from '@tanstack/react-router'
 import {
   BookText,
   ChartColumn,
-  CircleDot,
+  Flag,
   FileText,
   Files,
   LayoutDashboard,
@@ -85,7 +85,7 @@ export function GlobalSearch() {
   const pages: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
     { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { to: '/materials', label: t('nav.materials'), icon: Files },
-    { to: '/issues', label: t('nav.issues'), icon: CircleDot },
+    { to: '/issues', label: t('nav.issues'), icon: Flag },
     { to: '/library', label: t('nav.library'), icon: LibraryBig },
     { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
     { to: '/settings', label: t('nav.settings'), icon: Settings },
@@ -165,7 +165,7 @@ export function GlobalSearch() {
                     value={`${i.id} ${i.title} ${i.material}`}
                     onSelect={() => go('/issues/$issueId', { issueId: i.id })}
                   >
-                    <CircleDot />
+                    <Flag />
                     <span className="grid min-w-0 flex-1">
                       <span className="truncate">{i.title}</span>
                       <span className="truncate text-xs text-muted-foreground"><code>{i.id}</code> · {i.material}</span>
