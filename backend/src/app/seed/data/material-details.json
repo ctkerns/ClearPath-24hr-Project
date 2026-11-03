@@ -414,7 +414,10 @@
           "role": "Marketing",
           "at": "2026-11-02T16:05:00Z",
           "body": "Can we keep the $199/month if we add the D-7 disclosure under the image instead of in the primary text?",
-          "anchor": { "field": "Primary text", "text": "for as low as $199/month" }
+          "anchor": {
+            "field": "Primary text",
+            "text": "for as low as $199/month"
+          }
         }
       ],
       "versions": [
@@ -600,12 +603,6 @@
           "result": "pass"
         },
         {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
           "ruleId": "POL-04",
           "title": "Banned phrases",
           "layer": "code",
@@ -710,12 +707,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -853,12 +844,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -1009,12 +994,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -1176,12 +1155,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -1429,12 +1402,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -1915,16 +1882,6 @@
           "text": "Apply for our Credit Builder card",
           "explanation": "\"our\" on an affiliate page suggests that RateRadar is the lender. The card is issued by ClearPath Credit Union.",
           "suggestion": "Say \"Apply for the ClearPath Credit Builder Visa\"."
-        },
-        {
-          "id": "f1",
-          "source": "code",
-          "severity": "medium",
-          "ruleId": "NCUA-740",
-          "status": "open",
-          "text": "",
-          "explanation": "Disclosure D-1 \"Federal insurance statement\" is missing. Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
-          "suggestion": "Add disclosure D-1 v1: \"Federally insured by NCUA.\""
         }
       ],
       "checklist": [
@@ -1933,13 +1890,6 @@
           "title": "No hidden instructions in the content",
           "layer": "code",
           "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "fail",
-          "finding": "f1"
         },
         {
           "ruleId": "POL-04",
@@ -2045,7 +1995,7 @@
           "at": "2026-10-22T16:30:00Z",
           "actor": "Rule check",
           "type": "prereview",
-          "text": "Code checks found 6 problems: POL-04, REGZ-1026.16, RATE-01, NCUA-740."
+          "text": "Code checks found 5 problems: POL-04 ×3, REGZ-1026.16, RATE-01."
         },
         {
           "at": "2026-10-22T16:31:00Z",
@@ -2090,31 +2040,13 @@
           ]
         }
       ],
-      "findings": [
-        {
-          "id": "f1",
-          "source": "code",
-          "severity": "medium",
-          "ruleId": "NCUA-740",
-          "status": "open",
-          "text": "",
-          "explanation": "Disclosure D-1 \"Federal insurance statement\" is missing. Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
-          "suggestion": "Add disclosure D-1 v1: \"Federally insured by NCUA.\""
-        }
-      ],
+      "findings": [],
       "checklist": [
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
           "layer": "code",
           "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "fail",
-          "finding": "f1"
         },
         {
           "ruleId": "POL-04",
@@ -2172,14 +2104,6 @@
       "conditions": "Show disclosure D-4 directly below the reward amount.",
       "comments": [
         {
-          "id": "c1",
-          "author": "Jordan Kim",
-          "role": "Compliance",
-          "at": "2026-07-21T13:40:00Z",
-          "version": 1,
-          "body": "The NCUA-740 finding does not apply here: the post advertises only a credit card, a loan product, and loan-only ads do not need the NCUA statement."
-        },
-        {
           "id": "c2",
           "author": "Jordan Kim",
           "role": "Compliance",
@@ -2217,7 +2141,7 @@
           "at": "2026-07-14T10:20:00Z",
           "actor": "Rule check",
           "type": "prereview",
-          "text": "Code checks found 1 problem: NCUA-740."
+          "text": "Code checks passed."
         },
         {
           "at": "2026-07-14T10:21:00Z",
@@ -2345,12 +2269,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -2509,12 +2427,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -2767,12 +2679,6 @@
           "result": "pass"
         },
         {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
           "ruleId": "POL-04",
           "title": "Banned phrases",
           "layer": "code",
@@ -3011,12 +2917,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },
@@ -3354,12 +3254,6 @@
         {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
           "layer": "code",
           "result": "pass"
         },

@@ -58,7 +58,7 @@ def line(e: dict) -> tuple:
 async def test_submit_writes_submitted_and_routed(client):
     me = await as_user(client, SUBMITTER)
     d = (await client.post("/api/materials", json=submission(product="mortgage", channel="meta"))).json()
-    submitted, routed, checked = await entries("material", d["id"])
+    submitted, routed, checked, no_ai = await entries("material", d["id"])
     assert (submitted.action, str(submitted.actor_id), submitted.data["version"]) == ("submitted", me["id"], 1)
     # Routing is the system's decision: a system actor, not a fake user (PRD R1, F6)
     assert (routed.action, routed.actor_id, routed.actor_label) == ("routed", None, "Routing")
@@ -66,17 +66,20 @@ async def test_submit_writes_submitted_and_routed(client):
     # Pre-review runs after routing, in the same transaction, as the "Rule check" system actor (PRD F4)
     assert (checked.action, checked.actor_id, checked.actor_label, checked.data["version"]) == ("prereviewed", None, "Rule check", 1)
     assert submitted.created_at == routed.created_at == checked.created_at  # one transaction
+    # No AI key in tests: the AI reviewer says that it did not run (PRD F4 fail safe, app.ai_review)
+    assert (no_ai.action, no_ai.actor_label) == ("ai_review_unavailable", "AI reviewer")
     assert [line(e) for e in d["history"]] == [
         ("Priya Shah", "submitted", "Submitted version 1 by manual upload."),
         ("Routing", "routed", routed.data["text"]),
         ("Rule check", "prereview", checked.data["text"]),
+        ("AI reviewer", "prereview", "AI review did not run: no AI service is set up. Only the code checks ran; check the AI rules by hand."),
     ]
     assert routed.data["text"].startswith('Required Compliance (rule "Compliance reviews everything")')
 
-    # A new version adds the same three entries.
+    # A new version adds the same four entries.
     d = (await client.post(f"/api/materials/{d['id']}/versions", json=submission(product="mortgage", channel="meta"))).json()
-    assert [e["text"] for e in d["history"]][3] == "Submitted version 2 by manual upload."
-    assert [e.data["version"] for e in await entries("material", d["id"])] == [1, 1, 1, 2, 2, 2]
+    assert [e["text"] for e in d["history"]][4] == "Submitted version 2 by manual upload."
+    assert [e.data["version"] for e in await entries("material", d["id"])] == [1, 1, 1, 1, 2, 2, 2, 2]
 
 
 async def test_failed_submit_writes_nothing(client, monkeypatch):
@@ -333,8 +336,9 @@ async def test_affiliate_sees_own_history_and_activity(client):
     assert (await client.post(f"/api/materials/{LENDWISE_POST}/versions", json=body)).status_code == 201
     d = (await client.get(f"/api/materials/{LENDWISE_POST}")).json()
     # After the seeded history of the post, oldest first
-    assert [line(e)[:2] for e in d["history"]][-4:] == [
+    assert [line(e)[:2] for e in d["history"]][-5:] == [
         ("Jordan Kim", "issue"), ("Erin Walsh", "submitted"), ("Routing", "routed"), ("Rule check", "prereview"),
+        ("AI reviewer", "prereview"),
     ]
     assert (await client.get(f"/api/materials/{RATERADAR}")).status_code == 404
     assert (await client.get(f"/api/materials/{SUMMER}")).status_code == 404

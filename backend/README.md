@@ -2,12 +2,22 @@
 
 FastAPI app. Run it with `docker compose up` from the repo root.
 
+## AI review
+
+Pre-review layer 2 (PRD F4, `app/ai_review.py`) calls the Anthropic API with `ANTHROPIC_API_KEY`. Without a key,
+pre-review runs the code checks only and the History tab says that the AI review did not run.
+Locally, `backend/scripts/dev.sh` starts the stack with the key from the macOS Keychain (service
+`anthropic-api-key`), in the process environment only. Model, effort and timeout: `ai_review_*` in `config.py`.
+
 ## Tests
 
 `docker compose up -d postgres`, then `uv run pytest`. Tests use their own database, `clearpath_test`.
 
 Pre-review evaluation (PRD F4): `uv run python -m tests.eval.run` prints precision and recall of the code checks
 on the golden dataset in `tests/eval/` (no database needed). `tests/eval/test_eval.py` runs it in pytest.
+With `ANTHROPIC_API_KEY` set it also runs the AI reviewer on every case (35 API calls) and reports code checks
+plus AI side by side; it exits with an error when recall is under 90% or precision under 80%. Tests never call the
+API: they use a fake client (`tests/test_ai_review.py`).
 
 ## Invites and email
 

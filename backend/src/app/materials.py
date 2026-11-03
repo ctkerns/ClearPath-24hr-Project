@@ -9,14 +9,14 @@ import uuid
 from datetime import date, datetime, timedelta
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import flags, issues, material_list, prereview
+from app import ai_review, flags, issues, material_list, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
 from app.business_days import days_left, review_deadline
@@ -257,6 +257,8 @@ HistoryType = Literal["submitted", "prereview", "routed", "decision", "comment",
 HISTORY_TYPE: dict[str, HistoryType] = {
     "submitted": "submitted",
     "prereviewed": "prereview",
+    "ai_reviewed": "prereview",  # app.ai_review (PRD F4 layer 2)
+    "ai_review_unavailable": "prereview",  # no key, or the AI call failed: code checks only
     "routed": "routed",
     "approved": "decision",
     "approved_with_conditions": "decision",
@@ -577,8 +579,9 @@ class Submission(APIModel):
         return self
 
 
-async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submission, number: int) -> None:
-    """Adds the version, routes it, and moves the material to In review (PRD section 6)."""
+async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submission, number: int) -> MaterialVersion:
+    """Adds the version, routes it, runs the code checks, and moves the material to In review (PRD section 6).
+    The endpoint schedules the AI review after its commit (`ai_review.schedule`)."""
     licensed = set((await workspace_of(db, viewer)).licensed_states)
     if not body.nationwide and not set(body.states) <= licensed:
         raise bad_request("Target only states where ClearPath is licensed")
@@ -631,8 +634,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
         fields=[
             {"label": f.label, "segments": [f.text.strip()], **({"kind": f.kind} if f.kind else {})} for f in body.fields
         ],
-        # TODO (F4): pre-review (code checks and AI) fills the checklist and adds findings.
-        checklist=[],
+        checklist=[],  # pre-review fills it: code checks now, the AI rules after the AI review (PRD F4)
     )
     db.add(version)
     await db.flush()
@@ -647,8 +649,8 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
         for i, (g, reason) in enumerate(groups)
     )
     m.product = body.product
-    # TODO (F4): AI pre-review runs between Submitted and In review. It does not exist yet,
-    # so the version goes to its reviewer groups at once.
+    # The version goes to its reviewer groups at once. The AI review runs in the background and only adds
+    # suggestions (PRD F4), so reviewers can start with the code findings; a person can always review without AI.
     m.status = MaterialStatus.IN_REVIEW
     m.submitted_at = version.submitted_at
     m.updated_at = version.submitted_at
@@ -658,10 +660,11 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     record(db, OtherActor(m.workspace_id, "Routing"), "material", m.id, "routed", routed)  # PRD F6
     await prereview.run(db, m, version)  # code checks; marks old findings outdated (PRD F4)
     await notify_groups(db, viewer, NotificationType.ASSIGNMENT, m, [g for g, _ in groups])  # PRD F13
+    return version
 
 
 @items.post("", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
-async def submit_material(body: Submission, viewer: Submitter, db: Db) -> MaterialDetail:
+async def submit_material(body: Submission, viewer: Submitter, db: Db, background: BackgroundTasks) -> MaterialDetail:
     """A new material with its first version. The owner is the person who uploads it (PRD section 4);
     an affiliate's material belongs to their company."""
     if not body.title.strip():
@@ -679,20 +682,24 @@ async def submit_material(body: Submission, viewer: Submitter, db: Db) -> Materi
     )
     db.add(m)
     await db.flush()
-    await add_version(db, viewer, m, body, 1)
-    return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]
+    version = await add_version(db, viewer, m, body, 1)
+    detail = await saved_detail(db, viewer, m.id)
+    ai_review.schedule(background, version)  # after the commit, so the upload never waits for the AI
+    return detail  # type: ignore[return-value]
 
 
 @items.post("/{material_id}/versions", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
-async def submit_version(material_id: uuid.UUID, body: Submission, viewer: Submitter, db: Db) -> MaterialDetail:
+async def submit_version(material_id: uuid.UUID, body: Submission, viewer: Submitter, db: Db, background: BackgroundTasks) -> MaterialDetail:
     """Resubmit or renew (PRD F3, section 6). Any status except Retired. Title and channel stay."""
     m = await load_material(db, viewer, material_id)
     if m.status is MaterialStatus.RETIRED:
         raise conflict("A retired material cannot get a new version")
     if body.channel is not m.channel:
         raise bad_request("A new version keeps the channel")
-    await add_version(db, viewer, m, body, (m.versions[-1].number if m.versions else 0) + 1)
-    return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]
+    version = await add_version(db, viewer, m, body, (m.versions[-1].number if m.versions else 0) + 1)
+    detail = await saved_detail(db, viewer, m.id)
+    ai_review.schedule(background, version)
+    return detail  # type: ignore[return-value]
 
 
 # ---- Decisions (PRD F5, F6) ----

@@ -251,8 +251,12 @@
     "yourGroup": "Your group",
     "requiredBecause": "Required: {{reason}}",
     "checklist": "Checklist · {{failed}} failed, {{passed}} passed",
+    "checklistOpen_one": ", {{count}} not checked",
+    "checklistOpen_other": ", {{count}} not checked",
     "pass": "Passed",
     "fail": "Failed",
+    "pending": "AI review running",
+    "notRun": "AI review unavailable",
     "layer": {
       "code": "Code check",
       "ai": "AI check"

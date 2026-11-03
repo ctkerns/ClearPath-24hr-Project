@@ -11,6 +11,8 @@ BASE_URL = os.environ.get("TEST_DATABASE_SERVER", "postgresql+psycopg://clearpat
 TEST_DB = os.environ.get("TEST_DATABASE_NAME", "clearpath_test")
 os.environ["DATABASE_URL"] = f"{BASE_URL}/{TEST_DB}"
 os.environ["COOKIE_SECURE"] = "false"  # the test client uses http://
+# No real AI calls in tests, even when the shell has a key: AI tests inject a fake client (tests/test_ai_review.py).
+os.environ["ANTHROPIC_API_KEY"] = ""
 
 from pathlib import Path  # noqa: E402
 

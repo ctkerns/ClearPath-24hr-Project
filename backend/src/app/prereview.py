@@ -21,7 +21,7 @@ from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -807,7 +807,8 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
       is still in the content, and is Outdated when the quote is gone (PRD F4: a finding becomes Outdated
       when its flagged text changes).
     - Fills the version's checklist and finding marks, and adds a "Rule check" entry to the history.
-    TODO (F4 layer 2): the AI review runs after this, for the AI rules on the checklist.
+    - Adds the AI rules to the checklist (app.ai_review.prepare). The AI review itself (F4 layer 2) runs
+      after the commit, as a background task that the endpoint schedules with `ai_review.schedule`.
     TODO (F6): a High code finding should move the item to Changes requested automatically.
     """
     texts = [plain_text(f) for f in version.fields]
@@ -877,7 +878,6 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     for position, (_, f, _) in enumerate(current):
         f.position = position
     version.fields = marked(version.fields, [(*w, str(f.id)) for _, f, w in current if w])
-    # TODO (F4 layer 2): the AI rules join the checklist when the AI review exists.
     version.checklist = checklist
 
     problems = [f for _, f, _ in current if f.source is FindingSource.CODE]
@@ -891,6 +891,10 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     data = {"version": version.number, "problems": len(problems), "rules": ids, "outdated": len(outdated), "text": text}
     record(db, OtherActor(m.workspace_id, AUTHOR), "material", m.id, "prereviewed", data)  # PRD F2, F4
 
+    from app import ai_review  # here, because ai_review imports this module
+
+    await ai_review.prepare(db, m, version, lib.licensed_states)  # the AI rules join the checklist (F4 layer 2)
+
 
 # ---- Re-run after a library change ----
 
@@ -898,8 +902,8 @@ router = APIRouter(prefix="/api/materials", tags=["materials"])
 
 
 @router.post("/{material_id}/prereview")
-async def rerun(material_id: uuid.UUID, viewer: Reviewer, db: Db) -> dict[str, Any]:
-    """Runs the code checks again on the current version, for example after a rule or the rate sheet changed.
+async def rerun(material_id: uuid.UUID, viewer: Reviewer, db: Db, background: BackgroundTasks) -> dict[str, Any]:
+    """Runs the code checks and the AI review again on the current version, for example after a rule or the rate sheet changed.
     Only while the version waits for review: approved materials get a flag for re-review instead (app.flags, F7).
     Returns the material detail."""
     from app.materials import saved_detail  # here, because materials.py imports this module
@@ -913,6 +917,10 @@ async def rerun(material_id: uuid.UUID, viewer: Reviewer, db: Db) -> dict[str, A
         raise conflict("This material has no version to check")
     if m.status not in (MaterialStatus.SUBMITTED, MaterialStatus.IN_REVIEW):
         raise conflict("Only a version that waits for review can be checked again")
-    await run(db, m, m.versions[-1])
+    from app import ai_review
+
+    version = m.versions[-1]
+    await run(db, m, version)
     detail = await saved_detail(db, viewer, m.id)
+    ai_review.schedule(background, version)
     return detail.model_dump(mode="json", by_alias=True, exclude_none=True) if detail else {}

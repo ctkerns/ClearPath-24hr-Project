@@ -17,6 +17,8 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false} # set true in .env on a server with HTTPS
       UPLOAD_DIR: /app/uploads
       HOST: 0.0.0.0  # IPv4, for Caddy (the image default "::" is for Railway)
+      # AI review (PRD F4 layer 2). Empty: code checks only. backend/scripts/dev.sh sets it from the macOS Keychain.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - uploads:/app/uploads # uploaded material files stay when the container is rebuilt; `down -v` deletes them
     ports:
