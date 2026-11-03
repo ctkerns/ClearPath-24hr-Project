@@ -332,7 +332,8 @@ async def test_affiliate_sees_own_history_and_activity(client):
     body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}])
     assert (await client.post(f"/api/materials/{LENDWISE_POST}/versions", json=body)).status_code == 201
     d = (await client.get(f"/api/materials/{LENDWISE_POST}")).json()
-    assert [line(e)[:2] for e in d["history"]] == [
+    # After the seeded history of the post, oldest first
+    assert [line(e)[:2] for e in d["history"]][-4:] == [
         ("Jordan Kim", "issue"), ("Erin Walsh", "submitted"), ("Routing", "routed"), ("Rule check", "prereview"),
     ]
     assert (await client.get(f"/api/materials/{RATERADAR}")).status_code == 404
@@ -344,7 +345,8 @@ async def test_affiliate_sees_own_history_and_activity(client):
     await as_user(client, OTHER_AFFILIATE)
     assert (await client.get(f"/api/materials/{LENDWISE_POST}")).status_code == 404
     assert (await client.get(f"/api/issues/{NOTICE_ISSUE}")).status_code == 404
-    assert (await client.get(f"/api/materials/{RATERADAR}")).json() is None  # visible, but it has no version
+    own = (await client.get(f"/api/materials/{RATERADAR}")).json()  # its own company's material, with its history
+    assert own["history"][0]["text"] == "Submitted version 1 by manual upload."
 
 
 @pytest.mark.parametrize("email", [VIEWER, SUBMITTER, REVIEWER, MANAGER, ADMIN])

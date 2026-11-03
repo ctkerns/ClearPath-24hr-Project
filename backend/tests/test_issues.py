@@ -15,7 +15,7 @@ OTHER_AFFILIATE = "leo@rateradar.example"
 
 DEBT_ISSUE = "01a1993a-f3e0-7668-886f-7df89511ac54"  # owner Sam Rivera, actions a1 done, a2 and a3 open
 NOTICE_ISSUE = "01a19b87-a300-7083-a17b-e83caf805f10"  # LendWise, owner Tara Nguyen, has a notice draft
-BEN_ISSUE = "01a19afc-7a00-7b94-a2c9-209ffc0a0fe5"  # owner Ben Okafor, a Viewer; no detail file
+BEN_ISSUE = "01a19afc-7a00-7b94-a2c9-209ffc0a0fe5"  # owner Ben Okafor, a Viewer; CardCompass, notice not sent
 SUMMER = "01a112a1-4000-7d42-94be-d09364e3b51d"
 RATERADAR = "01a0e8ea-8a00-758c-87e6-0a28f7797431"
 LENDWISE_POST = "01a0dfa5-7e00-7a60-a023-ce47b3e545d3"
@@ -61,10 +61,11 @@ async def test_detail(client):
     assert d["notice"]["to"].startswith("Tara Nguyen")
     assert [a["kind"] for a in d["actions"]] == ["notice", "confirm_fix"]
     assert d["activity"][0]["actor"] == "Monitoring"
-    # An issue without a seeded detail still has its opening event.
+    # Every seeded issue has its details, here a notice to an affiliate company with no users.
     ben = (await client.get(f"/api/issues/{BEN_ISSUE}")).json()
-    assert ben["summary"] == "" and ben["actions"] == []
-    assert ben["activity"][0]["text"] == "Opened this issue and assigned it to Ben Okafor."
+    assert ben["summary"] and [a["kind"] for a in ben["actions"]] == ["notice", "confirm_fix"]
+    assert ben["notice"]["to"].startswith("CardCompass") and "sentAt" not in ben["notice"]
+    assert "assigned it to Ben Okafor" in ben["activity"][1]["text"]
 
 
 # Raising (PRD F12)

@@ -81,8 +81,14 @@ async def test_other_workspace_sees_nothing(client):
 async def test_demo_records(client):
     await as_user(client, VIEWER)
     data = await metrics(client)
+    # One record for each seeded final decision: 8 approvals and the RateRadar rejection, oldest first.
+    assert [(d["decidedAt"], d["outcome"]) for d in data["decisions"]] == [
+        ("2026-05-05T16:20:00Z", "approved"), ("2026-05-06T10:00:00Z", "approved"), ("2026-05-13T11:00:00Z", "approved"),
+        ("2026-05-27T10:30:00Z", "approved"), ("2026-06-17T16:30:00Z", "approved"), ("2026-07-09T11:00:00Z", "approved"),
+        ("2026-07-21T13:45:00Z", "approved"), ("2026-10-26T14:00:00Z", "approved"), ("2026-10-27T10:44:00Z", "rejected"),
+    ]
     # The debt payoff ad: version 3 approved by the lighter path, with a decision comment.
-    assert data["decisions"] == [
+    assert [d for d in data["decisions"] if d["decidedAt"] == "2026-07-09T11:00:00Z"] == [
         {
             "decidedAt": "2026-07-09T11:00:00Z", "channel": "google", "product": "personal_loan", "groups": ["Compliance"],
             "path": "no_change", "turnaroundDays": 0.9, "rounds": 1, "outcome": "approved", "findings": [],
@@ -129,7 +135,7 @@ async def test_review_flow_record(client):
 
     await as_user(client, REVIEWER)
     assert (await client.post(f"/api/materials/{material_id}/decisions", json={"decision": "approve"})).status_code == 200
-    record = next(d for d in (await metrics(client))["decisions"] if d["channel"] == "meta")
+    record = next(d for d in (await metrics(client))["decisions"] if (d["channel"], d["product"]) == ("meta", "personal_loan"))
     assert {k: v for k, v in record.items() if k not in ("decidedAt", "turnaroundDays")} == {
         "channel": "meta", "product": "personal_loan", "groups": ["Compliance"], "path": "full", "rounds": 2,
         "outcome": "approved", "findings": ["REGZ-1026.24", "UDAAP-03", "NCUA-740"], "aiFindings": 1, "aiOutdated": 1,
@@ -145,7 +151,7 @@ async def test_review_flow_record(client):
     assert res.status_code == 201, res.text
     assert (res.json()["kind"], res.json()["channel"]) == ("changed", "meta")
     data = await metrics(client)
-    assert next(d for d in data["decisions"] if d["channel"] == "meta")["laterViolation"] is True
+    assert next(d for d in data["decisions"] if (d["channel"], d["product"]) == ("meta", "personal_loan"))["laterViolation"] is True
     found = [v for v in data["violations"] if v["channel"] == "meta" and v["product"] == "personal_loan" and v["kind"] == "changed"]
     assert len(found) == 1 and "daysToFix" not in found[0]
 

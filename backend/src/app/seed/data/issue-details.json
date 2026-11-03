@@ -252,6 +252,634 @@
           "text": "Drafted a correction notice to LendWise."
         }
       ]
+    },
+    {
+      "id": "01a17c5f-9000-73e0-8e41-e2fdb37444ab",
+      "summary": "Approval CP-2026-0090-v4 expired on Oct 25, when the campaign end date passed, but the ad was still running on Google Ads two days later. Sam paused it. Submit a renewal with a new end date, or remove the ad.",
+      "liveItem": {
+        "connector": "Google Ads",
+        "externalId": "718209431",
+        "match": "platform_id",
+        "checkedAt": "2026-10-27T08:00:00Z",
+        "paused": true,
+        "fields": [
+          {
+            "label": "Headline 1",
+            "text": "Consolidate your debt"
+          },
+          {
+            "label": "Headline 2",
+            "text": "Personal loans from 9.49% APR"
+          },
+          {
+            "label": "Headline 3",
+            "text": "One fixed monthly payment"
+          },
+          {
+            "label": "Description",
+            "text": "Rates from 9.49% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+          }
+        ]
+      },
+      "approved": {
+        "version": 4,
+        "approvalId": "CP-2026-0090-v4",
+        "fields": [
+          {
+            "label": "Headline 1",
+            "text": "Consolidate your debt"
+          },
+          {
+            "label": "Headline 2",
+            "text": "Personal loans from 9.49% APR"
+          },
+          {
+            "label": "Headline 3",
+            "text": "One fixed monthly payment"
+          },
+          {
+            "label": "Description",
+            "text": "Rates from 9.49% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "pause",
+          "label": "Pause the ad on Google Ads",
+          "done": true,
+          "doneBy": "Sam Rivera",
+          "doneAt": "2026-10-27T15:30:00Z"
+        },
+        {
+          "id": "a2",
+          "kind": "new_version",
+          "label": "Submit a renewal with a new end date",
+          "done": false
+        },
+        {
+          "id": "a3",
+          "kind": "take_down",
+          "label": "Or remove the ad from Google Ads",
+          "done": false
+        }
+      ],
+      "activity": [
+        {
+          "at": "2026-10-27T08:00:00Z",
+          "actor": "Monitoring",
+          "text": "Found ad 718209431 still live on Google Ads. Its approval CP-2026-0090-v4 expired on Oct 25."
+        },
+        {
+          "at": "2026-10-27T08:00:00Z",
+          "actor": "Monitoring",
+          "text": "Opened this issue and assigned it to Sam Rivera, the owner of the material. Due Oct 31."
+        },
+        {
+          "at": "2026-10-27T15:28:00Z",
+          "actor": "Sam Rivera",
+          "text": "Changed the status to In progress."
+        },
+        {
+          "at": "2026-10-27T15:30:00Z",
+          "actor": "Sam Rivera",
+          "text": "Marked done: Pause the ad on Google Ads."
+        },
+        {
+          "at": "2026-10-27T15:34:00Z",
+          "actor": "Sam Rivera",
+          "comment": true,
+          "text": "Paused it. The end date on the campaign was wrong in Google Ads, so it kept serving. I want to run it through January with the November rates, so I will submit a renewal instead of deleting it."
+        },
+        {
+          "at": "2026-10-30T09:05:00Z",
+          "actor": "Sam Rivera",
+          "comment": true,
+          "text": "The renewal is waiting for the new landing page copy. It will be in by Nov 4, after the due date."
+        }
+      ]
+    },
+    {
+      "id": "01a19afc-7a00-7b94-a2c9-209ffc0a0fe5",
+      "summary": "The CardCompass comparison page no longer shows the ongoing APR of the ClearPath Rewards Visa; it shows only the intro offer. The approval has a condition that the comparison table shows the APR range.",
+      "rule": {
+        "id": "REGZ-1026.16",
+        "title": "Open-end credit ads state the terms with any trigger term"
+      },
+      "condition": "Show the APR range in the comparison table.",
+      "liveItem": {
+        "connector": "Web crawler",
+        "url": "https://cardcompass.example/compare/rewards-cards",
+        "match": "similarity",
+        "similarity": 0.88,
+        "checkedAt": "2026-11-02T06:38:00Z",
+        "paused": false,
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "Best rewards credit cards for everyday spending\n\nClearPath Rewards Visa\nRewards: 1.5% cash back on every purchase\nCash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\nAnnual fee: $0\nIntro offer: 0% for 12 months on purchases and balance transfers\nIssued by ClearPath Credit Union. Federally insured by NCUA.\n\nCardCompass is paid by some card issuers when you apply through our links. This affects where cards appear on the page."
+          }
+        ]
+      },
+      "approved": {
+        "version": 1,
+        "approvalId": "CP-2026-0127-v1",
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "Best rewards credit cards for everyday spending\n\nClearPath Rewards Visa\nRewards: 1.5% cash back on every purchase\nCash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\nAnnual fee: $0\nIntro APR: 0% for 12 months on purchases and balance transfers\nOngoing APR: 17.49% to 28.49% variable\nIssued by ClearPath Credit Union. Federally insured by NCUA.\n\nCardCompass is paid by some card issuers when you apply through our links. This affects where cards appear on the page."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "notice",
+          "label": "Send a correction notice to CardCompass",
+          "done": false
+        },
+        {
+          "id": "a2",
+          "kind": "confirm_fix",
+          "label": "Check the live page after CardCompass fixes it",
+          "done": false
+        }
+      ],
+      "notice": {
+        "to": "CardCompass partner team <partners@cardcompass.example>",
+        "cc": "Marcus Lee",
+        "subject": "Correction needed: ClearPath Rewards Visa comparison (CP-2026-0127-v1)",
+        "body": "Hello,\n\nOur monitoring checked your page \"Best rewards credit cards for everyday spending\" on Nov 2 and found that the ClearPath Rewards Visa row no longer shows the ongoing APR.\n\nWhat to fix:\n- Show the ongoing APR in the comparison table again: \"Ongoing APR: 17.49% to 28.49% variable\".\n- Keep \"Intro APR\" as the label of the intro offer, not \"Intro offer\".\n\nPlease make the change by Nov 5. The approved version is CP-2026-0127-v1. Reply to this email when it is done, and we will check the page again.\n\nThank you,\nBen Okafor\nClearPath Credit Union"
+      },
+      "activity": [
+        {
+          "at": "2026-11-02T06:38:00Z",
+          "actor": "Monitoring",
+          "text": "Crawled the CardCompass referral URL. Matched it to Rewards card comparison, CardCompass by similarity (88%)."
+        },
+        {
+          "at": "2026-11-02T06:40:00Z",
+          "actor": "Monitoring",
+          "text": "Found that approval condition \"Show the APR range\" is broken. Opened this issue and assigned it to Ben Okafor. Due Nov 5."
+        },
+        {
+          "at": "2026-11-02T06:40:00Z",
+          "actor": "AI reviewer",
+          "text": "Drafted a correction notice to CardCompass."
+        }
+      ]
+    },
+    {
+      "id": "01a19889-5720-7964-a60c-b8ae0aa45686",
+      "summary": "After the website redesign, the shared footer of the mortgage prequal page no longer shows the NMLS ID (disclosure D-5). The page body still matches approved version 2, but the footer is part of what the member sees. Put the NMLS ID back in the footer.",
+      "rule": {
+        "id": "SAFE-01",
+        "title": "Mortgage ads show the NMLS ID"
+      },
+      "approved": {
+        "version": 2,
+        "approvalId": "CP-2026-0118-v2",
+        "fields": [
+          {
+            "label": "Page title",
+            "text": "Get prequalified for a ClearPath mortgage"
+          },
+          {
+            "label": "Body",
+            "text": "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          }
+        ]
+      },
+      "actions": [],
+      "activity": [
+        {
+          "at": "2026-11-01T19:15:00Z",
+          "actor": "Jordan Kim",
+          "text": "Raised this issue and assigned it to Dana Ortiz."
+        },
+        {
+          "at": "2026-11-01T19:16:00Z",
+          "actor": "Jordan Kim",
+          "comment": true,
+          "text": "I looked at clearpathcu.example/mortgage/prequalify on my phone: the new footer theme shows only \"Equal Housing Opportunity\" and the NCUA logo. The NMLS line in the page text is hidden on screens under 768px. SAFE-01 needs it on every screen size."
+        },
+        {
+          "at": "2026-11-02T10:05:00Z",
+          "actor": "Dana Ortiz",
+          "comment": true,
+          "text": "Thanks. The web team moved the footer to a new theme block. I asked them to add \"ClearPath Credit Union NMLS #401822\" to the footer on all mortgage pages, not only this one. They expect to ship it on Nov 6."
+        }
+      ]
+    },
+    {
+      "id": "01a192c2-c380-7304-a682-faf747d79d7a",
+      "summary": "Replies from the ClearPath page under the HELOC carousel tell members that the rate is \"as low as 6.99%\". The approved ad says from 7.74% APR, and the current rate sheet starts at 7.49%. Replies are advertising too, so they must use the rate sheet.",
+      "rule": {
+        "id": "RATE-01",
+        "title": "Every APR is inside the rate sheet range"
+      },
+      "approved": {
+        "version": 2,
+        "approvalId": "CP-2026-0124-v2",
+        "fields": [
+          {
+            "label": "Primary text",
+            "text": "Your home's equity can fund the projects on your list. Borrow what you need, when you need it, with a ClearPath home equity line of credit."
+          },
+          {
+            "label": "Headline",
+            "text": "HELOC rates from 7.74% APR"
+          },
+          {
+            "label": "Description",
+            "text": "Variable rate; the APR can change. No closing costs on lines up to $250,000. ClearPath Credit Union NMLS #401822. Equal Housing Opportunity."
+          },
+          {
+            "label": "Call to action",
+            "text": "Learn more"
+          },
+          {
+            "label": "Image",
+            "text": "Card 1: Update the kitchen. Card 2: Add the extra room. Card 3: Rates from 7.74% APR. ClearPath Credit Union. Federally insured by NCUA."
+          }
+        ]
+      },
+      "actions": [],
+      "activity": [
+        {
+          "at": "2026-10-31T16:20:00Z",
+          "actor": "Jordan Kim",
+          "text": "Raised this issue and assigned it to Jordan Kim."
+        },
+        {
+          "at": "2026-10-31T16:24:00Z",
+          "actor": "Jordan Kim",
+          "comment": true,
+          "text": "Three replies from the page account on Oct 29 and 30 say \"HELOC rates as low as 6.99%\". 6.99% was never on a rate sheet; it looks like a competitor's promo. I asked Priya who on the social team wrote them."
+        },
+        {
+          "at": "2026-11-02T11:40:00Z",
+          "actor": "Priya Shah",
+          "comment": true,
+          "text": "A new community manager wrote them from a saved reply. I deleted the three replies and changed the saved reply to \"HELOC rates from 7.49% APR. Rates are variable. See clearpathcu.example/heloc for details.\" Is that wording OK?"
+        }
+      ]
+    },
+    {
+      "id": "01a18751-1380-70b5-811c-a6ca7fa835c5",
+      "summary": "The hero image of the mortgage prequal page changed after it was approved. The page text still matches version 2, but images are part of the approval: the new image shows only one kind of family, which can steer applicants. Restore the approved image, or submit the page with the new image for review.",
+      "rule": {
+        "id": "FAIR-01",
+        "title": "No wording or imagery that could steer applicants"
+      },
+      "liveItem": {
+        "connector": "WordPress",
+        "externalId": "4182",
+        "match": "platform_id",
+        "checkedAt": "2026-10-29T10:58:00Z",
+        "paused": false,
+        "fields": [
+          {
+            "label": "Page title",
+            "text": "Get prequalified for a ClearPath mortgage"
+          },
+          {
+            "label": "Body",
+            "text": "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          }
+        ]
+      },
+      "approved": {
+        "version": 2,
+        "approvalId": "CP-2026-0118-v2",
+        "fields": [
+          {
+            "label": "Page title",
+            "text": "Get prequalified for a ClearPath mortgage"
+          },
+          {
+            "label": "Body",
+            "text": "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "restore",
+          "label": "Restore the approved hero image on WordPress",
+          "done": false
+        },
+        {
+          "id": "a2",
+          "kind": "new_version",
+          "label": "Or submit the page with the new image as a new version",
+          "done": false
+        }
+      ],
+      "activity": [
+        {
+          "at": "2026-10-29T10:58:00Z",
+          "actor": "Monitoring",
+          "text": "Checked WordPress page 4182. The hero image changed from hero-keys-handoff.jpg to hero-family-porch-2026.jpg. The page text matches version 2."
+        },
+        {
+          "at": "2026-10-29T11:00:00Z",
+          "actor": "Monitoring",
+          "text": "Opened this issue and assigned it to Dana Ortiz, the owner of the material. Due Nov 6."
+        },
+        {
+          "at": "2026-10-30T09:12:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Changed the status to In progress."
+        },
+        {
+          "at": "2026-10-30T09:20:00Z",
+          "actor": "Dana Ortiz",
+          "comment": true,
+          "text": "The brand team swapped the hero images on all home lending pages. I will submit a new version with a set of images that shows different buyers, rather than going back to the old photo."
+        }
+      ]
+    },
+    {
+      "id": "01a16d75-d040-7794-b078-777462c16a50",
+      "summary": "In the Mailchimp automation, email 3 of the auto pre-approval flow used a custom footer block whose unsubscribe link went to a 404 page. The submitted text was correct, but the email as built would not let members unsubscribe.",
+      "rule": {
+        "id": "CANSPAM-01",
+        "title": "Marketing email has an unsubscribe link and a postal address"
+      },
+      "actions": [],
+      "activity": [
+        {
+          "at": "2026-10-24T10:30:00Z",
+          "actor": "Maya Ruiz",
+          "text": "Raised this issue and assigned it to Sam Rivera."
+        },
+        {
+          "at": "2026-10-24T10:33:00Z",
+          "actor": "Maya Ruiz",
+          "comment": true,
+          "text": "I sent a Mailchimp test of the automation to myself. In email 3 (day 7), the Unsubscribe link goes to clearpathcu.example/unsubscribe-old, which returns a 404. Emails 1 and 2 are fine."
+        },
+        {
+          "at": "2026-10-26T09:15:00Z",
+          "actor": "Sam Rivera",
+          "text": "Changed the status to In progress."
+        },
+        {
+          "at": "2026-10-27T15:05:00Z",
+          "actor": "Sam Rivera",
+          "comment": true,
+          "text": "Email 3 was built from an old template with a hard-coded link. I replaced the footer with the standard block that uses the {{unsubscribe}} merge tag and sent a new test: the link works now."
+        },
+        {
+          "at": "2026-10-27T15:10:00Z",
+          "actor": "Sam Rivera",
+          "text": "Changed the status to Resolved."
+        },
+        {
+          "at": "2026-10-27T15:10:00Z",
+          "actor": "Sam Rivera",
+          "comment": true,
+          "text": "Fixed in Mailchimp: email 3 uses the standard footer with the {{unsubscribe}} merge tag. Tested on Oct 27."
+        }
+      ]
+    },
+    {
+      "id": "01a14916-e680-78d9-9de9-77d6d4fd9d69",
+      "summary": "The LendWise blog post added a line \"0% intro APR for 15 months\" from last year's card offer, which is not in approved version 1 and not on the rate sheet, and replaced disclosure D-4 v2 with the old D-4 v1 wording.",
+      "rule": {
+        "id": "D-4 v2",
+        "title": "Cash back card rewards terms"
+      },
+      "condition": "Show disclosure D-4 directly below the reward amount.",
+      "liveItem": {
+        "connector": "Web crawler",
+        "url": "https://lendwise.example/blog/best-cash-back-cards-2026",
+        "match": "similarity",
+        "similarity": 0.84,
+        "checkedAt": "2026-10-17T09:00:00Z",
+        "paused": false,
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Cash back paid quarterly. Restrictions apply. Plus 0% intro APR for 15 months on purchases. Apply in minutes and get a decision fast."
+          }
+        ]
+      },
+      "approved": {
+        "version": 1,
+        "approvalId": "CP-2026-0131-v1",
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Apply in minutes and get a decision fast."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "notice",
+          "label": "Send a correction notice to LendWise",
+          "done": true,
+          "doneBy": "Alex Chen",
+          "doneAt": "2026-10-17T11:20:00Z"
+        },
+        {
+          "id": "a2",
+          "kind": "confirm_fix",
+          "label": "Check the live page after LendWise fixes it",
+          "done": true,
+          "doneBy": "Alex Chen",
+          "doneAt": "2026-10-20T12:42:00Z"
+        }
+      ],
+      "notice": {
+        "to": "Erin Walsh <erin.walsh@lendwise.example>",
+        "cc": "Marcus Lee",
+        "subject": "Correction needed: ClearPath Cash Back Visa post (CP-2026-0131-v1)",
+        "body": "Hi Erin,\n\nOur monitoring checked your post \"Best cash back cards of 2026\" on Oct 17 and found two changes from the approved version.\n\nWhat to fix:\n- Remove \"Plus 0% intro APR for 15 months on purchases.\" That offer ended last year.\n- Replace \"Cash back paid quarterly. Restrictions apply.\" with the current rewards terms: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\"\n\nPlease make the change by Oct 22. The approved version is CP-2026-0131-v1. Reply to this email when it is done, and we will check the page again.\n\nThank you,\nAlex Chen\nCompliance, ClearPath Credit Union",
+        "sentAt": "2026-10-17T11:20:00Z",
+        "sentBy": "Alex Chen"
+      },
+      "activity": [
+        {
+          "at": "2026-10-17T09:00:00Z",
+          "actor": "Monitoring",
+          "text": "Crawled the LendWise referral URL. Matched it to Cash back card, affiliate post by similarity (84%)."
+        },
+        {
+          "at": "2026-10-17T09:00:00Z",
+          "actor": "Monitoring",
+          "text": "Found that approval condition \"Show disclosure D-4\" is broken. Opened this issue and assigned it to Tara Nguyen (LendWise). Due Oct 22."
+        },
+        {
+          "at": "2026-10-17T09:00:00Z",
+          "actor": "AI reviewer",
+          "text": "Drafted a correction notice to LendWise."
+        },
+        {
+          "at": "2026-10-17T11:20:00Z",
+          "actor": "Alex Chen",
+          "text": "Sent the correction notice to Erin Walsh <erin.walsh@lendwise.example>."
+        },
+        {
+          "at": "2026-10-19T16:02:00Z",
+          "actor": "Erin Walsh",
+          "comment": true,
+          "text": "Sorry about that, an editor pasted the card block from last year's post. Both lines are fixed now."
+        },
+        {
+          "at": "2026-10-20T12:40:00Z",
+          "actor": "Monitoring",
+          "text": "Crawled the post again. It matches version 1."
+        },
+        {
+          "at": "2026-10-20T12:42:00Z",
+          "actor": "Alex Chen",
+          "text": "Marked done: Check the live page after LendWise fixes it."
+        },
+        {
+          "at": "2026-10-20T12:45:00Z",
+          "actor": "Alex Chen",
+          "text": "Changed the status to Resolved."
+        },
+        {
+          "at": "2026-10-20T12:45:00Z",
+          "actor": "Alex Chen",
+          "comment": true,
+          "text": "LendWise removed the old intro APR line and restored D-4 v2. The crawl on Oct 20 matches version 1."
+        }
+      ]
+    },
+    {
+      "id": "01a124b7-fcc0-72be-bf9b-ddefbca02045",
+      "summary": "The spring savings email was retired on Jul 1, but it was still step 4 of the Mailchimp automation \"New member welcome\", so new members kept getting an offer that ended on Jun 30. A retired material found live is unapproved content.",
+      "liveItem": {
+        "connector": "Mailchimp",
+        "externalId": "automation 5d81c2e0a4, step 4",
+        "match": "similarity",
+        "similarity": 1.0,
+        "checkedAt": "2026-10-10T07:30:00Z",
+        "paused": true,
+        "fields": [
+          {
+            "label": "Subject line",
+            "text": "Spring into savings: 4.25% APY on a 12-month certificate"
+          },
+          {
+            "label": "Preview text",
+            "text": "Lock in a fixed rate for 12 months with $1,000 to open."
+          },
+          {
+            "label": "Body",
+            "text": "Hi {{first_name}},\n\nPut your tax refund to work. Open a 12-month share certificate by June 30 and earn 4.25% APY, fixed for the full term.\n\n- $1,000 minimum to open\n- Dividends compound monthly\n- Early withdrawal penalty: 90 days of dividends\n\nAPY = Annual Percentage Yield. APY is accurate as of the date shown and can change after the account is opened. You need a minimum balance of $100 to earn the APY. Fees can reduce earnings.\n\nOpen your certificate: clearpathcu.example/savings/certificates\n\nFederally insured by NCUA.\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}"
+          }
+        ]
+      },
+      "approved": {
+        "version": 1,
+        "approvalId": "CP-2026-0112-v1",
+        "fields": [
+          {
+            "label": "Subject line",
+            "text": "Spring into savings: 4.25% APY on a 12-month certificate"
+          },
+          {
+            "label": "Preview text",
+            "text": "Lock in a fixed rate for 12 months with $1,000 to open."
+          },
+          {
+            "label": "Body",
+            "text": "Hi {{first_name}},\n\nPut your tax refund to work. Open a 12-month share certificate by June 30 and earn 4.25% APY, fixed for the full term.\n\n- $1,000 minimum to open\n- Dividends compound monthly\n- Early withdrawal penalty: 90 days of dividends\n\nAPY = Annual Percentage Yield. APY is accurate as of the date shown and can change after the account is opened. You need a minimum balance of $100 to earn the APY. Fees can reduce earnings.\n\nOpen your certificate: clearpathcu.example/savings/certificates\n\nFederally insured by NCUA.\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "pause",
+          "label": "Pause step 4 of the automation",
+          "done": true,
+          "doneBy": "Dana Ortiz",
+          "doneAt": "2026-10-10T09:15:00Z"
+        },
+        {
+          "id": "a2",
+          "kind": "notice",
+          "label": "Send a correction notice to members who got the email",
+          "done": true,
+          "doneBy": "Dana Ortiz",
+          "doneAt": "2026-10-13T15:30:00Z"
+        },
+        {
+          "id": "a3",
+          "kind": "take_down",
+          "label": "Remove the email from the automation",
+          "done": true,
+          "doneBy": "Dana Ortiz",
+          "doneAt": "2026-10-13T15:45:00Z"
+        }
+      ],
+      "notice": {
+        "to": "Members who got the spring savings email after Jun 30 (212 recipients)",
+        "cc": "Jordan Kim",
+        "subject": "A correction to our certificate offer",
+        "body": "Hi {{first_name}},\n\nA recent welcome email from us offered 4.25% APY on a 12-month share certificate. That offer ended on Jun 30, and we sent it to you by mistake.\n\nOur current 12-month certificate rate is shown at clearpathcu.example/savings/certificates. If you opened a certificate because of the email, call us at 800-555-0142 and we will talk through your options.\n\nWe are sorry for the confusion.\n\nClearPath Credit Union\nFederally insured by NCUA.\n1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}",
+        "sentAt": "2026-10-13T15:30:00Z",
+        "sentBy": "Dana Ortiz"
+      },
+      "activity": [
+        {
+          "at": "2026-10-10T07:30:00Z",
+          "actor": "Monitoring",
+          "text": "Found the email still sending as step 4 of the Mailchimp automation \"New member welcome\". The material is retired."
+        },
+        {
+          "at": "2026-10-10T07:30:00Z",
+          "actor": "Monitoring",
+          "text": "Opened this issue and assigned it to Dana Ortiz, the owner of the material. Due Oct 15."
+        },
+        {
+          "at": "2026-10-10T09:10:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Changed the status to In progress."
+        },
+        {
+          "at": "2026-10-10T09:15:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Marked done: Pause step 4 of the automation."
+        },
+        {
+          "at": "2026-10-10T09:22:00Z",
+          "actor": "Dana Ortiz",
+          "comment": true,
+          "text": "Paused. Mailchimp shows 212 new members got this step since Jul 1. I will draft a correction email with Jordan."
+        },
+        {
+          "at": "2026-10-13T15:30:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Sent the correction notice to Members who got the spring savings email after Jun 30 (212 recipients)."
+        },
+        {
+          "at": "2026-10-13T15:45:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Marked done: Remove the email from the automation."
+        },
+        {
+          "at": "2026-10-13T16:00:00Z",
+          "actor": "Dana Ortiz",
+          "text": "Changed the status to Resolved."
+        },
+        {
+          "at": "2026-10-13T16:00:00Z",
+          "actor": "Dana Ortiz",
+          "comment": true,
+          "text": "Removed the email from the automation and sent the correction to the 212 members. I also added an end date check to the automation review list."
+        }
+      ]
     }
   ]
 }

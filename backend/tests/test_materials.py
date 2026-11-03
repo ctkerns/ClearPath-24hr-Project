@@ -7,7 +7,7 @@ from app.config import settings
 from app.db import SessionLocal
 from app.models import Role, User, Workspace
 from app.models.audit import AuditEvent
-from app.models.materials import Comment, Material, MaterialStatus, MaterialVersion
+from app.models.materials import Channel, Comment, Material, MaterialStatus, MaterialVersion, Product
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
 from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, EXAMPLE_FIELDS, with_channel_fields
@@ -18,7 +18,6 @@ OTHER_AFFILIATE = "leo@rateradar.example"  # RateRadar
 
 SUMMER = "01a112a1-4000-7d42-94be-d09364e3b51d"  # in review: Compliance waits, Legal approved, open High finding
 DEBT = "01a0d660-7200-7f2e-846a-4b2b8dd2f651"  # live, with a live item and an issue
-HELOC_EMAIL = "01a11743-c600-7e07-a845-e3bc969278a6"  # no seeded version
 LENDWISE_POST = "01a0dfa5-7e00-7a60-a023-ce47b3e545d3"
 LENDWISE_REVIEW = "01a10dfe-ba00-70a4-92a2-32f7091afc7c"
 RATERADAR = "01a0e8ea-8a00-758c-87e6-0a28f7797431"
@@ -106,9 +105,22 @@ async def test_detail(client):
     assert debt["issues"][0]["actions"][0]["done"] is True
 
 
+async def material_without_version() -> str:
+    """Every seeded material has a version, so a test that needs one without makes it (a draft in the making)."""
+    async with SessionLocal() as db:
+        ws = await db.scalar(select(Workspace).where(Workspace.is_demo))
+        owner = await db.scalar(select(User).where(User.email == SUBMITTER))
+        m = Material(workspace_id=ws.id, title="Holiday HELOC rate email, copy", channel=Channel.MAILCHIMP, product=Product.HELOC,
+                     status=MaterialStatus.SUBMITTED, owner_id=owner.id)
+        db.add(m)
+        await db.commit()
+        return str(m.id)
+
+
 async def test_detail_without_version_is_null(client):
+    empty = await material_without_version()
     await as_user(client, VIEWER)
-    res = await client.get(f"/api/materials/{HELOC_EMAIL}")
+    res = await client.get(f"/api/materials/{empty}")
     assert res.status_code == 200 and res.json() is None
     assert (await client.get("/api/materials/01a112a1-4000-7d42-94be-000000000000")).status_code == 404
 
@@ -230,8 +242,9 @@ async def test_new_version(client):
 
 
 async def test_version_of_material_without_versions(client):
+    empty = await material_without_version()
     await as_user(client, SUBMITTER)
-    res = await client.post(f"/api/materials/{HELOC_EMAIL}/versions", json=submission(product="heloc"))
+    res = await client.post(f"/api/materials/{empty}/versions", json=submission(product="heloc"))
     assert res.status_code == 201 and res.json()["version"] == 1
 
 
@@ -300,8 +313,18 @@ async def test_routing_is_in_the_audit_log(client):
     assert row.data["input"]["source"] == "internal" and row.data["path"] == "full" and row.data["version"] == 1
 
 
+async def age_raterradar_rejection():
+    """The seeded RateRadar listing was rejected on Oct 27, which counts as recent history (PRD F6). Tests that need
+    an affiliate with no history move that rejection back past the 90 days."""
+    old = datetime.now(UTC) - timedelta(days=91)
+    async with SessionLocal() as db, db.begin():
+        await db.execute(update(Comment).where(Comment.material_id == RATERADAR).values(at=old))
+        await db.execute(update(MaterialVersion).where(MaterialVersion.material_id == RATERADAR).values(submitted_at=old))
+
+
 async def test_affiliate_submit_routes_as_affiliate(client):
-    # RateRadar has no issue and no rejection: only "Affiliate content" adds a group.
+    # RateRadar has no open issue and no recent rejection: only "Affiliate content" adds a group.
+    await age_raterradar_rejection()
     await as_user(client, OTHER_AFFILIATE)
     body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}], groups=[])
     assert routed((await client.post("/api/materials", json=body)).json()) == [
@@ -319,6 +342,7 @@ async def test_affiliate_submit_routes_as_affiliate(client):
 
 async def test_affiliate_history_from_the_database(client):
     """An internal user's new version of an affiliate's material also routes as affiliate, with its history."""
+    await age_raterradar_rejection()
     await as_user(client, OTHER_AFFILIATE)
     body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}])
     new_id = (await client.post("/api/materials", json=body)).json()["id"]

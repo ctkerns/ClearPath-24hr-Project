@@ -110,6 +110,7 @@ HISTORY_ACTION = {
     "comment": "commented",
     "live": "live_checked",
     "issue": "issue_raised",
+    "expired": "approval_expired",
 }
 DECISION_ACTION = (
     ("Approved with conditions", "approved_with_conditions"),
@@ -159,7 +160,7 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
             material_id=material.id,
             number=v["number"],
             submitted_at=parse_time(v["submittedAt"]),
-            submitted_by_id=ctx.users[v["submittedBy"]].id,
+            submitted_by_id=by.id if (by := person(ctx, v.get("submittedBy"))) else None,  # none: found live
             path=ReviewPath(v["path"]),
             outcome=Outcome(v["outcome"]) if v.get("outcome") else None,
             outcome_by=v.get("outcomeBy"),
@@ -183,8 +184,11 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
     current = d["version"]
     for i, f in enumerate(d["findings"]):
         status = FindingStatus(f["status"])
-        # Outdated findings came from the version before the current one.
-        number = current - 1 if status is FindingStatus.OUTDATED and current - 1 in versions else current
+        # Outdated findings came from an earlier version: the one named, else the version before the current one.
+        if status is FindingStatus.OUTDATED:
+            number = f.get("version") or (current - 1 if current - 1 in versions else current)
+        else:
+            number = current
         db.add(
             Finding(
                 id=finding_ids[f["id"]],
@@ -223,7 +227,7 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
             Comment(
                 workspace_id=ws,
                 material_id=material.id,
-                version_number=current,
+                version_number=c.get("version", current),
                 author_id=ctx.users[c["author"]].id,
                 role=c["role"],
                 at=parse_time(c["at"]),

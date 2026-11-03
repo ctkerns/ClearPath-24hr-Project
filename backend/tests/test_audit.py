@@ -325,7 +325,8 @@ async def test_filter_and_pages(client):
     # Then only the seeded history of the demo materials and issues, which is older
     older = (await client.get("/api/audit", params={"limit": 200, "before": rest[-1]["id"]})).json()
     assert older and {e["entity"] for e in older} == set(HISTORY)
-    assert [e["id"] for e in older] == [e["id"] for e in everything[4:]]
+    # Each page holds at most 200, and the seeded history is longer, so compare the part both pages hold.
+    assert [e["id"] for e in older][: len(everything) - 4] == [e["id"] for e in everything[4:]]
     assert (await client.get("/api/audit", params={"before": UNKNOWN})).status_code == 400
     assert (await client.get("/api/audit", params={"limit": 0})).status_code == 422
 
