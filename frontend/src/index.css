@@ -2,7 +2,31 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/*
+ * Ledger: the ClearPath design system.
+ * Light theme only. Dark mode is not designed yet; the variant stays so it can be added later.
+ * Every color in the app comes from the tokens in :root below. Do not use raw hex values in components.
+ * See every token and component at /design-system.
+ */
+
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+    /* Dense type scale: Ledger body text is 13px */
+    --text-xs: 0.71875rem;          /* 11.5px: pills, tags, table headers */
+    --text-xs--line-height: 1rem;
+    --text-sm: 0.8125rem;           /* 13px: body, tables, controls */
+    --text-sm--line-height: 1.25rem;
+    --text-base: 0.875rem;          /* 14px: long reading text */
+    --text-base--line-height: 1.375rem;
+    --text-lg: 1.125rem;            /* 18px: page titles */
+    --text-lg--line-height: 1.5rem;
+    --text-xl: 1.375rem;            /* 22px */
+    --text-xl--line-height: 1.75rem;
+}
 
 @theme inline {
     --radius-sm: calc(var(--radius) * 0.6);
@@ -19,6 +43,8 @@
     --color-popover: var(--popover);
     --color-popover-foreground: var(--popover-foreground);
     --color-primary: var(--primary);
+    --color-primary-strong: var(--primary-strong);
+    --color-primary-soft: var(--primary-soft);
     --color-primary-foreground: var(--primary-foreground);
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
@@ -43,82 +69,88 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Meaning colors: risk tier, severity, status. Never use these for brand or decoration. */
+    --color-risk-high: var(--risk-high);
+    --color-risk-high-soft: var(--risk-high-soft);
+    --color-risk-medium: var(--risk-medium);
+    --color-risk-medium-soft: var(--risk-medium-soft);
+    --color-risk-low: var(--risk-low);
+    --color-risk-low-soft: var(--risk-low-soft);
+    --color-info: var(--info);
+    --color-info-soft: var(--info-soft);
+    --color-neutral: var(--neutral);
+    --color-neutral-soft: var(--neutral-soft);
 }
 
 :root {
-    --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-}
+    /* 4px base: md = 3.2px (buttons, inputs), lg = 4px (cards) */
+    --radius: 0.25rem;
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Neutrals: blue-gray, biased toward the cobalt accent */
+    --background: #FFFFFF;
+    --foreground: #141A26;          /* ink */
+    --card: #FFFFFF;
+    --card-foreground: #141A26;
+    --popover: #FFFFFF;
+    --popover-foreground: #141A26;
+    --muted: #F5F7FA;               /* surface: side panels, table headers */
+    --muted-foreground: #5A6476;    /* secondary text */
+    --secondary: #F5F7FA;
+    --secondary-foreground: #141A26;
+    --border: #DCE1E9;              /* lines and dividers */
+    --input: #C9D0DB;               /* form field borders, a step darker than lines */
+
+    /* Brand: cobalt */
+    --primary: #2350D8;
+    --primary-strong: #1B3FAE;      /* hover, links, accent text */
+    --primary-soft: #EAF0FE;        /* selected rows, active nav */
+    --primary-foreground: #FFFFFF;
+    --accent: #EAF0FE;              /* hover background in menus and lists */
+    --accent-foreground: #1B3FAE;
+    --ring: #2350D8;
+
+    --destructive: #B42323;
+
+    /* Meaning */
+    --risk-high: #B42323;
+    --risk-high-soft: #FDECEC;
+    --risk-medium: #94560A;
+    --risk-medium-soft: #FFF2D9;
+    --risk-low: #1D7238;
+    --risk-low-soft: #E5F4E9;
+    --info: #3346A8;                /* in review, submitted */
+    --info-soft: #EAEDFB;
+    --neutral: #59606B;             /* draft, expired, retired */
+    --neutral-soft: #EEF0F3;
+
+    /* Charts: cobalt first, then hues that stay clear of the meaning colors */
+    --chart-1: #2350D8;
+    --chart-2: #0E8A9A;
+    --chart-3: #7A5AD1;
+    --chart-4: #C2780C;
+    --chart-5: #5A6476;
+
+    --sidebar: #F5F7FA;
+    --sidebar-foreground: #141A26;
+    --sidebar-primary: #2350D8;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #EAF0FE;
+    --sidebar-accent-foreground: #1B3FAE;
+    --sidebar-border: #DCE1E9;
+    --sidebar-ring: #2350D8;
+
+    color-scheme: light;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
-    @apply bg-background text-foreground;
-    }
+    @apply bg-background font-sans text-sm text-foreground antialiased;
+  }
+  code, kbd, samp {
+    @apply font-mono;
+  }
 }

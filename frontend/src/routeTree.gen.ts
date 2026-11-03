@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as MaterialsMaterialIdRouteImport } from './routes/materials.$materialId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaterialsMaterialIdRoute = MaterialsMaterialIdRouteImport.update({
@@ -25,27 +31,31 @@ const MaterialsMaterialIdRoute = MaterialsMaterialIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/materials/$materialId': typeof MaterialsMaterialIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/materials/$materialId': typeof MaterialsMaterialIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/materials/$materialId': typeof MaterialsMaterialIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/materials/$materialId'
+  fullPaths: '/' | '/design-system' | '/materials/$materialId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/materials/$materialId'
-  id: '__root__' | '/' | '/materials/$materialId'
+  to: '/' | '/design-system' | '/materials/$materialId'
+  id: '__root__' | '/' | '/design-system' | '/materials/$materialId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DesignSystemRoute: typeof DesignSystemRoute
   MaterialsMaterialIdRoute: typeof MaterialsMaterialIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/materials/$materialId': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DesignSystemRoute: DesignSystemRoute,
   MaterialsMaterialIdRoute: MaterialsMaterialIdRoute,
 }
 export const routeTree = rootRouteImport
