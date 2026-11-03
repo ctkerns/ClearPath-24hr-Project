@@ -6,6 +6,9 @@ FastAPI app. Run it with `docker compose up` from the repo root.
 
 `docker compose up -d postgres`, then `uv run pytest`. Tests use their own database, `clearpath_test`.
 
+Pre-review evaluation (PRD F4): `uv run python -m tests.eval.run` prints precision and recall of the code checks
+on the golden dataset in `tests/eval/` (no database needed). `tests/eval/test_eval.py` runs it in pytest.
+
 ## Invites and email
 
 An invite (PRD F16) emails a link to `{APP_URL}/accept-invite?token=...`. With the default `MAIL_BACKEND=console`,

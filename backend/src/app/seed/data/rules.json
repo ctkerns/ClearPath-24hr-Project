@@ -29,7 +29,12 @@
           "monthly payment",
           "payments of",
           "down payment",
-          "months to repay"
+          "months to repay",
+          "{amount}/month",
+          "{amount}/mo",
+          "{amount} per month",
+          "{amount} a month",
+          "{number} monthly payments"
         ],
         "disclosure": "D-7"
       },

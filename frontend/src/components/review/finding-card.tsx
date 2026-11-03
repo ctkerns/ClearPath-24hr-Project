@@ -80,7 +80,8 @@ function FindingCard({
         </span>
       </div>
       <p className={cn("text-sm", outdated && "text-muted-foreground")}>
-        <q className="font-semibold">{flaggedText}</q> {explanation}
+        {/* A missing disclosure or phrase has no text to quote. */}
+        {flaggedText && <><q className="font-semibold">{flaggedText}</q>{" "}</>}{explanation}
       </p>
       {suggestion && !outdated && (
         <p className="flex items-baseline gap-1.5 text-sm text-primary-strong">
