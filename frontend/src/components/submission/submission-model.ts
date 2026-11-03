@@ -1,9 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
 import { versionFields, type MaterialDetail, type MaterialFile } from '@/components/review/material-detail-data'
 import { api, ApiError } from '@/lib/api'
-import { useReviewerGroups, type ReviewerGroup } from '@/components/settings/group-data'
-import { evaluateRouting, formatList, useRouting, type RoutingRule } from '@/components/settings/routing-data'
+import { formatList } from '@/components/settings/routing-data'
 import i18n from '@/i18n'
 
 // Shared model for the submit form (PRD F3), used by /materials/new and /materials/$id/new-version.
@@ -84,37 +83,36 @@ export function valuesFromMaterial(m: Material, detail: MaterialDetail | null): 
   }
 }
 
+/** POST /api/routing/preview: the groups the server would require, with the rules that require each one. */
+type RoutingPreview = { path: 'full' | 'lighter'; groups: { name: string; reason: string; rules: string[] }[] }
+
 /**
  * Which reviewer groups a submission goes to (PRD F6), so the form can show it before you submit.
- * It runs the Routing tab's rules and default group through evaluateRouting, the same function as "Test routing".
- * The submit sends the result; the server checks that the groups exist, and uses the default group when there are none.
- * TODO: the server evaluates the rules on every new version, once they are in the database; it also knows the affiliate's history.
+ * This is only a preview: the server decides the groups on submit, from its own data, and the submit
+ * does not send them (PRD R2). The preview asks the server, so it runs the same code as the decision.
+ * Affiliates use it too: they cannot read the Routing tab. For a new version, `materialId` gives the server
+ * the material's channel and affiliate. The Routing tab's "Test routing" still uses evaluateRouting.
  */
-export function previewRouting(rules: RoutingRule[], groups: ReviewerGroup[], v: SubmissionValues): { name: string; reason: string }[] {
-  if (!v.product || !v.channel) return []
-  const result = evaluateRouting(rules, groups.find((g) => g.isDefault)?.id, {
-    product: v.product,
+export function useRoutingPreview(v: SubmissionValues, materialId?: string) {
+  const input = {
+    materialId: materialId ?? null,
     channel: v.channel,
-    // Affiliate pages come from affiliates, as in "Test routing". The demo does not know an affiliate's history.
-    source: v.channel === 'affiliate' ? 'affiliate' : 'internal',
-    affiliateHistory: false,
+    product: v.product,
     nationwide: v.nationwide,
-    states: v.states,
+    states: v.nationwide ? [] : v.states,
+  }
+  const enabled = !!v.product && !!v.channel && (v.nationwide || v.states.length > 0)
+  const query = useQuery({
+    queryKey: ['routing-preview', input],
+    queryFn: () => api<RoutingPreview>('POST', '/routing/preview', input),
+    enabled,
+    placeholderData: keepPreviousData, // no flicker while the next answer loads
   })
-  const ruleName = (id: string) => rules.find((r) => r.id === id)?.name ?? id
-  return result.required.flatMap(({ groupId, ruleIds }) => {
-    const group = groups.find((g) => g.id === groupId)
-    if (!group) return []
-    return [{ name: group.name, reason: ruleIds.length ? formatList(ruleIds.map(ruleName), 'conjunction') : i18n.t('submit.routingDefault') }]
-  })
-}
-
-/** The routing rules and reviewer groups that previewRouting reads, from the Settings data. */
-export function useRoutingPreview() {
-  const routing = useRouting()
-  const groups = useReviewerGroups()
-  const ready = !!routing.data && !!groups.data
-  return { ready, preview: (v: SubmissionValues) => (ready ? previewRouting(routing.data!.rules, groups.data!, v) : []) }
+  if (!enabled || !query.data) return []
+  return query.data.groups.map((g) => ({
+    name: g.name,
+    reason: g.rules.length ? formatList(g.rules, 'conjunction') : i18n.t('submit.routingDefault'),
+  }))
 }
 
 /** What is missing before the form can be sent. Keys are field names, values are i18n keys. */
@@ -135,11 +133,11 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
 /**
  * Sends a submission: POST /api/materials for a new material, POST /api/materials/<id>/versions for a new version.
  * Resolves with the material ID, and rejects with an ApiError, so the form can show what went wrong.
- * The server stores the version, routes it, and moves the material to In review. TODO (F4): pre-review.
+ * The server stores the version, routes it (it alone decides the groups), and moves the material to In review.
+ * TODO (F4): pre-review.
  */
 export function useSubmitMaterial() {
   const queryClient = useQueryClient()
-  const routing = useRoutingPreview()
 
   return async (values: SubmissionValues, existing?: { material: Material }) => {
     const channel = values.channel as Channel
@@ -162,7 +160,7 @@ export function useSubmitMaterial() {
       launchDate: values.launchDate || null,
       endDate: values.endDate || null,
       destinationUrl: values.destinationUrl,
-      groups: routing.preview(values),
+      // No groups: the server evaluates the routing rules itself (PRD R2, F6).
     }
     const detail = existing
       ? await api<MaterialDetail>('POST', `/materials/${existing.material.id}/versions`, body)

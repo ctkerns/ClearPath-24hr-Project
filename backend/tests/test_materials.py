@@ -6,7 +6,8 @@ from sqlalchemy import select, update
 from app.config import settings
 from app.db import SessionLocal
 from app.models import Role, User, Workspace
-from app.models.materials import Material, MaterialStatus
+from app.models.audit import AuditEvent
+from app.models.materials import Comment, Material, MaterialStatus, MaterialVersion
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
 from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
@@ -32,7 +33,6 @@ def submission(**change):
         "product": "savings",
         "fields": [{"label": "Subject line", "text": "Save more this winter"}, {"label": "Body", "text": "Rates from 4.00% APY."}],
         "nationwide": True,
-        "groups": [{"name": "Compliance", "reason": "Every material"}],
     }
     return body | change
 
@@ -114,12 +114,12 @@ async def test_detail_without_version_is_null(client):
 
 async def test_submit_new_material(client):
     await as_user(client, SUBMITTER)
-    res = await client.post("/api/materials", json=submission(groups=[]))
+    res = await client.post("/api/materials", json=submission())
     assert res.status_code == 201, res.text
     d = res.json()
     assert d["version"] == 1 and d["submittedBy"] == "Priya Shah"
-    # No routed groups: the default group reviews it (PRD F6).
-    assert d["groups"][0]["name"] == "Compliance" and d["groups"][0]["reason"] == "Default group"
+    # The server routes it: savings matches only the seeded rule for everything (PRD F6).
+    assert [(g["name"], g["reason"]) for g in d["groups"]] == [("Compliance", "Compliance reviews everything")]
     assert d["fields"][0] == {"label": "Subject line", "segments": ["Save more this winter"]}
     assert [e["type"] for e in d["history"]] == ["submitted", "routed"]
     row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == d["id"])
@@ -139,7 +139,6 @@ async def test_viewer_cannot_submit(client):
         ({"nationwide": False, "states": ["XX"]}, 422),
         ({"nationwide": False, "states": ["WY"]}, 400),  # not a licensed state
         ({"launchDate": "2026-12-10", "endDate": "2026-12-01"}, 422),
-        ({"groups": [{"name": "Nobody"}]}, 400),
         ({"title": " "}, 400),
         ({"channel": "fax"}, 422),
     ],
@@ -168,7 +167,8 @@ async def test_new_version(client):
     d = res.json()
     assert (d["version"], d["versionCount"]) == (3, 3)
     assert all(f["status"] != "open" for f in d["findings"])  # old findings are outdated (PRD F4)
-    assert [g["state"] for g in d["groups"]] == ["waiting"]
+    # New decisions: Legal approved version 2, but waits again (a nationwide loan needs Legal, PRD F6).
+    assert [(g["name"], g["state"]) for g in d["groups"]] == [("Compliance", "waiting"), ("Legal", "waiting")]
     assert d["versions"][1]["fields"][1] == {"label": "Headline", "text": "Personal loans from 8.99% APR"}
     assert d["details"]["platformId"] == "23851204417730592"  # kept, for monitoring
     assert d["comments"][0]["author"] == "Maya Ruiz"  # comments stay
@@ -189,6 +189,117 @@ async def test_affiliate_cannot_version_other_company(client):
     body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}])
     assert (await client.post(f"/api/materials/{RATERADAR}/versions", json=body)).status_code == 404
     assert (await client.post(f"/api/materials/{LENDWISE_REVIEW}/versions", json=body)).status_code == 201
+
+
+# Routing on submit: the server alone decides the required groups (PRD R2, F6)
+
+
+def routed(d):
+    return [(g["name"], g["reason"]) for g in d["groups"]]
+
+
+MORTGAGE_NATIONWIDE = [
+    ("Compliance", "Compliance reviews everything"),
+    ("Legal", "Loans sold nationwide"),
+    ("Mortgage", "Home lending"),
+]
+
+
+@pytest.mark.parametrize(
+    "groups",
+    [
+        None,  # not sent
+        [],
+        [{"name": "Compliance", "reason": "Every material"}],  # Legal and Mortgage dropped
+        [{"name": "Senior compliance", "reason": "mine"}],  # a group no rule requires
+        [{"name": "Nobody"}],  # an unknown group: ignored, not an error
+    ],
+)
+async def test_submit_ignores_client_groups(client, groups):
+    await as_user(client, SUBMITTER)
+    body = submission(product="mortgage", channel="meta") | ({} if groups is None else {"groups": groups})
+    res = await client.post("/api/materials", json=body)
+    assert res.status_code == 201, res.text
+    assert routed(res.json()) == MORTGAGE_NATIONWIDE
+
+
+async def test_new_version_ignores_client_groups(client):
+    await as_user(client, MANAGER)
+    body = submission(channel="meta", product="mortgage", groups=[{"name": "Compliance"}])
+    d = (await client.post(f"/api/materials/{SUMMER}/versions", json=body)).json()
+    assert routed(d) == MORTGAGE_NATIONWIDE and d["path"] == "full"
+    assert d["history"][-1]["text"] == (
+        'Required Compliance (rule "Compliance reviews everything"), Legal (rule "Loans sold nationwide"), '
+        'Mortgage (rule "Home lending").'
+    )
+    # States are the version's content: a mortgage in CA only is not "sold nationwide".
+    d = (await client.post(f"/api/materials/{SUMMER}/versions", json=body | {"nationwide": False, "states": ["CA"]})).json()
+    assert [g["name"] for g in d["groups"]] == ["Compliance", "Mortgage"]
+
+
+async def test_routing_is_in_the_audit_log(client):
+    await as_user(client, SUBMITTER)
+    d = (await client.post("/api/materials", json=submission(product="mortgage", channel="meta"))).json()
+    async with SessionLocal() as db:
+        row = await db.scalar(select(AuditEvent).where(AuditEvent.entity_id == d["id"], AuditEvent.action == "routed"))
+    assert row is not None and row.entity == "material"
+    assert [g["name"] for g in row.data["groups"]] == ["Compliance", "Legal", "Mortgage"]
+    assert row.data["groups"][1]["rules"] == ["Loans sold nationwide"]
+    assert row.data["input"]["source"] == "internal" and row.data["path"] == "full" and row.data["version"] == 1
+
+
+async def test_affiliate_submit_routes_as_affiliate(client):
+    # RateRadar has no issue and no rejection: only "Affiliate content" adds a group.
+    await as_user(client, OTHER_AFFILIATE)
+    body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}], groups=[])
+    assert routed((await client.post("/api/materials", json=body)).json()) == [
+        ("Compliance", "Compliance reviews everything"),
+        ("Senior compliance", "Affiliate content"),
+    ]
+    # LendWise has an open issue, so it has history (PRD F6): Senior compliance and Legal, from two rules.
+    await as_user(client, AFFILIATE)
+    assert routed((await client.post("/api/materials", json=body)).json()) == [
+        ("Compliance", "Compliance reviews everything"),
+        ("Senior compliance", "Affiliate content and Affiliates with recent problems"),
+        ("Legal", "Affiliates with recent problems"),
+    ]
+
+
+async def test_affiliate_history_from_the_database(client):
+    """An internal user's new version of an affiliate's material also routes as affiliate, with its history."""
+    await as_user(client, OTHER_AFFILIATE)
+    body = submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}])
+    new_id = (await client.post("/api/materials", json=body)).json()["id"]
+    await as_user(client, REVIEWER)
+    assert (await decide(client, new_id, "reject", "Misleading.")).status_code == 200
+    await as_user(client, MANAGER)
+    d = (await client.post(f"/api/materials/{RATERADAR}/versions", json=body)).json()
+    assert ("Legal", "Affiliates with recent problems") in routed(d)
+    # 90 days later the rejection no longer counts.
+    async with SessionLocal() as db, db.begin():
+        old = datetime.now(UTC) - timedelta(days=91)
+        await db.execute(update(Comment).where(Comment.material_id == new_id).values(at=old))
+        await db.execute(update(MaterialVersion).where(MaterialVersion.material_id == new_id).values(submitted_at=old))
+    d = (await client.post(f"/api/materials/{RATERADAR}/versions", json=body)).json()
+    assert [g["name"] for g in d["groups"]] == ["Compliance", "Senior compliance"]
+
+
+async def test_preview_matches_submit(client):
+    await as_user(client, SUBMITTER)
+    preview = {"channel": "meta", "product": "mortgage", "nationwide": True}
+    res = await client.post("/api/routing/preview", json=preview)
+    assert res.status_code == 200, res.text
+    assert res.json()["path"] == "full"
+    assert [(g["name"], g["reason"]) for g in res.json()["groups"]] == MORTGAGE_NATIONWIDE
+    assert (await client.post("/api/routing/preview", json=preview | {"states": ["XX"]})).status_code == 422
+    # Affiliates preview their own materials (they cannot read the Routing tab).
+    await as_user(client, AFFILIATE)
+    res = await client.post("/api/routing/preview", json={"materialId": LENDWISE_REVIEW, "channel": "meta", "product": "savings", "states": ["CA"]})
+    assert [g["name"] for g in res.json()["groups"]] == ["Compliance", "Senior compliance", "Legal"]  # the material's channel
+    res = await client.post("/api/routing/preview", json={"materialId": RATERADAR, "channel": "affiliate", "product": "savings"})
+    assert res.status_code == 404
+    await as_user(client, VIEWER)
+    assert (await client.post("/api/routing/preview", json=preview)).status_code == 403
 
 
 # Decisions
@@ -402,7 +513,7 @@ async def test_other_workspace_sees_nothing(client):
     assert (await client.post(f"/api/materials/{SUMMER}/comments", json={"body": "x"})).status_code == 404
     assert (await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta"))).status_code == 404
     # Its own submissions use its own groups: it has none, so it cannot route yet.
-    assert (await client.post("/api/materials", json=submission(nationwide=False, states=["CA"], groups=[]))).status_code == 400
+    assert (await client.post("/api/materials", json=submission(nationwide=False, states=["CA"]))).status_code == 400
 
 
 async def test_seed_reset_restores_materials(client):
