@@ -11,7 +11,8 @@
     "library": "Library",
     "metrics": "Metrics",
     "settings": "Settings",
-    "designSystem": "Design system"
+    "designSystem": "Design system",
+    "signOut": "Sign out"
   },
   "status": {
     "draft": "Draft",
@@ -38,5 +39,42 @@
     "aiSuggestion": "AI suggestion",
     "outdated": "Outdated",
     "fix": "Fix:"
+  },
+  "placeholder": {
+    "label": "Placeholder",
+    "planned": "Planned content"
+  },
+  "page": {
+    "signIn": "Sign in",
+    "home": "Home",
+    "materials": "Materials",
+    "newMaterial": "New submission",
+    "material": "Material {{id}}",
+    "newVersion": "Upload new version",
+    "issues": "Issues",
+    "issue": "Issue {{id}}",
+    "library": "Library",
+    "metrics": "Metrics",
+    "settings": "Settings"
+  },
+  "materialTabs": {
+    "content": "Content",
+    "versions": "Versions",
+    "history": "History",
+    "live": "Live status and issues"
+  },
+  "libraryTabs": {
+    "rules": "Rules",
+    "disclosures": "Disclosures",
+    "buildingBlocks": "Building blocks",
+    "rateSheet": "Rate sheet",
+    "regulatoryChanges": "Regulatory changes"
+  },
+  "settingsTabs": {
+    "users": "Users and roles",
+    "reviewerGroups": "Reviewer groups",
+    "routing": "Routing",
+    "integrations": "Integrations",
+    "workspace": "Workspace"
   }
 }

@@ -10,53 +10,335 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DesignSystemRouteImport } from './routes/design-system'
-import { Route as MaterialsMaterialIdRouteImport } from './routes/materials.$materialId'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as AppDesignSystemRouteImport } from './routes/_app.design-system'
+import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppLibraryRouteImport } from './routes/_app.library'
+import { Route as AppMetricsRouteImport } from './routes/_app.metrics'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppIssuesIndexRouteImport } from './routes/_app.issues.index'
+import { Route as AppIssuesIssueIdRouteImport } from './routes/_app.issues.$issueId'
+import { Route as AppLibraryIndexRouteImport } from './routes/_app.library.index'
+import { Route as AppLibraryBuildingBlocksRouteImport } from './routes/_app.library.building-blocks'
+import { Route as AppLibraryDisclosuresRouteImport } from './routes/_app.library.disclosures'
+import { Route as AppLibraryRateSheetRouteImport } from './routes/_app.library.rate-sheet'
+import { Route as AppLibraryRegulatoryChangesRouteImport } from './routes/_app.library.regulatory-changes'
+import { Route as AppLibraryRulesRouteImport } from './routes/_app.library.rules'
+import { Route as AppMaterialsIndexRouteImport } from './routes/_app.materials.index'
+import { Route as AppMaterialsNewRouteImport } from './routes/_app.materials.new'
+import { Route as AppSettingsIndexRouteImport } from './routes/_app.settings.index'
+import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app.settings.integrations'
+import { Route as AppSettingsReviewerGroupsRouteImport } from './routes/_app.settings.reviewer-groups'
+import { Route as AppSettingsRoutingRouteImport } from './routes/_app.settings.routing'
+import { Route as AppSettingsUsersRouteImport } from './routes/_app.settings.users'
+import { Route as AppSettingsWorkspaceRouteImport } from './routes/_app.settings.workspace'
+import { Route as AppMaterialsMaterialIdIndexRouteImport } from './routes/_app.materials.$materialId.index'
+import { Route as AppMaterialsMaterialIdNewVersionRouteImport } from './routes/_app.materials.$materialId.new-version'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DesignSystemRoute = DesignSystemRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDesignSystemRoute = AppDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const MaterialsMaterialIdRoute = MaterialsMaterialIdRouteImport.update({
-  id: '/materials/$materialId',
-  path: '/materials/$materialId',
-  getParentRoute: () => rootRouteImport,
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
 } as any)
+const AppLibraryRoute = AppLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMetricsRoute = AppMetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIssuesIndexRoute = AppIssuesIndexRouteImport.update({
+  id: '/issues/',
+  path: '/issues/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIssuesIssueIdRoute = AppIssuesIssueIdRouteImport.update({
+  id: '/issues/$issueId',
+  path: '/issues/$issueId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLibraryIndexRoute = AppLibraryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLibraryRoute,
+} as any)
+const AppLibraryBuildingBlocksRoute =
+  AppLibraryBuildingBlocksRouteImport.update({
+    id: '/building-blocks',
+    path: '/building-blocks',
+    getParentRoute: () => AppLibraryRoute,
+  } as any)
+const AppLibraryDisclosuresRoute = AppLibraryDisclosuresRouteImport.update({
+  id: '/disclosures',
+  path: '/disclosures',
+  getParentRoute: () => AppLibraryRoute,
+} as any)
+const AppLibraryRateSheetRoute = AppLibraryRateSheetRouteImport.update({
+  id: '/rate-sheet',
+  path: '/rate-sheet',
+  getParentRoute: () => AppLibraryRoute,
+} as any)
+const AppLibraryRegulatoryChangesRoute =
+  AppLibraryRegulatoryChangesRouteImport.update({
+    id: '/regulatory-changes',
+    path: '/regulatory-changes',
+    getParentRoute: () => AppLibraryRoute,
+  } as any)
+const AppLibraryRulesRoute = AppLibraryRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AppLibraryRoute,
+} as any)
+const AppMaterialsIndexRoute = AppMaterialsIndexRouteImport.update({
+  id: '/materials/',
+  path: '/materials/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMaterialsNewRoute = AppMaterialsNewRouteImport.update({
+  id: '/materials/new',
+  path: '/materials/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsIntegrationsRoute = AppSettingsIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsReviewerGroupsRoute =
+  AppSettingsReviewerGroupsRouteImport.update({
+    id: '/reviewer-groups',
+    path: '/reviewer-groups',
+    getParentRoute: () => AppSettingsRoute,
+  } as any)
+const AppSettingsRoutingRoute = AppSettingsRoutingRouteImport.update({
+  id: '/routing',
+  path: '/routing',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsUsersRoute = AppSettingsUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsWorkspaceRoute = AppSettingsWorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppMaterialsMaterialIdIndexRoute =
+  AppMaterialsMaterialIdIndexRouteImport.update({
+    id: '/materials/$materialId/',
+    path: '/materials/$materialId/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMaterialsMaterialIdNewVersionRoute =
+  AppMaterialsMaterialIdNewVersionRouteImport.update({
+    id: '/materials/$materialId/new-version',
+    path: '/materials/$materialId/new-version',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/design-system': typeof DesignSystemRoute
-  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/sign-in': typeof SignInRoute
+  '/design-system': typeof AppDesignSystemRoute
+  '/home': typeof AppHomeRoute
+  '/library': typeof AppLibraryRouteWithChildren
+  '/metrics': typeof AppMetricsRoute
+  '/settings': typeof AppSettingsRouteWithChildren
+  '/issues/$issueId': typeof AppIssuesIssueIdRoute
+  '/library/building-blocks': typeof AppLibraryBuildingBlocksRoute
+  '/library/disclosures': typeof AppLibraryDisclosuresRoute
+  '/library/rate-sheet': typeof AppLibraryRateSheetRoute
+  '/library/regulatory-changes': typeof AppLibraryRegulatoryChangesRoute
+  '/library/rules': typeof AppLibraryRulesRoute
+  '/materials/new': typeof AppMaterialsNewRoute
+  '/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
+  '/settings/routing': typeof AppSettingsRoutingRoute
+  '/settings/users': typeof AppSettingsUsersRoute
+  '/settings/workspace': typeof AppSettingsWorkspaceRoute
+  '/issues/': typeof AppIssuesIndexRoute
+  '/library/': typeof AppLibraryIndexRoute
+  '/materials/': typeof AppMaterialsIndexRoute
+  '/settings/': typeof AppSettingsIndexRoute
+  '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/design-system': typeof DesignSystemRoute
-  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/sign-in': typeof SignInRoute
+  '/design-system': typeof AppDesignSystemRoute
+  '/home': typeof AppHomeRoute
+  '/metrics': typeof AppMetricsRoute
+  '/issues/$issueId': typeof AppIssuesIssueIdRoute
+  '/library/building-blocks': typeof AppLibraryBuildingBlocksRoute
+  '/library/disclosures': typeof AppLibraryDisclosuresRoute
+  '/library/rate-sheet': typeof AppLibraryRateSheetRoute
+  '/library/regulatory-changes': typeof AppLibraryRegulatoryChangesRoute
+  '/library/rules': typeof AppLibraryRulesRoute
+  '/materials/new': typeof AppMaterialsNewRoute
+  '/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
+  '/settings/routing': typeof AppSettingsRoutingRoute
+  '/settings/users': typeof AppSettingsUsersRoute
+  '/settings/workspace': typeof AppSettingsWorkspaceRoute
+  '/issues': typeof AppIssuesIndexRoute
+  '/library': typeof AppLibraryIndexRoute
+  '/materials': typeof AppMaterialsIndexRoute
+  '/settings': typeof AppSettingsIndexRoute
+  '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/materials/$materialId': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/design-system': typeof DesignSystemRoute
-  '/materials/$materialId': typeof MaterialsMaterialIdRoute
+  '/_app': typeof AppRouteWithChildren
+  '/sign-in': typeof SignInRoute
+  '/_app/design-system': typeof AppDesignSystemRoute
+  '/_app/home': typeof AppHomeRoute
+  '/_app/library': typeof AppLibraryRouteWithChildren
+  '/_app/metrics': typeof AppMetricsRoute
+  '/_app/settings': typeof AppSettingsRouteWithChildren
+  '/_app/issues/$issueId': typeof AppIssuesIssueIdRoute
+  '/_app/library/building-blocks': typeof AppLibraryBuildingBlocksRoute
+  '/_app/library/disclosures': typeof AppLibraryDisclosuresRoute
+  '/_app/library/rate-sheet': typeof AppLibraryRateSheetRoute
+  '/_app/library/regulatory-changes': typeof AppLibraryRegulatoryChangesRoute
+  '/_app/library/rules': typeof AppLibraryRulesRoute
+  '/_app/materials/new': typeof AppMaterialsNewRoute
+  '/_app/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/_app/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
+  '/_app/settings/routing': typeof AppSettingsRoutingRoute
+  '/_app/settings/users': typeof AppSettingsUsersRoute
+  '/_app/settings/workspace': typeof AppSettingsWorkspaceRoute
+  '/_app/issues/': typeof AppIssuesIndexRoute
+  '/_app/library/': typeof AppLibraryIndexRoute
+  '/_app/materials/': typeof AppMaterialsIndexRoute
+  '/_app/settings/': typeof AppSettingsIndexRoute
+  '/_app/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/_app/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/design-system' | '/materials/$materialId'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/design-system'
+    | '/home'
+    | '/library'
+    | '/metrics'
+    | '/settings'
+    | '/issues/$issueId'
+    | '/library/building-blocks'
+    | '/library/disclosures'
+    | '/library/rate-sheet'
+    | '/library/regulatory-changes'
+    | '/library/rules'
+    | '/materials/new'
+    | '/settings/integrations'
+    | '/settings/reviewer-groups'
+    | '/settings/routing'
+    | '/settings/users'
+    | '/settings/workspace'
+    | '/issues/'
+    | '/library/'
+    | '/materials/'
+    | '/settings/'
+    | '/materials/$materialId/new-version'
+    | '/materials/$materialId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/design-system' | '/materials/$materialId'
-  id: '__root__' | '/' | '/design-system' | '/materials/$materialId'
+  to:
+    | '/'
+    | '/sign-in'
+    | '/design-system'
+    | '/home'
+    | '/metrics'
+    | '/issues/$issueId'
+    | '/library/building-blocks'
+    | '/library/disclosures'
+    | '/library/rate-sheet'
+    | '/library/regulatory-changes'
+    | '/library/rules'
+    | '/materials/new'
+    | '/settings/integrations'
+    | '/settings/reviewer-groups'
+    | '/settings/routing'
+    | '/settings/users'
+    | '/settings/workspace'
+    | '/issues'
+    | '/library'
+    | '/materials'
+    | '/settings'
+    | '/materials/$materialId/new-version'
+    | '/materials/$materialId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/sign-in'
+    | '/_app/design-system'
+    | '/_app/home'
+    | '/_app/library'
+    | '/_app/metrics'
+    | '/_app/settings'
+    | '/_app/issues/$issueId'
+    | '/_app/library/building-blocks'
+    | '/_app/library/disclosures'
+    | '/_app/library/rate-sheet'
+    | '/_app/library/regulatory-changes'
+    | '/_app/library/rules'
+    | '/_app/materials/new'
+    | '/_app/settings/integrations'
+    | '/_app/settings/reviewer-groups'
+    | '/_app/settings/routing'
+    | '/_app/settings/users'
+    | '/_app/settings/workspace'
+    | '/_app/issues/'
+    | '/_app/library/'
+    | '/_app/materials/'
+    | '/_app/settings/'
+    | '/_app/materials/$materialId/new-version'
+    | '/_app/materials/$materialId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DesignSystemRoute: typeof DesignSystemRoute
-  MaterialsMaterialIdRoute: typeof MaterialsMaterialIdRoute
+  AppRoute: typeof AppRouteWithChildren
+  SignInRoute: typeof SignInRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,27 +350,262 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/design-system': {
-      id: '/design-system'
-      path: '/design-system'
-      fullPath: '/design-system'
-      preLoaderRoute: typeof DesignSystemRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/materials/$materialId': {
-      id: '/materials/$materialId'
-      path: '/materials/$materialId'
-      fullPath: '/materials/$materialId'
-      preLoaderRoute: typeof MaterialsMaterialIdRouteImport
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/design-system': {
+      id: '/_app/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof AppDesignSystemRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/library': {
+      id: '/_app/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AppLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/metrics': {
+      id: '/_app/metrics'
+      path: '/metrics'
+      fullPath: '/metrics'
+      preLoaderRoute: typeof AppMetricsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/issues/': {
+      id: '/_app/issues/'
+      path: '/issues'
+      fullPath: '/issues/'
+      preLoaderRoute: typeof AppIssuesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/issues/$issueId': {
+      id: '/_app/issues/$issueId'
+      path: '/issues/$issueId'
+      fullPath: '/issues/$issueId'
+      preLoaderRoute: typeof AppIssuesIssueIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/library/': {
+      id: '/_app/library/'
+      path: '/'
+      fullPath: '/library/'
+      preLoaderRoute: typeof AppLibraryIndexRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/building-blocks': {
+      id: '/_app/library/building-blocks'
+      path: '/building-blocks'
+      fullPath: '/library/building-blocks'
+      preLoaderRoute: typeof AppLibraryBuildingBlocksRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/disclosures': {
+      id: '/_app/library/disclosures'
+      path: '/disclosures'
+      fullPath: '/library/disclosures'
+      preLoaderRoute: typeof AppLibraryDisclosuresRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/rate-sheet': {
+      id: '/_app/library/rate-sheet'
+      path: '/rate-sheet'
+      fullPath: '/library/rate-sheet'
+      preLoaderRoute: typeof AppLibraryRateSheetRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/regulatory-changes': {
+      id: '/_app/library/regulatory-changes'
+      path: '/regulatory-changes'
+      fullPath: '/library/regulatory-changes'
+      preLoaderRoute: typeof AppLibraryRegulatoryChangesRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/rules': {
+      id: '/_app/library/rules'
+      path: '/rules'
+      fullPath: '/library/rules'
+      preLoaderRoute: typeof AppLibraryRulesRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/materials/': {
+      id: '/_app/materials/'
+      path: '/materials'
+      fullPath: '/materials/'
+      preLoaderRoute: typeof AppMaterialsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/materials/new': {
+      id: '/_app/materials/new'
+      path: '/materials/new'
+      fullPath: '/materials/new'
+      preLoaderRoute: typeof AppMaterialsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AppSettingsIndexRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/integrations': {
+      id: '/_app/settings/integrations'
+      path: '/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AppSettingsIntegrationsRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/reviewer-groups': {
+      id: '/_app/settings/reviewer-groups'
+      path: '/reviewer-groups'
+      fullPath: '/settings/reviewer-groups'
+      preLoaderRoute: typeof AppSettingsReviewerGroupsRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/routing': {
+      id: '/_app/settings/routing'
+      path: '/routing'
+      fullPath: '/settings/routing'
+      preLoaderRoute: typeof AppSettingsRoutingRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/users': {
+      id: '/_app/settings/users'
+      path: '/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AppSettingsUsersRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/workspace': {
+      id: '/_app/settings/workspace'
+      path: '/workspace'
+      fullPath: '/settings/workspace'
+      preLoaderRoute: typeof AppSettingsWorkspaceRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/materials/$materialId/': {
+      id: '/_app/materials/$materialId/'
+      path: '/materials/$materialId'
+      fullPath: '/materials/$materialId/'
+      preLoaderRoute: typeof AppMaterialsMaterialIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/materials/$materialId/new-version': {
+      id: '/_app/materials/$materialId/new-version'
+      path: '/materials/$materialId/new-version'
+      fullPath: '/materials/$materialId/new-version'
+      preLoaderRoute: typeof AppMaterialsMaterialIdNewVersionRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppLibraryRouteChildren {
+  AppLibraryBuildingBlocksRoute: typeof AppLibraryBuildingBlocksRoute
+  AppLibraryDisclosuresRoute: typeof AppLibraryDisclosuresRoute
+  AppLibraryRateSheetRoute: typeof AppLibraryRateSheetRoute
+  AppLibraryRegulatoryChangesRoute: typeof AppLibraryRegulatoryChangesRoute
+  AppLibraryRulesRoute: typeof AppLibraryRulesRoute
+  AppLibraryIndexRoute: typeof AppLibraryIndexRoute
+}
+
+const AppLibraryRouteChildren: AppLibraryRouteChildren = {
+  AppLibraryBuildingBlocksRoute: AppLibraryBuildingBlocksRoute,
+  AppLibraryDisclosuresRoute: AppLibraryDisclosuresRoute,
+  AppLibraryRateSheetRoute: AppLibraryRateSheetRoute,
+  AppLibraryRegulatoryChangesRoute: AppLibraryRegulatoryChangesRoute,
+  AppLibraryRulesRoute: AppLibraryRulesRoute,
+  AppLibraryIndexRoute: AppLibraryIndexRoute,
+}
+
+const AppLibraryRouteWithChildren = AppLibraryRoute._addFileChildren(
+  AppLibraryRouteChildren,
+)
+
+interface AppSettingsRouteChildren {
+  AppSettingsIntegrationsRoute: typeof AppSettingsIntegrationsRoute
+  AppSettingsReviewerGroupsRoute: typeof AppSettingsReviewerGroupsRoute
+  AppSettingsRoutingRoute: typeof AppSettingsRoutingRoute
+  AppSettingsUsersRoute: typeof AppSettingsUsersRoute
+  AppSettingsWorkspaceRoute: typeof AppSettingsWorkspaceRoute
+  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
+}
+
+const AppSettingsRouteChildren: AppSettingsRouteChildren = {
+  AppSettingsIntegrationsRoute: AppSettingsIntegrationsRoute,
+  AppSettingsReviewerGroupsRoute: AppSettingsReviewerGroupsRoute,
+  AppSettingsRoutingRoute: AppSettingsRoutingRoute,
+  AppSettingsUsersRoute: AppSettingsUsersRoute,
+  AppSettingsWorkspaceRoute: AppSettingsWorkspaceRoute,
+  AppSettingsIndexRoute: AppSettingsIndexRoute,
+}
+
+const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
+  AppSettingsRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppDesignSystemRoute: typeof AppDesignSystemRoute
+  AppHomeRoute: typeof AppHomeRoute
+  AppLibraryRoute: typeof AppLibraryRouteWithChildren
+  AppMetricsRoute: typeof AppMetricsRoute
+  AppSettingsRoute: typeof AppSettingsRouteWithChildren
+  AppIssuesIssueIdRoute: typeof AppIssuesIssueIdRoute
+  AppMaterialsNewRoute: typeof AppMaterialsNewRoute
+  AppIssuesIndexRoute: typeof AppIssuesIndexRoute
+  AppMaterialsIndexRoute: typeof AppMaterialsIndexRoute
+  AppMaterialsMaterialIdNewVersionRoute: typeof AppMaterialsMaterialIdNewVersionRoute
+  AppMaterialsMaterialIdIndexRoute: typeof AppMaterialsMaterialIdIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDesignSystemRoute: AppDesignSystemRoute,
+  AppHomeRoute: AppHomeRoute,
+  AppLibraryRoute: AppLibraryRouteWithChildren,
+  AppMetricsRoute: AppMetricsRoute,
+  AppSettingsRoute: AppSettingsRouteWithChildren,
+  AppIssuesIssueIdRoute: AppIssuesIssueIdRoute,
+  AppMaterialsNewRoute: AppMaterialsNewRoute,
+  AppIssuesIndexRoute: AppIssuesIndexRoute,
+  AppMaterialsIndexRoute: AppMaterialsIndexRoute,
+  AppMaterialsMaterialIdNewVersionRoute: AppMaterialsMaterialIdNewVersionRoute,
+  AppMaterialsMaterialIdIndexRoute: AppMaterialsMaterialIdIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DesignSystemRoute: DesignSystemRoute,
-  MaterialsMaterialIdRoute: MaterialsMaterialIdRoute,
+  AppRoute: AppRouteWithChildren,
+  SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

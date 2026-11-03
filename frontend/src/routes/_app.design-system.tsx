@@ -42,7 +42,7 @@ import { FlaggedText } from '@/components/review/flagged-text'
 
 // Design review page: every Ledger token and component in one place.
 // Check any style change here before it ships to real screens.
-export const Route = createFileRoute('/design-system')({
+export const Route = createFileRoute('/_app/design-system')({
   component: DesignSystemPage,
 })
 
