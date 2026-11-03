@@ -19,6 +19,8 @@ from tests.test_library import CSV, WAITING, disclosure_body, rule, rule_body
 from tests.test_materials import DEBT, SUMMER, VIEWER, submission
 
 SEEDED_FLAG = "01a1b2c0-5e00-7f07-9a11-6c0d2f1e0a01"
+CARDCOMPASS = "01a0cd1b-6600-73a9-8f0b-78172f5af13f"  # approved, states 17.49% to 28.49% APR
+HELOC_CAROUSEL = "01a0bf33-d400-758c-8181-f7618b0121bf"  # approved, states 7.74% APR
 # The debt payoff ad (DEBT) states 8.99% to 24.99% APR and has "Federally insured by NCUA." in its content.
 LOAN_FIELDS = [{"label": "Headline", "text": "Personal loans from 8.99% APR"}, {"label": "Footer", "text": "Federally insured by NCUA."}]
 
@@ -160,7 +162,9 @@ async def test_rate_sheet_flags_rates_it_no_longer_covers(client):
     await as_user(client, MANAGER)
     savings = await approved("Savings ad", product="savings", fields=[{"label": "Body", "text": "Earn 4.25% APY."}])
     body = {"effectiveDate": "2026-12-01", "file": "rates.csv", "csv": CSV}  # personal loans from 8.49%: still covers 8.99%
-    assert await impact(client, "rate-sheets", body) == set()
+    # The test sheet has no credit card or HELOC rows, so the approved seeded card and HELOC ads that state rates lose
+    # their cover; the personal loan ads keep it.
+    assert await impact(client, "rate-sheets", body) == {CARDCOMPASS, HELOC_CAROUSEL}
     # Personal loans now start at 9.49%, so "8.99%" in the ads is no longer covered. Savings stays.
     higher = CSV.replace("apr,8.49,24.99", "apr,9.49,24.99")
     res = await client.post("/api/library/rate-sheets/impact", json={**body, "csv": higher})

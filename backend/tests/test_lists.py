@@ -19,6 +19,7 @@ from app.models.materials import Channel, Issue, IssueSource, IssueStatus, Mater
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD
 from tests.helpers import AFFILIATE, as_user
+from tests.test_export import seeded
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 OTHER_AFFILIATE = "leo@rateradar.example"  # RateRadar
@@ -406,13 +407,13 @@ async def test_export_uses_list_filters(client):
         return {r["materialId"] for r in rows}, json.loads(z.read("manifest.json"))["filters"]
 
     everything, _ = await exported()
-    assert everything == {SUMMER, DEBT}
+    assert everything == seeded()
     got, filters = await exported(listFilters={"q": "summer", "sort": "title", "limit": 1})
     assert got == {SUMMER}
     assert filters["listFilters"] == {"q": "summer"}  # only what is set, and no paging
     # The same values as the list's URL: comma-separated strings, or lists
-    assert (await exported(listFilters={"status": "live,in_review"}))[0] == {SUMMER, DEBT}
-    assert (await exported(listFilters={"status": ["draft"]}))[0] == set()
-    assert (await exported(listFilters={"group": "Legal", "owner": "Priya Shah"}))[0] <= {SUMMER}
+    assert (await exported(listFilters={"status": "live,in_review"}))[0] == seeded(status=("live", "in_review"))
+    assert (await exported(listFilters={"status": ["draft"]}))[0] == seeded(status="draft")
+    assert (await exported(listFilters={"group": "Legal", "owner": "Priya Shah"}))[0] <= seeded(owner="Priya Shah")
     res = await client.post("/api/exports/regulator", json=WIDE | {"listFilters": {"status": "bogus"}})
     assert res.status_code == 422

@@ -8,7 +8,9 @@ import json
 import uuid
 import zipfile
 from datetime import UTC, datetime
+from pathlib import Path
 
+import app
 from app.config import settings
 from app.db import SessionLocal
 from app.models import Role, User, Workspace
@@ -22,6 +24,12 @@ DEBT = "01a0d660-7200-7f2e-846a-4b2b8dd2f651"  # approved at version 3 (CP-2026-
 
 TABLES = ["materials", "versions", "decisions", "group-reviews", "findings", "comments", "issues", "audit-log", "library-audit-log"]
 WIDE = {"dateFrom": "2025-01-01", "dateTo": "2026-12-31"}
+
+
+def seeded(**match) -> set[str]:
+    """The seeded demo materials with these list values (materials.json). Every one has a version in 2026."""
+    rows = json.loads((Path(app.__file__).parent / "seed" / "data" / "materials.json").read_text())["materials"]
+    return {m["id"] for m in rows if all(m[k] in (v if isinstance(v, tuple) else (v,)) for k, v in match.items())}
 
 
 def today() -> str:
@@ -109,7 +117,7 @@ def ids(z: zipfile.ZipFile) -> set[str]:
 
 async def test_filters(client):
     await as_user(client, VIEWER)
-    assert ids(await export(client)) == {SUMMER, DEBT}
+    assert ids(await export(client)) == seeded()
     # The range is on the version submitted date: DEBT's versions are May to July 2026.
     assert ids(await export(client, dateFrom="2026-06-11", dateTo="2026-06-11")) == {DEBT}
     assert ids(await export(client, dateFrom="2025-01-01", dateTo="2025-02-01")) == set()
@@ -119,7 +127,7 @@ async def test_filters(client):
     assert DEBT in ids(await export(client, channel=channel))
     assert DEBT in ids(await export(client, product=product))
     assert DEBT in ids(await export(client, status=status))
-    assert ids(await export(client, status="retired")) == set()
+    assert ids(await export(client, status="retired")) == seeded(status="retired")
     assert ids(await export(client, materialIds=[str(uuid.uuid4())])) == set()
     # Versions outside the range stay in the export, marked
     versions = rows(await export(client, dateFrom="2026-06-11", dateTo="2026-06-11"), "versions")

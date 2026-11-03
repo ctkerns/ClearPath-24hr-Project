@@ -532,6 +532,3357 @@
       ],
       "live": [],
       "issues": []
+    },
+    {
+      "id": "01a11743-c600-7e07-a845-e3bc969278a6",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-11-02T07:40:00Z",
+      "submittedBy": "Marcus Lee",
+      "path": "full",
+      "details": {
+        "targetStates": "MI, OH, PA",
+        "launchDate": "2026-11-16",
+        "endDate": "2026-12-31",
+        "destinationUrl": "clearpathcu.example/heloc/holiday",
+        "targeting": "Members who own a home, Mailchimp segment \"Homeowners, no HELOC\""
+      },
+      "fields": [
+        {
+          "label": "Subject line",
+          "segments": [
+            "Make room for the holidays with a ClearPath HELOC"
+          ]
+        },
+        {
+          "label": "Preview text",
+          "segments": [
+            "Variable rates from 7.49% to 9.99% APR. No closing costs on lines up to $250,000."
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Hi {{first_name}},\n\nA kitchen ready for hosting, a guest room for the family, or a new roof before the snow: a ClearPath home equity line of credit lets you borrow against your home's equity when you need it, and pay interest only on what you use.\n\n- Variable rates from 7.49% to 9.99% APR\n- No closing costs on lines up to $250,000\n- 10-year draw period, then a 20-year repayment period\n- Annual fee of $50\n\nThe APR is variable and can change after the line is opened. Lines up to 80% combined loan-to-value. Property insurance is required. Ask a tax advisor about deducting interest.\n\nSee your options: clearpathcu.example/heloc/holiday\n\nClearPath Credit Union NMLS #401822. Federally insured by NCUA.\n\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nYou get this email because you are a ClearPath member. Unsubscribe: {{unsubscribe}}"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "EHL-01",
+          "status": "open",
+          "text": "",
+          "explanation": "Disclosure D-3 \"Equal Housing Opportunity\" is missing. Ads for loans secured by a home must show the Equal Housing Opportunity logo or the statement \"Equal Housing Opportunity\" or \"Equal Housing Lender\".",
+          "suggestion": "Add disclosure D-3 v1: \"Equal Housing Opportunity.\""
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "CANSPAM-01",
+          "title": "Marketing email has an unsubscribe link and a postal address",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "EHL-01",
+          "title": "Mortgage ads show the Equal Housing Opportunity statement",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f1"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "SAFE-01",
+          "title": "Mortgage ads show the NMLS ID",
+          "layer": "code",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "waiting",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-11-02T07:40:00Z",
+          "submittedBy": "Marcus Lee",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-11-02T07:40:00Z",
+          "actor": "Marcus Lee",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-11-02T07:40:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-11-02T07:40:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: EHL-01."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a11be6-4c00-7213-b2e4-69357fe7cd73",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-10-28T10:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "full",
+      "details": {
+        "targetStates": "AZ, CO, TX",
+        "launchDate": "2026-11-09",
+        "endDate": "2027-01-31",
+        "destinationUrl": "clearpathcu.example/auto/refinance",
+        "platformId": "718215570",
+        "targeting": "Search keywords: auto refinance, refinance car loan. Ages 18 and older."
+      },
+      "fields": [
+        {
+          "label": "Headline 1",
+          "segments": [
+            "Refinance your auto loan"
+          ]
+        },
+        {
+          "label": "Headline 2",
+          "segments": [
+            "Auto refinance from 5.74% APR"
+          ]
+        },
+        {
+          "label": "Headline 3",
+          "segments": [
+            "Lower your monthly payment"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "Refinance a new or used vehicle with ClearPath. Rates from 5.74% to 12.99% APR. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass",
+          "note": "No claim about approval."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "waiting",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-11-01T16:05:00Z",
+          "version": 1,
+          "body": "The used vehicle rates on the rate sheet are for model year 2019 or newer, so 12.99% does not cover refinancing an older car. Can you say \"2019 or newer\" here, or link to the eligibility page? The rest is fine.",
+          "anchor": {
+            "field": "Description",
+            "text": "Refinance a new or used vehicle"
+          }
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-28T10:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-28T10:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-28T10:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-10-28T10:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-10-28T10:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-11-01T16:05:00Z",
+          "actor": "Jordan Kim",
+          "type": "comment",
+          "text": "Commented on version 1."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a1095c-3400-7fb8-ae18-2b04f5766c57",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-10-29T13:22:00Z",
+      "submittedBy": "Dana Ortiz",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-09",
+        "destinationUrl": "clearpathcu.example/mortgage/first-time-buyers"
+      },
+      "fields": [
+        {
+          "label": "Page title",
+          "segments": [
+            "Buying your first home: a step-by-step guide"
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Buying your first home is a big step. This guide walks you through it, from your first budget to the closing table.\n\n1. Know your budget. Add up your monthly income and your debts. Lenders look at your debt-to-income ratio: the share of your monthly income that goes to debt payments.\n\n2. Get prequalified. Prequalification with ClearPath takes about 10 minutes and uses a soft credit inquiry, so it does not affect your credit score. You get an estimate of how much you can borrow.\n\n3. Save for the down payment and closing costs. Some loan programs accept a smaller down payment, but a smaller down payment usually means private mortgage insurance (PMI) and a higher monthly cost.\n\n4. Compare loan types. A fixed-rate mortgage keeps the same rate for the whole term. An adjustable-rate mortgage (ARM) starts with a fixed rate that can change later. Our 30-year fixed rate is from 6.375% APR for well-qualified borrowers.\n\n5. Make an offer and close. After the seller accepts your offer, we order the appraisal, finish underwriting and schedule your closing.\n\nTalk to a ClearPath mortgage loan officer: clearpathcu.example/mortgage\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "EHL-01",
+          "title": "Mortgage ads show the Equal Housing Opportunity statement",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "SAFE-01",
+          "title": "Mortgage ads show the NMLS ID",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass",
+          "note": "Prequalification is described as an estimate, not an approval."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-10-31T13:22:00Z",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Mortgage",
+          "state": "waiting",
+          "reason": "Home lending"
+        },
+        {
+          "name": "Legal",
+          "state": "waiting",
+          "reason": "Loans sold nationwide"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-10-31T13:22:00Z",
+          "version": 1,
+          "decision": "approve",
+          "body": "Compliance is fine: the rate is inside the rate sheet and the soft inquiry claim matches the prequalification flow. Mortgage, please check the ARM and PMI wording."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-29T13:22:00Z",
+          "submittedBy": "Dana Ortiz",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-29T13:22:00Z",
+          "actor": "Dana Ortiz",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-29T13:22:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Legal (rule \"Loans sold nationwide\"), Mortgage (rule \"Home lending\")."
+        },
+        {
+          "at": "2026-10-29T13:22:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-10-29T13:23:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-31T13:22:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved for Compliance on version 1."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a10dfe-ba00-70a4-92a2-32f7091afc7c",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-11-01T20:48:00Z",
+      "submittedBy": "Marcus Lee",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-10",
+        "destinationUrl": "https://lendwise.example/reviews/clearpath-cash-back-visa"
+      },
+      "fields": [
+        {
+          "label": "Page text",
+          "segments": [
+            "ClearPath Cash Back Visa review (2026)\n\nOur take: a simple card with no annual fee, for members who want flat cash back without tracking categories.\n\nRewards: earn 2% cash back on every purchase. ",
+            {
+              "text": "Cash back paid quarterly. Restrictions apply.",
+              "finding": "f1"
+            },
+            "\n\nRates and fees: 0% intro APR for 12 months on purchases and balance transfers, then a variable APR of 17.24% to 28.24%. Balance transfer fee: 3% of each transfer, minimum $5.\n\nWho it is for: members who pay their balance most months and want one card for everyday spending.\n\nThe card is issued by ClearPath Credit Union. Federally insured by NCUA. LendWise may get a commission when you apply through our links."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.16",
+          "status": "open",
+          "text": "Cash back paid quarterly. Restrictions apply.",
+          "explanation": "is an old wording of disclosure D-4 (version 1). Use the current version 2.",
+          "suggestion": "Replace it with disclosure D-4 v2: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\""
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.16",
+          "title": "Open-end credit ads state the terms with any trigger term",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f1"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "waiting",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Senior compliance",
+          "state": "waiting",
+          "reason": "Affiliate content"
+        }
+      ],
+      "comments": [],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-11-01T20:48:00Z",
+          "submittedBy": "Marcus Lee",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-11-01T20:48:00Z",
+          "actor": "Marcus Lee",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-11-01T20:48:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Senior compliance (rule \"Affiliate content\")."
+        },
+        {
+          "at": "2026-11-01T20:48:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.16."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a0fb74-a200-7fa7-ba9e-887219d4a6c8",
+      "version": 2,
+      "versionCount": 2,
+      "submittedAt": "2026-10-28T09:30:00Z",
+      "submittedBy": "Priya Shah",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-10",
+        "endDate": "2026-12-31",
+        "destinationUrl": "clearpathcu.example/cards/balance-transfer",
+        "targeting": "Mailchimp segment \"Members without a ClearPath card\""
+      },
+      "fields": [
+        {
+          "label": "Subject line",
+          "segments": [
+            "Pay 0% intro APR on balance transfers for 12 months"
+          ]
+        },
+        {
+          "label": "Preview text",
+          "segments": [
+            "Move your balance to ClearPath and save on interest."
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Hi {{first_name}},\n\nCarrying a balance at another bank? Move it to the ClearPath Visa and pay 0% intro APR for 12 months on balance transfers made in the first 60 days. After that, the variable APR is 17.49% to 28.49%, based on your creditworthiness.\n\nThere is no ",
+            {
+              "text": "annual fee",
+              "finding": "f4"
+            },
+            ". Plus, earn 1.5% cash back on every purchase.\n\nTransfer your balance today: clearpathcu.example/cards/balance-transfer\n\nFederally insured by NCUA.\n\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f4",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.16",
+          "status": "open",
+          "text": "annual fee",
+          "explanation": "is a trigger term. The content must also include disclosure D-4 \"Cash back card rewards terms\". If an ad for a credit card or a home equity line of credit states a finance charge, a periodic rate, or a membership fee, it must also state any minimum or fixed finance charge, the periodic rate as an APR, and any membership or participation fee.",
+          "suggestion": "Add disclosure D-4 v2: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\""
+        },
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "CANSPAM-01",
+          "status": "outdated",
+          "text": "",
+          "explanation": "The content must contain one of these: \"{{unsubscribe}}\", \"PO Box\", \"Street\". Each commercial email must include a clear way to opt out of future email and a valid physical postal address. The subject line must not mislead about the content.",
+          "version": 1
+        },
+        {
+          "id": "f2",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "POL-04",
+          "status": "outdated",
+          "text": "risk-free",
+          "explanation": "is a banned phrase. These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+          "suggestion": "Remove it, or say it in a way that does not promise a result.",
+          "version": 1
+        },
+        {
+          "id": "f3",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.16",
+          "status": "outdated",
+          "text": "cash back",
+          "explanation": "is a trigger term. The content must also include disclosure D-4 \"Cash back card rewards terms\". If an ad for a credit card or a home equity line of credit states a finance charge, a periodic rate, or a membership fee, it must also state any minimum or fixed finance charge, the periodic rate as an APR, and any membership or participation fee.",
+          "suggestion": "Add disclosure D-4 v2: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\"",
+          "version": 1
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "CANSPAM-01",
+          "title": "Marketing email has an unsubscribe link and a postal address",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.16",
+          "title": "Open-end credit ads state the terms with any trigger term",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f4"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "changes",
+          "by": "Maya Ruiz",
+          "at": "2026-10-30T11:02:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-10-23T10:05:00Z",
+          "version": 1,
+          "decision": "request_changes",
+          "body": "Remove \"risk-free\" (banned phrase, POL-04), and add the unsubscribe link and our postal address (CAN-SPAM). The cash back line also needs disclosure D-4 v2."
+        },
+        {
+          "id": "c2",
+          "author": "Priya Shah",
+          "role": "Marketing",
+          "at": "2026-10-28T09:32:00Z",
+          "version": 2,
+          "body": "Version 2 removes \"risk-free\" and adds the footer. I left D-4 out because this is a balance transfer email, not a rewards email. Is that OK?"
+        },
+        {
+          "id": "c3",
+          "author": "Maya Ruiz",
+          "role": "Compliance",
+          "at": "2026-10-30T11:02:00Z",
+          "version": 2,
+          "decision": "request_changes",
+          "body": "The email states the annual fee and a cash back rate, so it needs disclosure D-4 v2 directly below the cash back line, or remove the cash back line. Also show the 3% balance transfer fee (minimum $5) next to the 0% offer."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-21T14:10:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Subject line",
+              "text": "Pay 0% intro APR on balance transfers"
+            },
+            {
+              "label": "Preview text",
+              "text": "Move your balance risk-free and save on interest."
+            },
+            {
+              "label": "Body",
+              "text": "Hi {{first_name}},\n\nCarrying a balance at another bank? Move it to the ClearPath Visa and pay 0% intro APR for 12 months on balance transfers. After that, the variable APR is 17.49% to 28.49%.\n\nPlus, earn 1.5% cash back on every purchase.\n\nTransfer your balance today: clearpathcu.example/cards/balance-transfer\n\nFederally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-10-28T09:30:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Maya Ruiz (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-21T14:10:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-21T14:10:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-10-21T14:10:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 3 problems: POL-04, REGZ-1026.16, CANSPAM-01."
+        },
+        {
+          "at": "2026-10-21T14:11:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-23T10:05:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 1: Remove \"risk-free\" (banned phrase, POL-04), and add the unsubscribe link and our postal address (CAN-SPAM). The cash back line also needs disclosure D-4 v2."
+        },
+        {
+          "at": "2026-10-28T09:30:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 2 by manual upload."
+        },
+        {
+          "at": "2026-10-28T09:30:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-10-28T09:30:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.16. Marked 3 findings outdated."
+        },
+        {
+          "at": "2026-10-28T09:31:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-28T09:32:00Z",
+          "actor": "Priya Shah",
+          "type": "comment",
+          "text": "Commented on version 2."
+        },
+        {
+          "at": "2026-10-30T11:02:00Z",
+          "actor": "Maya Ruiz",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 2: The email states the annual fee and a cash back rate, so it needs disclosure D-4 v2 directly below the cash back line, or remove the cash back line. Also show the 3% balance transfer fee (minimum $5) next to the 0% offer."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a0f22f-9600-714c-af3e-f455a8f2279e",
+      "version": 2,
+      "versionCount": 2,
+      "submittedAt": "2026-10-27T09:40:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-09",
+        "endDate": "2026-12-31",
+        "destinationUrl": "clearpathcu.example/loans/personal",
+        "platformId": "23851298760012453",
+        "targeting": "Instagram stories. Ages 25 to 54. Interests: personal finance."
+      },
+      "fields": [
+        {
+          "label": "Primary text",
+          "segments": [
+            "“I rolled three credit cards into one payment and finally have a plan.” Jasmine, ClearPath member since 2021"
+          ]
+        },
+        {
+          "label": "Headline",
+          "segments": [
+            "Personal loans from 8.99% APR"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "APR = Annual Percentage Rate. Rates from 8.99% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87."
+          ]
+        },
+        {
+          "label": "Call to action",
+          "segments": [
+            "Learn more"
+          ]
+        },
+        {
+          "label": "Image",
+          "kind": "image",
+          "segments": [
+            "One payment. One plan. ClearPath Credit Union. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.24",
+          "status": "outdated",
+          "text": "% APR",
+          "explanation": "is a trigger term. The content must also include disclosure D-7 \"Personal loan APR range and term\". If an ad for closed-end credit states a trigger term (the amount or percentage of a down payment, the number of payments or period of repayment, the amount of any payment, or the amount of any finance charge), it must also state the down payment, the terms of repayment, and the annual percentage rate. If the rate can increase after the loan is made, the ad must say so.",
+          "suggestion": "Add disclosure D-7 v3: \"APR = Annual Percentage Rate. Rates from 8.99% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87.\"",
+          "version": 1
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.24",
+          "title": "Trigger terms require APR disclosure",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "CA-FIN-22161",
+          "title": "California: no false or misleading statements in loan ads",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass",
+          "note": "Age targeting 25 to 54 is broad and has a business reason (debt consolidation)."
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-10-28T10:15:00Z",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Legal",
+          "state": "changes",
+          "by": "Omar Haddad",
+          "at": "2026-10-29T15:30:00Z",
+          "reason": "Loans sold nationwide"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-10-23T15:20:00Z",
+          "version": 1,
+          "decision": "request_changes",
+          "body": "The headline states an APR, which is a Reg Z trigger term. Add disclosure D-7 v3."
+        },
+        {
+          "id": "c2",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-10-28T10:15:00Z",
+          "version": 2,
+          "decision": "approve",
+          "body": "D-7 v3 is in the description now."
+        },
+        {
+          "id": "c3",
+          "author": "Omar Haddad",
+          "role": "Legal",
+          "at": "2026-10-29T15:30:00Z",
+          "version": 2,
+          "decision": "request_changes",
+          "body": "Before we run a member testimonial we need Jasmine's signed release on file, and the story must say whether she was paid. Add \"Real member. Not paid for this story. Individual results vary.\" under the quote.",
+          "anchor": {
+            "field": "Primary text",
+            "text": "Jasmine, ClearPath member since 2021"
+          }
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-22T11:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Primary text",
+              "text": "“I rolled three credit cards into one payment and finally have a plan.” Jasmine, ClearPath member since 2021"
+            },
+            {
+              "label": "Headline",
+              "text": "Personal loans from 8.99% APR"
+            },
+            {
+              "label": "Description",
+              "text": "One payment. One plan."
+            },
+            {
+              "label": "Call to action",
+              "text": "Learn more"
+            },
+            {
+              "label": "Image",
+              "text": "One payment. One plan. ClearPath Credit Union. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-10-27T09:40:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Omar Haddad (Legal)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-22T11:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-22T11:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Legal (rule \"Loans sold nationwide\")."
+        },
+        {
+          "at": "2026-10-22T11:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.24."
+        },
+        {
+          "at": "2026-10-22T11:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-23T15:20:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 1: The headline states an APR, which is a Reg Z trigger term. Add disclosure D-7 v3."
+        },
+        {
+          "at": "2026-10-27T09:40:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 2 by manual upload."
+        },
+        {
+          "at": "2026-10-27T09:40:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Legal (rule \"Loans sold nationwide\")."
+        },
+        {
+          "at": "2026-10-27T09:40:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-10-27T09:41:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-28T10:15:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved for Compliance on version 2."
+        },
+        {
+          "at": "2026-10-29T15:30:00Z",
+          "actor": "Omar Haddad",
+          "type": "decision",
+          "text": "Requested changes for Legal on version 2: Before we run a member testimonial we need Jasmine's signed release on file, and the story must say whether she was paid. Add \"Real member. Not paid for this story. Individual results vary.\" under the quote."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a12088-d200-75d7-8ddb-bd69ee56c7c9",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-11-02T08:15:00Z",
+      "submittedBy": "Dana Ortiz",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "destinationUrl": "clearpathcu.example/",
+        "platformId": "12"
+      },
+      "fields": [
+        {
+          "label": "Page title",
+          "segments": [
+            "Homepage banner: holiday certificate special"
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Grow your savings faster. Earn 4.40% APY on a 12-month share certificate with $1,000 to open. Open yours online in minutes.\n\nFederally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [],
+      "groups": [],
+      "comments": [],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-11-02T08:15:00Z",
+          "submittedBy": "Dana Ortiz",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-11-02T08:15:00Z",
+          "actor": "WordPress connector",
+          "type": "submitted",
+          "text": "Synced version 1 from WordPress as a draft, saved by Dana Ortiz. Not submitted for review yet."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a1252b-5800-7984-ae0e-64145a3d5342",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-10-30T14:02:00Z",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "destinationUrl": "clearpathcu.example/loans/personal?utm_campaign=agency-test",
+        "platformId": "23851234567890"
+      },
+      "fields": [
+        {
+          "label": "Primary text",
+          "segments": [
+            "Need cash fast? Loans approved in 5 minutes, no credit check needed."
+          ]
+        },
+        {
+          "label": "Headline",
+          "segments": [
+            "Loans approved in 5 minutes"
+          ]
+        },
+        {
+          "label": "Call to action",
+          "segments": [
+            "Apply now"
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [],
+      "groups": [],
+      "comments": [],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-30T14:02:00Z",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-30T14:02:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found ad 23851234567890 live on Meta. No material matches it, so monitoring created this material with source \"found live\" and version 1 from the live ad."
+        },
+        {
+          "at": "2026-10-30T14:05:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Paused the ad on Meta."
+        },
+        {
+          "at": "2026-10-30T14:05:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Unapproved ad found live and paused\" for Priya Shah."
+        },
+        {
+          "at": "2026-11-02T06:01:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Checked the live ad: still paused, no change."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Meta ads",
+          "externalId": "23851234567890",
+          "match": "platform_id",
+          "status": "unapproved",
+          "foundAt": "2026-10-30T14:02:00Z",
+          "checkedAt": "2026-11-02T06:01:00Z",
+          "paused": true,
+          "fields": [
+            {
+              "label": "Primary text",
+              "text": "Need cash fast? Loans approved in 5 minutes, no credit check needed."
+            },
+            {
+              "label": "Headline",
+              "text": "Loans approved in 5 minutes"
+            },
+            {
+              "label": "Call to action",
+              "text": "Apply now"
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a0e8ea-8a00-758c-87e6-0a28f7797431",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-10-22T16:30:00Z",
+      "submittedBy": "Marcus Lee",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-01",
+        "destinationUrl": "https://rateradar.example/cards/clearpath-credit-builder"
+      },
+      "fields": [
+        {
+          "label": "Page text",
+          "segments": [
+            "ClearPath Credit Builder Visa: ",
+            {
+              "text": "the easiest card to get",
+              "finding": "f7"
+            },
+            " in 2026\n\nBad credit? ",
+            {
+              "text": "No credit check",
+              "finding": "f2"
+            },
+            "! RateRadar readers get ",
+            {
+              "text": "guaranteed approval",
+              "finding": "f3"
+            },
+            " for the ClearPath Credit Builder Visa, so you can start building credit ",
+            {
+              "text": "risk-free",
+              "finding": "f4"
+            },
+            ".\n\n- No ",
+            {
+              "text": "annual fee",
+              "finding": "f6"
+            },
+            "\n- APR: ",
+            {
+              "text": "29.99%",
+              "finding": "f5"
+            },
+            " variable\n- Reports to all three credit bureaus every month\n\n",
+            {
+              "text": "Apply for our Credit Builder card",
+              "finding": "f8"
+            },
+            " in 2 minutes at rateradar.example/apply."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f7",
+          "source": "ai",
+          "severity": "high",
+          "ruleId": "UDAAP-03",
+          "status": "open",
+          "text": "the easiest card to get",
+          "explanation": "says that approval is easy for everyone. The Credit Builder card has a credit review, so approval is not certain.",
+          "suggestion": "Remove the claim, or say \"Built for members who are new to credit\"."
+        },
+        {
+          "id": "f2",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "POL-04",
+          "status": "open",
+          "text": "No credit check",
+          "explanation": "is a banned phrase. These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+          "suggestion": "Remove it, or say it in a way that does not promise a result."
+        },
+        {
+          "id": "f3",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "POL-04",
+          "status": "open",
+          "text": "guaranteed approval",
+          "explanation": "is a banned phrase. These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+          "suggestion": "Remove it, or say it in a way that does not promise a result."
+        },
+        {
+          "id": "f4",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "POL-04",
+          "status": "open",
+          "text": "risk-free",
+          "explanation": "is a banned phrase. These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+          "suggestion": "Remove it, or say it in a way that does not promise a result."
+        },
+        {
+          "id": "f6",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.16",
+          "status": "open",
+          "text": "annual fee",
+          "explanation": "is a trigger term. The content must also include disclosure D-4 \"Cash back card rewards terms\". If an ad for a credit card or a home equity line of credit states a finance charge, a periodic rate, or a membership fee, it must also state any minimum or fixed finance charge, the periodic rate as an APR, and any membership or participation fee.",
+          "suggestion": "Add disclosure D-4 v2: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\""
+        },
+        {
+          "id": "f5",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "RATE-01",
+          "status": "open",
+          "text": "29.99%",
+          "explanation": "is outside the APR range for credit cards on the current rate sheet (0%, 17.49% to 28.49%).",
+          "suggestion": "Use a rate from the current rate sheet: 0%, 17.49% to 28.49%."
+        },
+        {
+          "id": "f8",
+          "source": "ai",
+          "severity": "low",
+          "ruleId": "POL-07",
+          "status": "open",
+          "text": "Apply for our Credit Builder card",
+          "explanation": "\"our\" on an affiliate page suggests that RateRadar is the lender. The card is issued by ClearPath Credit Union.",
+          "suggestion": "Say \"Apply for the ClearPath Credit Builder Visa\"."
+        },
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "NCUA-740",
+          "status": "open",
+          "text": "",
+          "explanation": "Disclosure D-1 \"Federal insurance statement\" is missing. Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
+          "suggestion": "Add disclosure D-1 v1: \"Federally insured by NCUA.\""
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f1"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f2"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f5"
+        },
+        {
+          "ruleId": "REGZ-1026.16",
+          "title": "Open-end credit ads state the terms with any trigger term",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f6"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-07",
+          "title": "Affiliates use the approved brand name",
+          "layer": "ai",
+          "result": "fail",
+          "finding": "f8"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "fail",
+          "finding": "f7"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "rejected",
+          "by": "Alex Chen",
+          "at": "2026-10-27T10:44:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Leo Park",
+          "role": "Growth lead",
+          "at": "2026-10-24T09:12:00Z",
+          "version": 1,
+          "body": "This is our standard credit builder template. Which parts do you need us to change?"
+        },
+        {
+          "id": "c2",
+          "author": "Alex Chen",
+          "role": "Compliance",
+          "at": "2026-10-27T10:44:00Z",
+          "version": 1,
+          "decision": "reject",
+          "body": "The page promises approval with no credit check, which is not true for the Credit Builder card, and the APR is above our rate sheet. RateRadar must not publish it. A new version must start from the approved card copy in the partner kit."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-22T16:30:00Z",
+          "submittedBy": "Marcus Lee",
+          "path": "full",
+          "outcome": "rejected",
+          "outcomeBy": "Alex Chen (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-22T16:30:00Z",
+          "actor": "Marcus Lee",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-22T16:30:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-10-22T16:30:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 6 problems: POL-04, REGZ-1026.16, RATE-01, NCUA-740."
+        },
+        {
+          "at": "2026-10-22T16:31:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found 2 problems: UDAAP-03, POL-07."
+        },
+        {
+          "at": "2026-10-24T09:12:00Z",
+          "actor": "Leo Park",
+          "type": "comment",
+          "text": "Commented on version 1."
+        },
+        {
+          "at": "2026-10-27T10:44:00Z",
+          "actor": "Alex Chen",
+          "type": "decision",
+          "text": "Rejected for Compliance on version 1: The page promises approval with no credit check, which is not true for the Credit Builder card, and the APR is above our rate sheet. RateRadar must not publish it. A new version must start from the approved card copy in the partner kit."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-07-14T10:20:00Z",
+      "submittedBy": "Marcus Lee",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-07-27",
+        "endDate": "2027-04-30",
+        "destinationUrl": "https://lendwise.example/blog/best-cash-back-cards-2026"
+      },
+      "fields": [
+        {
+          "label": "Page text",
+          "segments": [
+            "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Apply in minutes and get a decision fast."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "NCUA-740",
+          "status": "open",
+          "text": "",
+          "explanation": "Disclosure D-1 \"Federal insurance statement\" is missing. Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
+          "suggestion": "Add disclosure D-1 v1: \"Federally insured by NCUA.\""
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f1"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.16",
+          "title": "Open-end credit ads state the terms with any trigger term",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-07",
+          "title": "Affiliates use the approved brand name",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass",
+          "note": "\"Get a decision fast\" is about the time to a decision, not the result."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-07-21T13:45:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "conditions": "Show disclosure D-4 directly below the reward amount.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-07-21T13:40:00Z",
+          "version": 1,
+          "body": "The NCUA-740 finding does not apply here: the post advertises only a credit card, a loan product, and loan-only ads do not need the NCUA statement."
+        },
+        {
+          "id": "c2",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-07-21T13:45:00Z",
+          "version": 1,
+          "decision": "approve_conditions",
+          "body": "Show disclosure D-4 directly below the reward amount."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-07-14T10:20:00Z",
+          "submittedBy": "Marcus Lee",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-07-14T10:20:00Z",
+          "actor": "Marcus Lee",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-07-14T10:20:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-07-14T10:20:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: NCUA-740."
+        },
+        {
+          "at": "2026-07-14T10:21:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-07-21T13:40:00Z",
+          "actor": "Jordan Kim",
+          "type": "comment",
+          "text": "Commented on version 1."
+        },
+        {
+          "at": "2026-07-21T13:45:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved with conditions for Compliance on version 1: Show disclosure D-4 directly below the reward amount. Approval ID CP-2026-0131-v1, expires Apr 30, 2027."
+        },
+        {
+          "at": "2026-07-28T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Crawled the LendWise referral URL. Matched version 1 by similarity (96%)."
+        },
+        {
+          "at": "2026-10-17T09:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Approval condition \"Show disclosure D-4\" is broken: the post shows the old D-4 wording and an intro APR offer that is not in version 1."
+        },
+        {
+          "at": "2026-10-17T09:00:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Affiliate post still shows last year’s intro APR\" for Tara Nguyen."
+        },
+        {
+          "at": "2026-10-20T12:40:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Crawled the post again. It matches version 1."
+        },
+        {
+          "at": "2026-10-28T09:10:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Crawled the post. It matches version 1."
+        },
+        {
+          "at": "2026-11-02T09:10:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Approval condition \"Show disclosure D-4\" is broken: the post no longer shows D-4."
+        },
+        {
+          "at": "2026-11-02T09:12:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Live page is missing disclosure D-4\" for Tara Nguyen."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Web crawler",
+          "externalId": "https://lendwise.example/blog/best-cash-back-cards-2026",
+          "match": "similarity",
+          "status": "condition_broken",
+          "foundAt": "2026-07-28T08:00:00Z",
+          "checkedAt": "2026-11-02T09:10:00Z",
+          "paused": false,
+          "fields": [
+            {
+              "label": "Page text",
+              "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Apply in minutes and get a decision fast."
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a10017-2800-7389-b220-910ed92e6d2d",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-10-20T13:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "full",
+      "details": {
+        "targetStates": "MI, OH, PA",
+        "launchDate": "2026-10-28",
+        "endDate": "2026-11-20",
+        "destinationUrl": "clearpathcu.example/auto/preapproval",
+        "targeting": "Mailchimp automation \"Auto pre-approval\", members who asked for auto loan news"
+      },
+      "fields": [
+        {
+          "label": "Subject line",
+          "segments": [
+            "Shop for your next car with a pre-approval in hand"
+          ]
+        },
+        {
+          "label": "Preview text",
+          "segments": [
+            "Know your budget before you visit the dealer."
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Email 1 (on sign-up)\nHi {{first_name}},\nGetting pre-approved for an auto loan before you shop tells you your budget and your rate, so you can negotiate like a cash buyer. The application takes about 10 minutes.\nNew vehicle rates from 5.74% APR for terms up to 72 months, based on creditworthiness. Used vehicle rates from 5.99% APR for model year 2019 or newer.\nChecking your rate uses a soft credit inquiry and does not affect your credit score. If you apply, we use a hard inquiry, which can affect your score.\n\nEmail 2 (day 3)\nFound the car? Send us the dealer's buyer's order and we will finish your loan, often on the same day.\n\nEmail 3 (day 7)\nYour pre-approval is good for 60 days. Questions? Call us at 800-555-0142.\n\nFederally insured by NCUA.\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}"
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "CANSPAM-01",
+          "title": "Marketing email has an unsubscribe link and a postal address",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass",
+          "note": "The soft inquiry claim uses disclosure D-6."
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass",
+          "note": "\"About 10 minutes\" is the time to apply, not an approval claim."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-10-26T14:00:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-10-26T14:00:00Z",
+          "version": 1,
+          "decision": "approve",
+          "body": "Approved. Sam fixed the footer of email 3 in Mailchimp (see the issue on the unsubscribe link); the text did not change."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-20T13:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-20T13:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-20T13:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-10-20T13:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-10-20T13:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-10-24T10:30:00Z",
+          "actor": "Maya Ruiz",
+          "type": "issue",
+          "text": "Raised the issue \"Unsubscribe link broken in step 3 of the flow\" and assigned it to Sam Rivera."
+        },
+        {
+          "at": "2026-10-26T14:00:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved for Compliance on version 1. Approval ID CP-2026-0138-v1, expires Nov 20, 2026."
+        }
+      ],
+      "live": [],
+      "issues": []
+    },
+    {
+      "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
+      "version": 2,
+      "versionCount": 2,
+      "submittedAt": "2026-05-11T09:30:00Z",
+      "submittedBy": "Dana Ortiz",
+      "path": "full",
+      "details": {
+        "targetStates": "AZ, CO, TX, WA",
+        "launchDate": "2026-05-18",
+        "endDate": "2027-02-15",
+        "destinationUrl": "clearpathcu.example/mortgage/prequalify",
+        "platformId": "4182"
+      },
+      "fields": [
+        {
+          "label": "Page title",
+          "segments": [
+            "Get prequalified for a ClearPath mortgage"
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "SAFE-01",
+          "status": "outdated",
+          "text": "",
+          "explanation": "The content must contain one of these: \"NMLS #\". Ads for mortgage loans and home equity lines must show the credit union's NMLS unique identifier. Ads that name a loan officer must also show that person's NMLS ID.",
+          "version": 1
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "EHL-01",
+          "title": "Mortgage ads show the Equal Housing Opportunity statement",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.24",
+          "title": "Trigger terms require APR disclosure",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "SAFE-01",
+          "title": "Mortgage ads show the NMLS ID",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass",
+          "note": "The page says that prequalification is not a loan approval."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Grace Liu",
+          "at": "2026-05-13T11:00:00Z",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Mortgage",
+          "state": "approved",
+          "by": "Grace Liu",
+          "at": "2026-05-13T11:00:00Z",
+          "reason": "Home lending"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Grace Liu",
+          "role": "Compliance, Mortgage",
+          "at": "2026-05-06T15:00:00Z",
+          "version": 1,
+          "decision": "request_changes",
+          "body": "Add our NMLS ID (disclosure D-5) in the footer. SAFE-01 requires it on every mortgage page."
+        },
+        {
+          "id": "c2",
+          "author": "Grace Liu",
+          "role": "Compliance, Mortgage",
+          "at": "2026-05-13T11:00:00Z",
+          "version": 2,
+          "decision": "approve",
+          "body": "The NMLS ID is in the footer now."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-05-04T10:00:00Z",
+          "submittedBy": "Dana Ortiz",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Grace Liu (Compliance, Mortgage)",
+          "fields": [
+            {
+              "label": "Page title",
+              "text": "Get prequalified for a ClearPath mortgage"
+            },
+            {
+              "label": "Body",
+              "text": "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nEqual Housing Opportunity. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-05-11T09:30:00Z",
+          "submittedBy": "Dana Ortiz",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Grace Liu (Compliance, Mortgage)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-05-04T10:00:00Z",
+          "actor": "Dana Ortiz",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-05-04T10:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Mortgage (rule \"Home lending\")."
+        },
+        {
+          "at": "2026-05-04T10:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: SAFE-01."
+        },
+        {
+          "at": "2026-05-04T10:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-06T15:00:00Z",
+          "actor": "Grace Liu",
+          "type": "decision",
+          "text": "Requested changes for Compliance, Mortgage on version 1: Add our NMLS ID (disclosure D-5) in the footer. SAFE-01 requires it on every mortgage page."
+        },
+        {
+          "at": "2026-05-11T09:30:00Z",
+          "actor": "Dana Ortiz",
+          "type": "submitted",
+          "text": "Submitted version 2 by manual upload."
+        },
+        {
+          "at": "2026-05-11T09:30:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Mortgage (rule \"Home lending\")."
+        },
+        {
+          "at": "2026-05-11T09:30:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-05-11T09:31:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-13T11:00:00Z",
+          "actor": "Grace Liu",
+          "type": "decision",
+          "text": "Approved for Compliance, Mortgage on version 2. Approval ID CP-2026-0118-v2, expires Feb 15, 2027."
+        },
+        {
+          "at": "2026-05-18T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found the page live on WordPress. Matched version 2."
+        },
+        {
+          "at": "2026-10-20T12:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Checked the live page after a site update. It matches version 2."
+        },
+        {
+          "at": "2026-10-29T11:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "The hero image on the live page changed. The page text still matches version 2."
+        },
+        {
+          "at": "2026-10-29T11:00:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Hero image changed on the live page\" for Dana Ortiz."
+        },
+        {
+          "at": "2026-11-01T19:15:00Z",
+          "actor": "Jordan Kim",
+          "type": "issue",
+          "text": "Raised the issue \"NMLS ID missing from the footer after the site redesign\" and assigned it to Dana Ortiz."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "WordPress",
+          "externalId": "4182",
+          "match": "platform_id",
+          "status": "matched",
+          "foundAt": "2026-05-18T08:00:00Z",
+          "checkedAt": "2026-10-29T10:58:00Z",
+          "paused": false,
+          "fields": [
+            {
+              "label": "Page title",
+              "text": "Get prequalified for a ClearPath mortgage"
+            },
+            {
+              "label": "Body",
+              "text": "Know your budget before you start house hunting.\n\nPrequalify for a ClearPath mortgage in about 10 minutes. We use a soft credit inquiry, so prequalifying does not affect your credit score. You get an estimate of how much you can borrow and which loan types fit you: fixed-rate, adjustable-rate, and loans for first-time buyers.\n\nPrequalification is not a loan approval or a commitment to lend. Your final loan terms depend on a full application, an appraisal and underwriting.\n\nStart your prequalification: clearpathcu.example/mortgage/prequalify\n\nClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a0cd1b-6600-73a9-8f0b-78172f5af13f",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-06-15T10:00:00Z",
+      "submittedBy": "Marcus Lee",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-06-22",
+        "endDate": "2026-12-01",
+        "destinationUrl": "https://cardcompass.example/compare/rewards-cards"
+      },
+      "fields": [
+        {
+          "label": "Page text",
+          "segments": [
+            "Best rewards credit cards for everyday spending\n\nClearPath Rewards Visa\nRewards: 1.5% cash back on every purchase\nCash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\nAnnual fee: $0\nIntro APR: 0% for 12 months on purchases and balance transfers\nOngoing APR: 17.49% to 28.49% variable\nIssued by ClearPath Credit Union. Federally insured by NCUA.\n\nCardCompass is paid by some card issuers when you apply through our links. This affects where cards appear on the page."
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.16",
+          "title": "Open-end credit ads state the terms with any trigger term",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-07",
+          "title": "Affiliates use the approved brand name",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Alex Chen",
+          "at": "2026-06-17T16:30:00Z",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Senior compliance",
+          "state": "approved",
+          "by": "Alex Chen",
+          "at": "2026-06-17T16:30:00Z",
+          "reason": "Affiliate content"
+        }
+      ],
+      "conditions": "Show the APR range in the comparison table.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Alex Chen",
+          "role": "Compliance, Senior compliance",
+          "at": "2026-06-17T16:30:00Z",
+          "version": 1,
+          "decision": "approve_conditions",
+          "body": "Show the APR range in the comparison table."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-06-15T10:00:00Z",
+          "submittedBy": "Marcus Lee",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Alex Chen (Compliance, Senior compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-06-15T10:00:00Z",
+          "actor": "Marcus Lee",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-06-15T10:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Senior compliance (rule \"Affiliate content\")."
+        },
+        {
+          "at": "2026-06-15T10:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-06-15T10:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-06-17T16:30:00Z",
+          "actor": "Alex Chen",
+          "type": "decision",
+          "text": "Approved with conditions for Compliance, Senior compliance on version 1: Show the APR range in the comparison table. Approval ID CP-2026-0127-v1, expires Dec 1, 2026."
+        },
+        {
+          "at": "2026-06-24T07:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Crawled the CardCompass referral URL. Matched version 1 by similarity (97%)."
+        },
+        {
+          "at": "2026-10-31T18:12:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Crawled the page. It matches version 1."
+        },
+        {
+          "at": "2026-11-02T06:38:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Approval condition \"Show the APR range\" is broken: the comparison table no longer shows the ongoing APR."
+        },
+        {
+          "at": "2026-11-02T06:40:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Comparison table no longer shows the APR range\" for Ben Okafor."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Web crawler",
+          "externalId": "https://cardcompass.example/compare/rewards-cards",
+          "match": "similarity",
+          "status": "condition_broken",
+          "foundAt": "2026-06-24T07:00:00Z",
+          "checkedAt": "2026-11-02T06:38:00Z",
+          "paused": false,
+          "fields": [
+            {
+              "label": "Page text",
+              "text": "Best rewards credit cards for everyday spending\n\nClearPath Rewards Visa\nRewards: 1.5% cash back on every purchase\nCash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\nAnnual fee: $0\nIntro offer: 0% for 12 months on purchases and balance transfers\nIssued by ClearPath Credit Union. Federally insured by NCUA.\n\nCardCompass is paid by some card issuers when you apply through our links. This affects where cards appear on the page."
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a0bf33-d400-758c-8181-f7618b0121bf",
+      "version": 2,
+      "versionCount": 2,
+      "submittedAt": "2026-05-26T09:00:00Z",
+      "submittedBy": "Priya Shah",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-06-01",
+        "endDate": "2027-03-31",
+        "destinationUrl": "clearpathcu.example/heloc",
+        "platformId": "23851190045560311",
+        "targeting": "Facebook and Instagram feeds. Homeowners, ages 30 and older."
+      },
+      "fields": [
+        {
+          "label": "Primary text",
+          "segments": [
+            "Your home's equity can fund the projects on your list. Borrow what you need, when you need it, with a ClearPath home equity line of credit."
+          ]
+        },
+        {
+          "label": "Headline",
+          "segments": [
+            "HELOC rates from 7.74% APR"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "Variable rate; the APR can change. No closing costs on lines up to $250,000. ClearPath Credit Union NMLS #401822. Equal Housing Opportunity."
+          ]
+        },
+        {
+          "label": "Call to action",
+          "segments": [
+            "Learn more"
+          ]
+        },
+        {
+          "label": "Image",
+          "kind": "image",
+          "segments": [
+            "Card 1: Update the kitchen. Card 2: Add the extra room. Card 3: Rates from 7.74% APR. ClearPath Credit Union. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "EHL-01",
+          "status": "outdated",
+          "text": "",
+          "explanation": "Disclosure D-3 \"Equal Housing Opportunity\" is missing. Ads for loans secured by a home must show the Equal Housing Opportunity logo or the statement \"Equal Housing Opportunity\" or \"Equal Housing Lender\".",
+          "suggestion": "Add disclosure D-3 v1: \"Equal Housing Opportunity.\"",
+          "version": 1
+        },
+        {
+          "id": "f2",
+          "source": "code",
+          "severity": "medium",
+          "ruleId": "SAFE-01",
+          "status": "outdated",
+          "text": "",
+          "explanation": "The content must contain one of these: \"NMLS #\". Ads for mortgage loans and home equity lines must show the credit union's NMLS unique identifier. Ads that name a loan officer must also show that person's NMLS ID.",
+          "version": 1
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "EHL-01",
+          "title": "Mortgage ads show the Equal Housing Opportunity statement",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "SAFE-01",
+          "title": "Mortgage ads show the NMLS ID",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass",
+          "note": "Targeting homeowners 30 and older matches the product; no excluded groups."
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Dana Ortiz",
+          "at": "2026-05-26T15:00:00Z",
+          "reason": "Compliance reviews everything"
+        },
+        {
+          "name": "Legal",
+          "state": "approved",
+          "by": "Tara Nguyen",
+          "at": "2026-05-27T10:30:00Z",
+          "reason": "Loans sold nationwide"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-20T10:00:00Z",
+          "version": 1,
+          "decision": "request_changes",
+          "body": "Add \"Equal Housing Opportunity\" and our NMLS ID. Both are required on every HELOC ad."
+        },
+        {
+          "id": "c2",
+          "author": "Dana Ortiz",
+          "role": "Compliance",
+          "at": "2026-05-26T15:00:00Z",
+          "version": 2,
+          "decision": "approve",
+          "body": ""
+        },
+        {
+          "id": "c3",
+          "author": "Tara Nguyen",
+          "role": "Legal",
+          "at": "2026-05-27T10:30:00Z",
+          "version": 2,
+          "decision": "approve",
+          "body": "Legal is fine with the variable rate wording."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-05-18T13:00:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Primary text",
+              "text": "Your home's equity can fund the projects on your list. Borrow what you need, when you need it, with a ClearPath home equity line of credit."
+            },
+            {
+              "label": "Headline",
+              "text": "HELOC rates from 7.74% APR"
+            },
+            {
+              "label": "Description",
+              "text": "Variable rate. No closing costs on lines up to $250,000."
+            },
+            {
+              "label": "Call to action",
+              "text": "Learn more"
+            },
+            {
+              "label": "Image",
+              "text": "Card 1: Update the kitchen. Card 2: Add the extra room. Card 3: Rates from 7.74% APR. ClearPath Credit Union. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-05-26T09:00:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Tara Nguyen (Legal)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-05-18T13:00:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-05-18T13:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Legal (rule \"Loans sold nationwide\")."
+        },
+        {
+          "at": "2026-05-18T13:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 2 problems: EHL-01, SAFE-01."
+        },
+        {
+          "at": "2026-05-18T13:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-20T10:00:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 1: Add \"Equal Housing Opportunity\" and our NMLS ID. Both are required on every HELOC ad."
+        },
+        {
+          "at": "2026-05-26T09:00:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 2 by manual upload."
+        },
+        {
+          "at": "2026-05-26T09:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\"), Legal (rule \"Loans sold nationwide\")."
+        },
+        {
+          "at": "2026-05-26T09:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed. Marked 2 findings outdated."
+        },
+        {
+          "at": "2026-05-26T09:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-26T15:00:00Z",
+          "actor": "Dana Ortiz",
+          "type": "decision",
+          "text": "Approved for Compliance on version 2."
+        },
+        {
+          "at": "2026-05-27T10:30:00Z",
+          "actor": "Tara Nguyen",
+          "type": "decision",
+          "text": "Approved for Legal on version 2. Approval ID CP-2026-0124-v2, expires Mar 31, 2027."
+        },
+        {
+          "at": "2026-06-01T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found live on Meta ads. Matched version 2."
+        },
+        {
+          "at": "2026-10-12T09:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Checked the live ad. It matches version 2."
+        },
+        {
+          "at": "2026-10-31T16:20:00Z",
+          "actor": "Jordan Kim",
+          "type": "issue",
+          "text": "Raised the issue \"Comment replies quote a rate that is not in the approved ad\" and assigned it to Jordan Kim."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Meta ads",
+          "externalId": "23851190045560311",
+          "match": "platform_id",
+          "status": "matched",
+          "foundAt": "2026-06-01T08:00:00Z",
+          "checkedAt": "2026-10-12T09:00:00Z",
+          "paused": false,
+          "fields": [
+            {
+              "label": "Primary text",
+              "text": "Your home's equity can fund the projects on your list. Borrow what you need, when you need it, with a ClearPath home equity line of credit."
+            },
+            {
+              "label": "Headline",
+              "text": "HELOC rates from 7.74% APR"
+            },
+            {
+              "label": "Description",
+              "text": "Variable rate; the APR can change. No closing costs on lines up to $250,000. ClearPath Credit Union NMLS #401822. Equal Housing Opportunity."
+            },
+            {
+              "label": "Call to action",
+              "text": "Learn more"
+            },
+            {
+              "label": "Image",
+              "text": "Card 1: Update the kitchen. Card 2: Add the extra room. Card 3: Rates from 7.74% APR. ClearPath Credit Union. Federally insured by NCUA."
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29",
+      "version": 4,
+      "versionCount": 4,
+      "submittedAt": "2026-05-05T14:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "full",
+      "details": {
+        "targetStates": "FL, GA, NC, TX",
+        "launchDate": "2026-05-11",
+        "endDate": "2026-10-25",
+        "destinationUrl": "clearpathcu.example/loans/debt-consolidation",
+        "platformId": "718209431",
+        "targeting": "Search keywords: debt consolidation loan, consolidate credit cards."
+      },
+      "fields": [
+        {
+          "label": "Headline 1",
+          "segments": [
+            "Consolidate your debt"
+          ]
+        },
+        {
+          "label": "Headline 2",
+          "segments": [
+            "Personal loans from 9.49",
+            {
+              "text": "% APR",
+              "finding": "f2"
+            }
+          ]
+        },
+        {
+          "label": "Headline 3",
+          "segments": [
+            "One fixed monthly payment"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "Rates from 9.49% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f2",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.24",
+          "status": "open",
+          "text": "% APR",
+          "explanation": "is a trigger term. The content must also include disclosure D-7 \"Personal loan APR range and term\". If an ad for closed-end credit states a trigger term (the amount or percentage of a down payment, the number of payments or period of repayment, the amount of any payment, or the amount of any finance charge), it must also state the down payment, the terms of repayment, and the annual percentage rate. If the rate can increase after the loan is made, the ad must say so.",
+          "suggestion": "Add disclosure D-7 v1: \"APR = Annual Percentage Rate. Rates from 9.49% to 24.99% APR, based on creditworthiness. Terms up to 60 months.\""
+        },
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "POL-04",
+          "status": "outdated",
+          "text": "Lowest rate anywhere",
+          "explanation": "is a banned phrase. These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+          "suggestion": "Remove it, or say it in a way that does not promise a result.",
+          "version": 1
+        },
+        {
+          "id": "f3",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "RATE-01",
+          "status": "outdated",
+          "text": "8.99%",
+          "explanation": "is outside the APR range for personal loans on the current rate sheet (9.49% to 24.99%).",
+          "suggestion": "Use a rate from the current rate sheet: 9.49% to 24.99%.",
+          "version": 2
+        },
+        {
+          "id": "f4",
+          "source": "ai",
+          "severity": "high",
+          "ruleId": "UDAAP-03",
+          "status": "outdated",
+          "text": "Approved in minutes",
+          "explanation": "promises a fast approval to every applicant. The decision depends on a credit review.",
+          "suggestion": "Use the approved building block \"One fixed monthly payment, so you always know what you owe.\"",
+          "version": 3
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGZ-1026.24",
+          "title": "Trigger terms require APR disclosure",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f2"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-05-05T16:20:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-01T15:00:00Z",
+          "version": 1,
+          "decision": "request_changes",
+          "body": "Remove \"Lowest rate anywhere\" (banned phrase, POL-04)."
+        },
+        {
+          "id": "c2",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-04T13:30:00Z",
+          "version": 2,
+          "decision": "request_changes",
+          "body": "8.99% is the June offer. The May rate sheet starts at 9.49% APR."
+        },
+        {
+          "id": "c3",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-05T11:00:00Z",
+          "version": 3,
+          "decision": "request_changes",
+          "body": "\"Approved in minutes\" promises approval. Go back to \"One fixed monthly payment\"."
+        },
+        {
+          "id": "c4",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-05T16:20:00Z",
+          "version": 4,
+          "decision": "approve",
+          "body": "Override: Search ads cannot hold D-7. The landing page clearpathcu.example/loans/debt-consolidation shows D-7 v1 next to the first rate, and the ad links only there."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-05-01T10:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Consolidate your debt"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Lowest rate anywhere: 9.49% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "One fixed monthly payment"
+            },
+            {
+              "label": "Description",
+              "text": "Personal loans from 9.49% to 24.99% APR for terms up to 60 months. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-05-04T09:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Consolidate your debt"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 8.99% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "One fixed monthly payment"
+            },
+            {
+              "label": "Description",
+              "text": "Rates from 8.99% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "submittedAt": "2026-05-05T09:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Consolidate your debt"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 9.49% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "Approved in minutes"
+            },
+            {
+              "label": "Description",
+              "text": "Rates from 9.49% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "submittedAt": "2026-05-05T14:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-05-01T10:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-05-01T10:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-05-01T10:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 2 problems: POL-04, REGZ-1026.24."
+        },
+        {
+          "at": "2026-05-01T10:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-01T15:00:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 1: Remove \"Lowest rate anywhere\" (banned phrase, POL-04)."
+        },
+        {
+          "at": "2026-05-04T09:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 2 by manual upload."
+        },
+        {
+          "at": "2026-05-04T09:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-05-04T09:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 2 problems: RATE-01, REGZ-1026.24. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-05-04T09:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-04T13:30:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 2: 8.99% is the June offer. The May rate sheet starts at 9.49% APR."
+        },
+        {
+          "at": "2026-05-05T09:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 3 by manual upload."
+        },
+        {
+          "at": "2026-05-05T09:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-05-05T09:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.24. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-05-05T09:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found 1 problem: UDAAP-03."
+        },
+        {
+          "at": "2026-05-05T11:00:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 3: \"Approved in minutes\" promises approval. Go back to \"One fixed monthly payment\"."
+        },
+        {
+          "at": "2026-05-05T14:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 4 by manual upload."
+        },
+        {
+          "at": "2026-05-05T14:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-05-05T14:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.24. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-05-05T14:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-05T16:20:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved for Compliance on version 4. Approval ID CP-2026-0090-v4, expires Oct 25, 2026. Override reason: Search ads cannot hold D-7. The landing page clearpathcu.example/loans/debt-consolidation shows D-7 v1 next to the first rate, and the ad links only there."
+        },
+        {
+          "at": "2026-05-11T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found live on Google Ads. Matched version 4."
+        },
+        {
+          "at": "2026-10-25T00:00:00Z",
+          "actor": "ClearPath",
+          "type": "expired",
+          "text": "Approval CP-2026-0090-v4 expired."
+        },
+        {
+          "at": "2026-10-27T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "The ad is still live on Google Ads after its approval expired on Oct 25."
+        },
+        {
+          "at": "2026-10-27T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Ad still running after its approval expired\" for Sam Rivera."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Google Ads",
+          "externalId": "718209431",
+          "match": "platform_id",
+          "status": "expired_approval",
+          "foundAt": "2026-05-11T08:00:00Z",
+          "checkedAt": "2026-10-27T08:00:00Z",
+          "paused": true,
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Consolidate your debt"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 9.49% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "One fixed monthly payment"
+            },
+            {
+              "label": "Description",
+              "text": "Rates from 9.49% to 24.99% APR. Terms up to 60 months. Federally insured by NCUA."
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "id": "01a08795-8c00-7cb9-93fd-75d440fc0a38",
+      "version": 1,
+      "versionCount": 1,
+      "submittedAt": "2026-05-05T11:00:00Z",
+      "submittedBy": "Dana Ortiz",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-05-11",
+        "endDate": "2026-06-30",
+        "destinationUrl": "clearpathcu.example/savings/certificates",
+        "targeting": "Mailchimp audience \"All members\""
+      },
+      "fields": [
+        {
+          "label": "Subject line",
+          "segments": [
+            "Spring into savings: 4.25% APY on a 12-month certificate"
+          ]
+        },
+        {
+          "label": "Preview text",
+          "segments": [
+            "Lock in a fixed rate for 12 months with $1,000 to open."
+          ]
+        },
+        {
+          "label": "Body",
+          "segments": [
+            "Hi {{first_name}},\n\nPut your tax refund to work. Open a 12-month share certificate by June 30 and earn 4.25% APY, fixed for the full term.\n\n- $1,000 minimum to open\n- Dividends compound monthly\n- Early withdrawal penalty: 90 days of dividends\n\nAPY = Annual Percentage Yield. APY is accurate as of the date shown and can change after the account is opened. You need a minimum balance of $100 to earn the APY. Fees can reduce earnings.\n\nOpen your certificate: clearpathcu.example/savings/certificates\n\nFederally insured by NCUA.\nClearPath Credit Union, 1200 Harbor Street, Columbus, OH 43215\nUnsubscribe: {{unsubscribe}}"
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "CANSPAM-01",
+          "title": "Marketing email has an unsubscribe link and a postal address",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "POL-04",
+          "title": "Banned phrases",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "REGDD-1030.8",
+          "title": "Savings rates are stated as Annual Percentage Yield",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Jordan Kim",
+          "at": "2026-05-06T10:00:00Z",
+          "reason": "Compliance reviews everything"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan Kim",
+          "role": "Compliance",
+          "at": "2026-05-06T10:00:00Z",
+          "version": 1,
+          "decision": "approve",
+          "body": "4.25% APY matches the May rate sheet, and D-2 v2 is next to it."
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-05-05T11:00:00Z",
+          "submittedBy": "Dana Ortiz",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Jordan Kim (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-05-05T11:00:00Z",
+          "actor": "Dana Ortiz",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-05-05T11:00:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Compliance reviews everything\")."
+        },
+        {
+          "at": "2026-05-05T11:00:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-05-05T11:01:00Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found no problems."
+        },
+        {
+          "at": "2026-05-06T10:00:00Z",
+          "actor": "Jordan Kim",
+          "type": "decision",
+          "text": "Approved for Compliance on version 1. Approval ID CP-2026-0112-v1, expires Jun 30, 2026."
+        },
+        {
+          "at": "2026-06-30T00:00:00Z",
+          "actor": "ClearPath",
+          "type": "expired",
+          "text": "Approval CP-2026-0112-v1 expired."
+        },
+        {
+          "at": "2026-07-01T10:00:00Z",
+          "actor": "Dana Ortiz",
+          "type": "decision",
+          "text": "Retired: the spring certificate offer ended on Jun 30."
+        },
+        {
+          "at": "2026-10-10T07:30:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found this email still sending as step 4 of the Mailchimp automation \"New member welcome\". The material is retired."
+        },
+        {
+          "at": "2026-10-10T07:30:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Retired email is still in an active automation\" for Dana Ortiz."
+        }
+      ],
+      "live": [],
+      "issues": []
     }
   ]
 }
