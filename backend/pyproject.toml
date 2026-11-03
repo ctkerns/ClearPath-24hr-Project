@@ -1,7 +1,7 @@
 [project]
 name = "clearpath-backend"
 version = "0.1.0"
-description = "ClearPath API"
+description = "ClearPath Review API"
 readme = "README.md"
 authors = [
     { name = "ctkerns", email = "christopher.t.kerns@gmail.com" }

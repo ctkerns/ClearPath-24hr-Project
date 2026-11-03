@@ -10,28 +10,28 @@
       "accounts": [
         {
           "id": "019f0b86-a000-74f7-89e9-9ff358f69117",
-          "name": "ClearPath CU – Lending",
+          "name": "ClearPath Financial – Lending",
           "detail": "Ad account",
           "defaultOwnerId": "01976f62-4280-77e8-950f-6fe7058397c4"
         },
         {
           "id": "019f1af9-b400-768d-8cbb-ab995893adab",
-          "name": "ClearPath CU – Cards",
+          "name": "ClearPath Financial – Cards",
           "detail": "Ad account",
           "defaultOwnerId": "01976f62-4280-77e8-950f-6fe7058397c4"
         }
       ],
       "available": [
         {
-          "name": "ClearPath CU – Lending",
+          "name": "ClearPath Financial – Lending",
           "detail": "Ad account"
         },
         {
-          "name": "ClearPath CU – Cards",
+          "name": "ClearPath Financial – Cards",
           "detail": "Ad account"
         },
         {
-          "name": "ClearPath CU – Brand",
+          "name": "ClearPath Financial – Brand",
           "detail": "Ad account"
         }
       ]
@@ -98,7 +98,7 @@
       "accounts": [],
       "available": [
         {
-          "name": "ClearPath CU",
+          "name": "ClearPath Financial",
           "detail": "Klaviyo account"
         }
       ]
@@ -198,13 +198,13 @@
       "accounts": [
         {
           "id": "019f77ac-2c00-707d-9ff0-f8f1bcd296b6",
-          "name": "ClearPath CU brand account",
+          "name": "ClearPath Financial brand account",
           "detail": "4 affiliates, 9 tracking links"
         }
       ],
       "available": [
         {
-          "name": "ClearPath CU brand account",
+          "name": "ClearPath Financial brand account",
           "detail": "4 affiliates, 9 tracking links"
         }
       ]
@@ -217,7 +217,7 @@
       "accounts": [],
       "available": [
         {
-          "name": "ClearPath CU advertiser account",
+          "name": "ClearPath Financial advertiser account",
           "detail": "CJ advertiser"
         }
       ]
@@ -250,7 +250,7 @@
       "accounts": [],
       "available": [
         {
-          "name": "ClearPath CU subscription",
+          "name": "ClearPath Financial subscription",
           "detail": "Regulatory change feed"
         }
       ]
