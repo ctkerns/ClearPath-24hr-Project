@@ -2,12 +2,8 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate, type LinkProps } from '@tanstack/react-router'
 import {
   BookText,
-  ChartColumn,
   Flag,
   FileText,
-  Files,
-  LayoutDashboard,
-  LibraryBig,
   Palette,
   Plus,
   Puzzle,
@@ -20,6 +16,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '@/lib/api'
 import { useViewer } from '@/lib/session'
+import { useMainNavLinks } from '@/components/main-nav-links'
 import type { Channel } from '@/components/materials/material-data'
 import type { BlockKind } from '@/components/library/block-data'
 import { settingsTabsFor } from '@/components/settings/settings-tabs'
@@ -99,12 +96,9 @@ export function GlobalSearch() {
     void navigate({ to, params, search } as Parameters<typeof navigate>[0])
   }
 
+  const mainLinks = useMainNavLinks()
   const pages: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
-    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { to: '/materials', label: t('nav.materials'), icon: Files },
-    { to: '/issues', label: t('nav.issues'), icon: Flag },
-    { to: '/library', label: t('nav.library'), icon: LibraryBig },
-    { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
+    ...mainLinks,
     ...(settingsTabsFor(viewer.role).length ? [{ to: '/settings' as const, label: t('nav.settings'), icon: Settings }] : []),
     { to: '/design-system', label: t('nav.designSystem'), icon: Palette },
   ]
