@@ -91,7 +91,8 @@ export function GlobalSearch() {
   const pages: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
     ...mainLinks,
     ...(settingsTabsFor(viewer.role).length ? [{ to: '/settings' as const, label: t('nav.settings'), icon: Settings }] : []),
-    { to: '/design-system', label: t('nav.designSystem'), icon: Palette },
+    // A team tool: development builds only (see routes/_app.design-system.tsx).
+    ...(import.meta.env.DEV ? [{ to: '/design-system' as const, label: t('nav.designSystem'), icon: Palette }] : []),
   ]
 
   const shortcut = isMac ? '⌘K' : 'Ctrl K'

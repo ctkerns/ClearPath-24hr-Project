@@ -14,13 +14,24 @@ import {
 import { useReviewerGroups } from '@/components/settings/group-data'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { NotAvailable } from '@/components/not-available'
+import { useViewer } from '@/lib/session'
 import { formatDate, formatNumber, formatPercent } from '@/i18n/format'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/metrics')({
   validateSearch: validateMetricsSearch,
-  component: MetricsPage,
+  component: MetricsRoute,
 })
+
+// Metrics is for internal users only: GET /api/metrics gives affiliates 403 (PRD section 4).
+// A separate component, so an affiliate's page calls none of the metrics APIs.
+function MetricsRoute() {
+  const { t } = useTranslation()
+  const viewer = useViewer()
+  if (viewer.role === 'affiliate') return <NotAvailable page={t('page.metrics')} />
+  return <MetricsPage />
+}
 
 const ALL = 'all'
 

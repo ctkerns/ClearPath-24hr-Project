@@ -53,9 +53,12 @@ export function UserMenu() {
             <Link to="/settings"><Settings />{t('nav.settings')}</Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem asChild>
-          <Link to="/design-system"><Palette />{t('nav.designSystem')}</Link>
-        </DropdownMenuItem>
+        {/* The design system page is a team tool: development builds only (see routes/_app.design-system.tsx). */}
+        {import.meta.env.DEV && (
+          <DropdownMenuItem asChild>
+            <Link to="/design-system"><Palette />{t('nav.designSystem')}</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         {/* A full page load, so no data of this user stays in memory for the next one. */}
         <DropdownMenuItem onSelect={() => { void signOut().then(() => window.location.assign('/sign-in')) }}>

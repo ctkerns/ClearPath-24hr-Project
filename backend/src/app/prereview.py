@@ -13,6 +13,7 @@ import logging
 import re
 import unicodedata
 import uuid
+from collections import Counter
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import date
@@ -479,7 +480,17 @@ INSTRUCTIONS = [
 ]
 COMMENT = re.compile(r"<!--.*?(?:-->|$)", re.S)
 OPEN_TAG = re.compile(r"<([a-zA-Z][a-zA-Z0-9]*)\b([^<>]*)>")
-ATTR_TEXT = re.compile(r"""\b(?:alt|title|aria-label)\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
+ATTR_TEXT = re.compile(r"""\b(alt|title|aria-label)\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
+# How the explanation and the fix name each attribute that ATTR_TEXT reads
+ATTR_NAMES = {
+    "alt": ("image text (alt text)", "alt text"),
+    "title": ("a title attribute", "title attribute"),
+    "aria-label": ("an aria-label", "aria-label"),
+}
+# The fix for each kind of hidden_text finding: what to remove depends on why the text was flagged.
+FIX_HIDDEN = "Remove the hidden text."
+FIX_INVISIBLE = "Remove the invisible characters."
+FIX_INSTRUCTION = "Remove the instruction aimed at automated reviewers."
 NAMED_COLORS = {"white": (255, 255, 255), "black": (0, 0, 0), "snow": (255, 250, 250), "ivory": (255, 255, 240), "whitesmoke": (245, 245, 245)}
 
 
@@ -570,21 +581,26 @@ def check_hidden_text(rule: RuleSpec, content: Content, lib: Library, product: s
     alt text with instructions, and plain instructions to automated reviewers."""
     hits: list[Hit] = []
     for i, (_, raw) in enumerate(content.fields):
-        spans: list[tuple[int, int, str]] = []  # (start, end, explanation)
+        spans: list[tuple[int, int, str, str]] = []  # (start, end, explanation, suggestion)
         markup = bool(MARKUP.search(raw))
         if markup:
-            spans += [(m.start(), m.end(), "is an HTML comment. Readers do not see it, but automated tools read it.") for m in COMMENT.finditer(raw)]
+            spans += [
+                (m.start(), m.end(), "is an HTML comment. Readers do not see it, but automated tools read it.", FIX_HIDDEN)
+                for m in COMMENT.finditer(raw)
+            ]
             for m in OPEN_TAG.finditer(raw):
                 # Only a tag that hides its text looks for its closing tag, so long markup stays fast.
                 if not (why := hidden_style(m[2])):
                     continue
                 close = re.compile(rf"</{m[1]}\s*>", re.I).search(raw, m.end())
                 if close and raw[m.end() : close.start()].strip():
-                    spans.append((m.start(), close.end(), f"is hidden text: it {why}. Readers do not see it, but automated tools read it."))
+                    spans.append((m.start(), close.end(), f"is hidden text: it {why}. Readers do not see it, but automated tools read it.", FIX_HIDDEN))
             for m in ATTR_TEXT.finditer(raw):
-                g = 1 if m[1] is not None else 2
+                g = 2 if m[2] is not None else 3
                 if any(p.search(norm(m[g])) for p in INSTRUCTIONS):
-                    spans.append((m.start(g), m.end(g), "is image text (alt text) that gives instructions to automated reviewers."))
+                    what, where = ATTR_NAMES[m[1].lower()]
+                    why = f"is {what} that gives instructions to automated reviewers."
+                    spans.append((m.start(g), m.end(g), why, f"Remove the instruction from the {where}."))
         # Invisible characters, as whole words. Words next to each other become one quote.
         words: list[tuple[int, int]] = []
         for m in re.finditer(r"\S+", raw):
@@ -594,18 +610,19 @@ def check_hidden_text(rule: RuleSpec, content: Content, lib: Library, product: s
                 else:
                     words.append((m.start(), m.end()))
         for s, e in words:
-            spans.append((s, e, f"has invisible characters ({codes(raw[s:e])}). They can hide words from readers and from checks. Remove them."))
+            spans.append((s, e, f"has invisible characters ({codes(raw[s:e])}). They can hide words from readers and from checks.", FIX_INVISIBLE))
         # Plain instructions to automated reviewers, quoted as the whole sentence.
         t = content.texts[i]
+        why = "gives instructions to automated reviewers. Marketing content must not do this."
         for p in INSTRUCTIONS:
             for m in p.finditer(t.norm):
-                spans.append((*sentence_span(raw, *t.quote(m.start(), m.end())), "gives instructions to automated reviewers. Marketing content must not do this."))
+                spans.append((*sentence_span(raw, *t.quote(m.start(), m.end())), why, FIX_INSTRUCTION))
         # The first span wins where two overlap, in the order above.
-        kept: list[tuple[int, int, str]] = []
-        for s, e, why in spans:
-            if e > s and all(e <= ks or s >= ke for ks, ke, _ in kept):
-                kept.append((s, e, why))
-        hits += [content.hit(rule, (i, s, e), why, "Remove the hidden text.") for s, e, why in sorted(kept)]
+        kept: list[tuple[int, int, str, str]] = []
+        for s, e, why, fix in spans:
+            if e > s and all(e <= ks or s >= ke for ks, ke, _, _ in kept):
+                kept.append((s, e, why, fix))
+        hits += [content.hit(rule, (i, s, e), why, fix) for s, e, why, fix in sorted(kept)]
     return hits
 
 
@@ -864,12 +881,11 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     version.checklist = checklist
 
     problems = [f for _, f, _ in current if f.source is FindingSource.CODE]
-    ids = list(dict.fromkeys(f.rule_id for f in problems))
-    text = (
-        f"Code checks found {len(problems)} problem{'s' if len(problems) != 1 else ''}: {', '.join(ids)}."
-        if problems
-        else "Code checks passed."
-    )
+    per_rule = Counter(f.rule_id for f in problems)  # in the order of the findings
+    ids = list(per_rule)
+    # Each rule once, with its count when it has more than one finding, so the list adds up to the number.
+    listed = ", ".join(rule_id if n == 1 else f"{rule_id} ×{n}" for rule_id, n in per_rule.items())
+    text = f"Code checks found {len(problems)} problem{'s' if len(problems) != 1 else ''}: {listed}." if problems else "Code checks passed."
     if outdated:
         text += f" Marked {len(outdated)} finding{'s' if len(outdated) != 1 else ''} outdated."
     data = {"version": version.number, "problems": len(problems), "rules": ids, "outdated": len(outdated), "text": text}

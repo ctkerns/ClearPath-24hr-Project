@@ -20,6 +20,11 @@
     "openMenu": "Open menu",
     "accountOf": "Account: {{name}}"
   },
+  "notAvailable": {
+    "title": "{{page}} is not available for your role",
+    "body": "This page is for internal staff only. You can still open your materials and issues.",
+    "back": "Go to the dashboard"
+  },
   "status": {
     "draft": "Draft",
     "submitted": "Submitted",

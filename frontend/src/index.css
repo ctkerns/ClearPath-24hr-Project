@@ -6,7 +6,7 @@
  * Ledger: the ClearPath design system.
  * Light theme only. Dark mode is not designed yet; the variant stays so it can be added later.
  * Every color in the app comes from the tokens in :root below. Do not use raw hex values in components.
- * See every token and component at /design-system.
+ * See every token and component at /design-system (development builds only: npm run dev).
  */
 
 @custom-variant dark (&:is(.dark *));

@@ -44,7 +44,7 @@ function IssuePage() {
   const failed = detail.error ?? issues.error ?? (issue && detail.data ? null : notFoundError)
   if (failed || !issue || !detail.data) {
     return (
-      <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
+      <div className="mx-auto grid w-full max-w-7xl justify-items-start gap-3">
         <BackLink />
         <LoadError error={failed} what={t('issue.what')} onRetry={() => Promise.all([issues.refetch(), detail.refetch()])} />
       </div>

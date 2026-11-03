@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState, type ReactNode } from 'react'
 import { ChevronDown, Filter, Info, Plus, Search, TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -44,7 +44,12 @@ import { FlaggedText } from '@/components/review/flagged-text'
 
 // Design review page: every Ledger token and component in one place.
 // Check any style change here before it ships to real screens.
+// A tool for the team, not a product screen, so it exists only in development builds (npm run dev):
+// a production build sends /design-system to the dashboard, and no menu links to it there.
 export const Route = createFileRoute('/_app/design-system')({
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) throw redirect({ to: '/dashboard' })
+  },
   component: DesignSystemPage,
 })
 

@@ -25,6 +25,8 @@ type FindingCardProps = Omit<React.ComponentProps<"article">, "children"> & {
   suggestion?: React.ReactNode
   status?: FindingStatus
   actions?: React.ReactNode
+  /** False shows the rule id as plain text, for viewers who cannot open the library (affiliates, R4). */
+  ruleLink?: boolean
 }
 
 /** One finding from the AI reviewer or a person, linked to a rule and to flagged text. */
@@ -39,6 +41,7 @@ function FindingCard({
   suggestion,
   status = "open",
   actions,
+  ruleLink = true,
   className,
   ...props
 }: FindingCardProps) {
@@ -63,7 +66,11 @@ function FindingCard({
         )}
         <SeverityLabel level={severity} className={cn(outdated && "text-muted-foreground")} />
         {/* stopPropagation: a click on the rule opens the rule, not the finding marks. */}
-        <Link to="/library/rules/$ruleId" params={{ ruleId }} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline">{ruleId}</Link>
+        {ruleLink ? (
+          <Link to="/library/rules/$ruleId" params={{ ruleId }} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline">{ruleId}</Link>
+        ) : (
+          <span className="font-mono text-xs text-muted-foreground">{ruleId}</span>
+        )}
         <span className="ml-auto flex items-center gap-1.5">
           {outdated && (
             <span className="rounded-sm bg-neutral-soft px-1.5 text-xs font-semibold text-neutral">{t("finding.outdated")}</span>

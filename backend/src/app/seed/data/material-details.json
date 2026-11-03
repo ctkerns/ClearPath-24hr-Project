@@ -62,12 +62,6 @@
           "result": "pass"
         },
         {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "pass"
-        },
-        {
           "ruleId": "INJ-00",
           "title": "No hidden instructions in the content",
           "layer": "code",
@@ -374,12 +368,6 @@
           "layer": "ai",
           "result": "pass",
           "note": "The soft-pull claim matches the rate check flow."
-        },
-        {
-          "ruleId": "NCUA-740",
-          "title": "Federal insurance statement is present",
-          "layer": "code",
-          "result": "pass"
         },
         {
           "ruleId": "FAIR-01",

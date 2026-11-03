@@ -465,6 +465,8 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
   onFinding: (id: string) => void
 }) {
   const { t } = useTranslation()
+  // Affiliates cannot open the library (R4), so the rule ids are not links for them.
+  const ruleLink = useViewer().role !== 'affiliate'
   const open = findings.filter((f) => f.status === 'open')
   const outdated = findings.filter((f) => f.status === 'outdated')
 
@@ -478,6 +480,7 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
           number={numbers.get(f.id)}
           severity={f.severity}
           ruleId={f.ruleId}
+          ruleLink={ruleLink}
           source={f.source}
           flaggedText={f.text}
           explanation={f.explanation}
@@ -490,7 +493,7 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
         <>
           <SectionHeading className="pt-2">{t('review.outdated', { count: outdated.length })}</SectionHeading>
           {outdated.map((f) => (
-            <FindingCard key={f.id} severity={f.severity} ruleId={f.ruleId} source={f.source} status="outdated" flaggedText={f.text} explanation={f.explanation} />
+            <FindingCard key={f.id} severity={f.severity} ruleId={f.ruleId} ruleLink={ruleLink} source={f.source} status="outdated" flaggedText={f.text} explanation={f.explanation} />
           ))}
         </>
       )}
