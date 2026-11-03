@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ChevronLeft, Lock } from 'lucide-react'
+import { ChevronLeft, Lock, Pencil } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CopyButton } from '@/components/library/copy-button'
 import { requiredBy, useDisclosures } from '@/components/library/disclosure-data'
-import { useRules } from '@/components/library/rule-data'
+import { DisclosureFormDialog } from '@/components/library/disclosure-form-dialog'
+import { canEditLibrary, useRules } from '@/components/library/rule-data'
 import { useDisclosureList } from '@/components/library/use-disclosure-list'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { TrackedText } from '@/components/review/tracked-text'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
 
@@ -28,7 +31,9 @@ function DisclosurePage() {
   const rules = useRules()
   const { label } = useDisclosureList()
   const d = disclosures.data?.find((x) => x.id === disclosureId)
-  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
+  // R3: only Managers and Admins change the library. The server checks too.
+  const canEdit = canEditLibrary(viewer.role)
+  const [editing, setEditing] = useState(false)
 
   if (disclosures.isPending) return <PageSkeleton />
   if (!d) {
@@ -49,7 +54,19 @@ function DisclosurePage() {
           <span className="font-medium text-foreground">{t('rules.versionShort', { version: d.version })}</span>
           <span>{t('disclosures.effectiveOn', { date: formatDate(d.effectiveDate) })}</span>
         </p>
-        <h1 className="text-xl font-semibold">{d.title}</h1>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <h1 className="text-xl font-semibold">{d.title}</h1>
+          {canEdit && (
+            <>
+              {/* An edit saves a new version with its full text; the Versions list below shows what changed (F8). */}
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Pencil aria-hidden="true" />
+                {t('disclosures.editor.edit')}
+              </Button>
+              <DisclosureFormDialog disclosure={d} open={editing} onClose={() => setEditing(false)} />
+            </>
+          )}
+        </div>
         {!canEdit && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="size-3.5" aria-hidden="true" />

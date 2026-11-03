@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { daysUntil, type Product } from '@/components/materials/material-data'
 import { api } from '@/lib/api'
 
@@ -33,6 +33,32 @@ export function useBlocks() {
     queryKey: ['building-blocks'],
     queryFn: () => api<Block[]>('GET', '/library/building-blocks'),
   })
+}
+
+/** The body of PATCH /api/library/building-blocks/{id}. The text and kind stay as they were approved (F9). */
+export type BlockScope = Pick<Block, 'products' | 'states' | 'expiresAt'>
+
+// TODO (F9): "Save to library" on an approved material calls POST /api/library/building-blocks (Reviewers and higher)
+// with { kind, text, products, states, expiresAt, savedFrom: { id, title } }. It belongs on the material page.
+
+/**
+ * Managers curate blocks (R3); the server checks. Each call rejects with an ApiError, so the dialog can show what went wrong.
+ * After a delete, call `forget` once the block's page is gone, so that page never shows "not found".
+ */
+export function useBlockUpdate() {
+  const queryClient = useQueryClient()
+  const key = ['building-blocks']
+  return {
+    edit: async (id: string, scope: BlockScope) => {
+      await api<Block>('PATCH', `/library/building-blocks/${encodeURIComponent(id)}`, scope)
+      await queryClient.invalidateQueries({ queryKey: key })
+    },
+    remove: (id: string) => api('DELETE', `/library/building-blocks/${encodeURIComponent(id)}`),
+    forget: (id: string) => {
+      queryClient.setQueryData<Block[]>(key, (old) => old?.filter((b) => b.id !== id))
+      void queryClient.invalidateQueries({ queryKey: key })
+    },
+  }
 }
 
 /** Same thresholds as the materials list: amber within 30 days, red once passed. */
