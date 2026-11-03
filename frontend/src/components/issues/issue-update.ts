@@ -1,111 +1,60 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
-import type { Material } from '@/components/materials/material-data'
-import { type MaterialDetail } from '@/components/review/material-detail-data'
-import { useViewer } from '@/lib/session'
 import type { RiskLevel } from '@/components/ui/risk-tag'
-import { uuidv7 } from '@/lib/uuid'
+import { api } from '@/lib/api'
 import type { Issue, IssueDetail, IssueStatus } from './issue-data'
 
 /**
- * Changes to one issue in the demo cache: status, actions, the notice, and comments.
- * Each change also adds an activity entry, because the log is append-only.
- * TODO: replace with API calls. The server sends the notice email and records the audit entries.
+ * Changes to one issue: status, actions, the notice, and comments (PRD F12). Each one calls the API,
+ * which checks who may do it (the owner or a Manager) and adds the activity entry, because the log is append-only.
+ * The new detail goes into the cache; the lists reload, because the status and steps show there too.
+ * Each function returns a promise that rejects with an ApiError, so the page can show what went wrong.
+ * TODO (F13): the server sends the notice email.
  */
 export function useIssueUpdate(issueId: string) {
-  const viewer = useViewer()
-  const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const now = () => new Date().toISOString()
 
-  const update = (change: (d: IssueDetail) => IssueDetail, summary?: Partial<Issue>) => {
-    queryClient.setQueryData<IssueDetail | null>(['issue-detail', issueId], (d) => (d ? change(d) : d))
-    if (summary) queryClient.setQueryData<Issue[]>(['issues'], (list) => list?.map((i) => (i.id === issueId ? { ...i, ...summary } : i)))
+  const after = async (call: Promise<IssueDetail>) => {
+    const detail = await call
+    queryClient.setQueryData(['issue-detail', issueId], detail)
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['issues'] }),
+      // The material page lists its issues and their steps.
+      queryClient.invalidateQueries({ queryKey: ['material-detail'] }),
+    ])
   }
-  const log = (d: IssueDetail, ...events: { text: string; comment?: boolean }[]): IssueDetail => ({
-    ...d,
-    activity: [...d.activity, ...events.map((e) => ({ at: now(), actor: viewer.name, ...e }))],
-  })
 
   return {
-    setStatus(status: IssueStatus, note?: string) {
-      update(
-        (d) => log(d, { text: t('issue.log.status', { status: t(`issues.status.${status}`) }) }, ...(note ? [{ text: note, comment: true }] : [])),
-        { status, resolvedAt: status === 'resolved' ? now() : undefined },
-      )
-    },
-    completeAction(actionId: string) {
-      update((d) => {
-        const action = d.actions.find((a) => a.id === actionId)
-        const next = { ...d, actions: d.actions.map((a) => (a.id === actionId ? { ...a, done: true, doneBy: viewer.name, doneAt: now() } : a)) }
-        return log(next, { text: t('issue.log.actionDone', { action: action?.label }) })
-      })
-    },
-    sendNotice(subject: string, body: string) {
-      update((d) => {
-        if (!d.notice) return d
-        const next: IssueDetail = {
-          ...d,
-          notice: { ...d.notice, subject, body, sentAt: now(), sentBy: viewer.name },
-          actions: d.actions.map((a) => (a.kind === 'notice' ? { ...a, done: true, doneBy: viewer.name, doneAt: now() } : a)),
-        }
-        return log(next, { text: t('issue.log.noticeSent', { to: d.notice.to }) })
-      })
-    },
-    comment(text: string) {
-      update((d) => log(d, { text, comment: true }))
-    },
+    /** Resolving needs a note on how the problem was fixed. */
+    setStatus: (status: IssueStatus, note?: string) => after(api('PATCH', `/issues/${issueId}`, { status, note: note ?? '' })),
+    completeAction: (actionId: string) => after(api('POST', `/issues/${issueId}/actions/${actionId}/done`)),
+    sendNotice: (subject: string, body: string) => after(api('POST', `/issues/${issueId}/notice`, { subject, body })),
+    comment: (text: string) => after(api('POST', `/issues/${issueId}/comments`, { text })),
   }
 }
 
-export type NewIssue = { title: string; severity: RiskLevel; summary: string; owner: string; dueDate: string }
+export type NewIssue = { title: string; severity: RiskLevel; summary: string; ownerId: string; dueDate: string }
 
 /**
- * Opens an issue on a material (PRD F12: any Reviewer or higher, at any time). Returns the new issue ID.
- * TODO: replace with a POST to the API, which also notifies the owner (F13).
+ * Opens an issue on a material (PRD F12: any Reviewer or higher, at any time). Resolves with the new issue ID.
+ * TODO (F13): the server also notifies the owner.
  */
 export function useRaiseIssue() {
-  const viewer = useViewer()
-  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
-  return (material: Material, input: NewIssue) => {
-    const now = new Date().toISOString()
-    const id = uuidv7()
-    // The due date is a day; the issue is due at the end of it.
-    const dueAt = new Date(`${input.dueDate}T23:59:00`).toISOString()
-    const issue: Issue = {
-      id,
+  return async (materialId: string, input: NewIssue) => {
+    const issue = await api<Issue>('POST', '/issues', {
+      materialId,
       title: input.title,
       severity: input.severity,
-      status: 'open',
-      source: 'reviewer',
-      material: { id: material.id, title: material.title, channel: material.channel },
-      affiliate: material.affiliate,
-      owner: input.owner,
-      openedBy: viewer.name,
-      dueAt,
-      openedAt: now,
-    }
-    const opened = t('issue.log.raised', { owner: input.owner })
-    const detail: IssueDetail = {
-      id,
       summary: input.summary,
-      actions: [],
-      activity: [{ at: now, actor: viewer.name, text: opened }],
-    }
-
-    queryClient.setQueryData<Issue[]>(['issues'], (list = []) => [issue, ...list])
-    queryClient.setQueryData(['issue-detail', id], detail)
-    queryClient.setQueryData<MaterialDetail | null>(['material-detail', material.id], (d) =>
-      d
-        ? {
-            ...d,
-            issues: [...d.issues, { id, title: input.title, severity: input.severity, status: 'open', owner: input.owner, dueAt, openedAt: now, source: 'reviewer', actions: [] }],
-            history: [...d.history, { at: now, actor: viewer.name, type: 'issue', text: t('issue.log.raisedHistory', { title: input.title, owner: input.owner }) }],
-          }
-        : d,
-    )
-    return id
+      ownerId: input.ownerId,
+      // The due date is a day; the issue is due at the end of it, in the person's time zone.
+      dueAt: new Date(`${input.dueDate}T23:59:00`).toISOString(),
+    })
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['issues'] }),
+      queryClient.invalidateQueries({ queryKey: ['material-detail', materialId] }),
+    ])
+    return issue.id
   }
 }

@@ -10,8 +10,13 @@ import { DecisionDialog } from '@/components/review/decision-dialog'
 import { HistoryTab } from '@/components/review/history-tab'
 import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
-import { useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { fileUrl, useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { SaveError } from '@/components/save-error'
+import { hasRole } from '@/components/settings/user-data'
+import { api } from '@/lib/api'
 import { useViewer } from '@/lib/session'
+import { useSave } from '@/lib/use-save'
+import { useQueryClient } from '@tanstack/react-query'
 import { useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
@@ -71,7 +76,6 @@ function MaterialPage() {
       <Header material={material} detail={detail.data ?? null} onDecide={setDecision} onRaiseIssue={() => setRaising(true)} />
       <RaiseIssueDialog
         material={material}
-        people={[...new Set((list.data ?? []).map((x) => x.owner))].sort()}
         open={raising}
         onClose={() => setRaising(false)}
       />
@@ -131,6 +135,9 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
   // R1: nobody approves a version they submitted.
   const canDecide = m.status === 'in_review' && !!detail && detail.submittedBy !== viewer.name && groupsForViewer(detail, viewer).length > 0
   const canRetract = !!detail && approvedByViewer(detail, viewer).length > 0
+  // PRD section 4: Submitters and affiliates send new versions; Reviewers and higher raise issues (F12).
+  const canSubmit = viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')
+  const canRaise = hasRole(viewer.role, 'reviewer')
 
   return (
     <header className="grid gap-2">
@@ -152,19 +159,19 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {canDecide ? <DecisionButtons onDecide={onDecide} /> : (
+          {canDecide ? <DecisionButtons onDecide={onDecide} /> : canSubmit && (
             <Button asChild variant="outline">
               <Link to="/materials/$materialId/new-version" params={{ materialId: m.id }}><Upload />{t('page.newVersion')}</Link>
             </Button>
           )}
-          <DropdownMenu>
+          {(canDecide || canRetract || canRaise) && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" aria-label={t('review.moreActions')}><Ellipsis /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {canDecide && <DropdownMenuItem onSelect={() => onDecide('escalate')}>{t('review.decision.escalate')}</DropdownMenuItem>}
               {canRetract && <DropdownMenuItem onSelect={() => onDecide('retract')}>{t('review.decision.retract')}</DropdownMenuItem>}
-              <DropdownMenuItem onSelect={onRaiseIssue}>{t('review.raiseIssue')}</DropdownMenuItem>
+              {canRaise && <DropdownMenuItem onSelect={onRaiseIssue}>{t('review.raiseIssue')}</DropdownMenuItem>}
               {canDecide && (
                 <>
                   <DropdownMenuSeparator />
@@ -174,7 +181,7 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
                 </>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
         </div>
       </div>
     </header>
@@ -460,10 +467,22 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
   )
 }
 
-/** Comments from people, oldest first, like a pull request conversation. TODO: post and reply. */
+/**
+ * Comments from people, oldest first, like a pull request conversation.
+ * Reviewers comment, Submitters and affiliates reply; Viewers only read (PRD section 4). TODO: threaded replies.
+ */
 function Conversation({ detail }: { detail: MaterialDetail }) {
   const viewer = useViewer()
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [body, setBody] = useState('')
+  const save = useSave(() => setBody(''))
+  const canComment = viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')
+  const post = () =>
+    save.run(async () => {
+      const saved = await api<MaterialDetail>('POST', `/materials/${detail.id}/comments`, { body })
+      queryClient.setQueryData(['material-detail', detail.id], saved)
+    })
   return (
     <section className="grid gap-3">
       <SectionHeading>{t('review.comments', { count: detail.comments.length })}</SectionHeading>
@@ -487,13 +506,16 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
           </li>
         ))}
       </ol>
-      <div className="flex gap-2.5">
-        <PersonAvatar name={viewer.name} />
-        <div className="grid flex-1 justify-items-end gap-2">
-          <Textarea placeholder={t('review.commentPlaceholder')} aria-label={t('review.commentPlaceholder')} className="min-h-16" />
-          <Button variant="outline" size="sm">{t('review.comment')}</Button>
-        </div>
-      </div>
+      {canComment && (
+        <form className="flex gap-2.5" onSubmit={(e) => { e.preventDefault(); void post() }}>
+          <PersonAvatar name={viewer.name} />
+          <div className="grid flex-1 justify-items-end gap-2">
+            <Textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={5000} placeholder={t('review.commentPlaceholder')} aria-label={t('review.commentPlaceholder')} className="min-h-16" />
+            <div className="w-full"><SaveError error={save.error} /></div>
+            <Button type="submit" variant="outline" size="sm" disabled={!body.trim() || save.pending}>{t('review.comment')}</Button>
+          </div>
+        </form>
+      )}
     </section>
   )
 }
@@ -603,6 +625,15 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
           {detail.details.launchDate && <Detail label={t('review.detail.dates')}>{formatDate(detail.details.launchDate)} – {detail.details.endDate ? formatDate(detail.details.endDate) : '—'}</Detail>}
           {detail.details.destinationUrl && <Detail label={t('review.detail.destination')}><span className="break-all">{detail.details.destinationUrl}</span></Detail>}
           {detail.details.platformId && <Detail label={t('review.detail.platformId')}><code className="break-all">{detail.details.platformId}</code></Detail>}
+          {detail.files.length > 0 && (
+            <Detail label={t('review.detail.files')}>
+              <ul className="grid gap-0.5">
+                {detail.files.map((f) => (
+                  <li key={f.id}><a href={fileUrl(f.id)} download={f.name} className="break-all font-medium text-primary hover:underline">{f.name}</a></li>
+                ))}
+              </ul>
+            </Detail>
+          )}
           <Detail label={t('review.detail.path')}>{t(`review.path.${detail.path}`)}</Detail>
           <Detail label={t('review.detail.submitted')}>{t('review.submittedBy', { name: detail.submittedBy, time: formatRelativeTime(detail.submittedAt) })}</Detail>
           {m.affiliate && <Detail label={t('materials.field.affiliate')}>{m.affiliate}</Detail>}

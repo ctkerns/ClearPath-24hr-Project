@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Channel } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
+import { hasRole } from '@/components/settings/user-data'
+import { api } from '@/lib/api'
+import type { SessionUser } from '@/lib/session'
 
 // Issues data (PRD F12). An issue comes from monitoring (a live problem) or from a reviewer.
-// TODO: replace ISSUES_URL with the real API. The server must filter by role:
+// GET /api/issues and /api/issues/<id>. The server filters by role:
 // an Affiliate gets only their own company's issues (PRD R4).
-const ISSUES_URL = '/demo/issues.json'
 
 export const ISSUE_STATUSES = ['open', 'in_progress', 'resolved'] as const
 export type IssueStatus = (typeof ISSUE_STATUSES)[number]
@@ -33,20 +35,20 @@ export type Issue = {
   /** Who raised it, for issues that a reviewer opened. */
   openedBy?: string
   owner: string
+  ownerId: string
   dueAt: string
   openedAt: string
   resolvedAt?: string
 }
 
+/** PRD F12: the issue owner, or a Manager and higher, changes the status and runs the steps. A Viewer only reads. */
+export const canManageIssue = (viewer: SessionUser, issue: Issue) =>
+  hasRole(viewer.role, 'manager') || (viewer.id === issue.ownerId && (viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')))
+
 export function useIssues() {
   return useQuery({
     queryKey: ['issues'],
-    queryFn: async (): Promise<Issue[]> => {
-      const res = await fetch(ISSUES_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).issues
-    },
-    staleTime: Infinity,
+    queryFn: () => api<Issue[]>('GET', '/issues'),
   })
 }
 
@@ -101,13 +103,6 @@ export type IssueDetail = {
 export function useIssueDetail(id: string) {
   return useQuery({
     queryKey: ['issue-detail', id],
-    queryFn: async (): Promise<IssueDetail | null> => {
-      const res = await fetch(`/demo/issues/${id}.json`)
-      // Vite answers a missing file with index.html, so check the type too.
-      if (res.status === 404 || !res.headers.get('content-type')?.includes('json')) return null
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    staleTime: Infinity,
+    queryFn: () => api<IssueDetail>('GET', `/issues/${id}`),
   })
 }

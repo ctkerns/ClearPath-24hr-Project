@@ -1,4 +1,5 @@
 {
+  "_note": "Demo issues (PRD F12). owner and openedBy are user names. material.id links to materials.json; the other material fields and affiliate come from the material.",
   "issues": [
     {
       "id": "01a1993a-f3e0-7668-886f-7df89511ac54",

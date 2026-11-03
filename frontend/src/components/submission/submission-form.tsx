@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { CHANNELS, PRODUCTS, type Channel, type Product } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
+import { SaveError } from '@/components/save-error'
 import { useLicensedStates } from '@/components/settings/workspace-data'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { ApiError } from '@/lib/api'
+import { useSave } from '@/lib/use-save'
 import { cn } from '@/lib/utils'
 import {
   channelFields,
@@ -18,6 +21,8 @@ import {
   validate,
   type ContentSource,
   type SubmissionValues,
+  type UploadedFile,
+  uploadFile,
 } from './submission-model'
 
 /**
@@ -32,7 +37,8 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
   versionNumber?: number
   /** False until the data that the submit needs has loaded. */
   ready: boolean
-  onSubmit: (values: SubmissionValues) => void
+  /** Sends the submission. When it fails, the form shows the server's message and keeps the values. */
+  onSubmit: (values: SubmissionValues) => Promise<unknown>
   onCancel: () => void
 }) {
   const { t } = useTranslation()
@@ -47,12 +53,13 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
   // Licensed states and routing come from Settings (Workspace and Routing tabs), so a change there shows here at once.
   const licensedStates = useLicensedStates()
   const routingPreview = useRoutingPreview()
+  const save = useSave(() => {})
   const routing = values.product && values.channel && (values.nationwide || values.states.length) ? routingPreview.preview(values) : []
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     setTried(true)
-    if (Object.keys(errors).length === 0 && ready && routingPreview.ready) onSubmit(values)
+    if (Object.keys(errors).length === 0 && ready && routingPreview.ready && !save.pending) void save.run(() => onSubmit(values))
   }
 
   return (
@@ -217,8 +224,9 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
         {tried && Object.keys(errors).length > 0 && (
           <p className="mr-auto text-xs font-medium text-destructive">{t('submit.fixErrors', { count: Object.keys(errors).length })}</p>
         )}
+        <SaveError error={save.error} />
         <Button type="button" variant="outline" onClick={onCancel}>{t('submit.cancel')}</Button>
-        <Button type="submit" disabled={!ready || !routingPreview.ready}>
+        <Button type="submit" disabled={!ready || !routingPreview.ready || save.pending}>
           {isVersion ? t('submit.submitVersion', { version: versionNumber }) : t('submit.submit')}
         </Button>
       </div>
@@ -248,22 +256,34 @@ function Field({ id, label, error, locked, optional, children }: {
   )
 }
 
-/** A drop zone that is also a file button. Demo keeps only the file names. */
+/** A drop zone that is also a file button. Each file uploads as soon as it is picked (POST /api/materials/files). */
 function FileDrop({ id, accept, multiple, icon: Icon, files, onFiles, hint, compact }: {
   id: string
   accept?: string
   multiple: boolean
   icon: typeof FileUp
-  files: string[]
-  onFiles: (files: string[]) => void
+  files: UploadedFile[]
+  onFiles: (files: UploadedFile[]) => void
   hint: string
   compact?: boolean
 }) {
   const { t } = useTranslation()
   const [over, setOver] = useState(false)
-  const add = (list: FileList | null) => {
-    const names = [...(list ?? [])].map((f) => f.name)
-    onFiles(multiple ? [...new Set([...files, ...names])] : names.slice(0, 1))
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string>()
+  const add = async (list: FileList | null) => {
+    const picked = [...(list ?? [])].slice(0, multiple ? undefined : 1)
+    if (!picked.length) return
+    setUploading(true)
+    setError(undefined)
+    try {
+      const uploaded = await Promise.all(picked.map(uploadFile))
+      onFiles(multiple ? [...files, ...uploaded] : uploaded)
+    } catch (err) {
+      setError(err instanceof ApiError && err.status < 500 ? err.detail : t('submit.uploadFailed'))
+    } finally {
+      setUploading(false)
+    }
   }
   return (
     <div className="grid gap-1.5">
@@ -271,7 +291,7 @@ function FileDrop({ id, accept, multiple, icon: Icon, files, onFiles, hint, comp
         htmlFor={id}
         onDragOver={(e) => { e.preventDefault(); setOver(true) }}
         onDragLeave={() => setOver(false)}
-        onDrop={(e) => { e.preventDefault(); setOver(false); add(e.dataTransfer.files) }}
+        onDrop={(e) => { e.preventDefault(); setOver(false); void add(e.dataTransfer.files) }}
         className={cn(
           'flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground',
           'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
@@ -280,17 +300,22 @@ function FileDrop({ id, accept, multiple, icon: Icon, files, onFiles, hint, comp
         )}
       >
         <Icon className={compact ? 'size-4' : 'size-5'} strokeWidth={1.5} aria-hidden="true" />
-        <span><span className="font-semibold text-primary">{t('submit.chooseFile')}</span> {t('submit.orDrop')}</span>
+        {uploading ? (
+          <span>{t('submit.uploading')}</span>
+        ) : (
+          <span><span className="font-semibold text-primary">{t('submit.chooseFile')}</span> {t('submit.orDrop')}</span>
+        )}
         {!compact && <span className="text-[11px]">{hint}</span>}
-        <input id={id} type="file" accept={accept} multiple={multiple} className="sr-only" onChange={(e) => add(e.target.files)} />
+        <input id={id} type="file" accept={accept} multiple={multiple} disabled={uploading} className="sr-only" onChange={(e) => { void add(e.target.files); e.target.value = '' }} />
       </label>
+      <SaveError error={error} />
       {files.length > 0 && (
         <ul className="grid gap-1">
-          {files.map((name) => (
-            <li key={name} className="flex items-center gap-2 rounded-md border px-2 py-1 text-xs">
+          {files.map(({ id: fileId, name }) => (
+            <li key={fileId} className="flex items-center gap-2 rounded-md border px-2 py-1 text-xs">
               <Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate">{name}</span>
-              <button type="button" onClick={() => onFiles(files.filter((f) => f !== name))} aria-label={t('submit.removeFile', { name })} className="text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => onFiles(files.filter((f) => f.id !== fileId))} aria-label={t('submit.removeFile', { name })} className="text-muted-foreground hover:text-foreground">
                 <X className="size-3.5" />
               </button>
             </li>

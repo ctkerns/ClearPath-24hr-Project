@@ -1,0 +1,548 @@
+{
+  "_note": "Versions, findings, checklist, reviews, comments, history and live items of the demo materials that have content. Names are user names, except the system actors (Rule check, AI reviewer, Routing, Monitoring). Finding IDs like f1 only link segments and checklist rows to findings; the seed gives each finding a new UUID. The issues of each material come from issues.json.",
+  "details": [
+    {
+      "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+      "version": 3,
+      "versionCount": 3,
+      "submittedAt": "2026-07-08T13:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "lighter",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-07-15",
+        "endDate": "2027-01-10",
+        "destinationUrl": "clearpathcu.example/loans/debt-payoff",
+        "platformId": "718204992"
+      },
+      "fields": [
+        {
+          "label": "Headline 1",
+          "segments": [
+            "Pay off debt faster"
+          ]
+        },
+        {
+          "label": "Headline 2",
+          "segments": [
+            "Personal loans from 8.99% APR"
+          ]
+        },
+        {
+          "label": "Headline 3",
+          "segments": [
+            "Check your rate in minutes"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "One fixed monthly payment. Rates from 8.99% to 24.99% APR. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [],
+      "checklist": [
+        {
+          "ruleId": "REGZ-1026.24",
+          "title": "Trigger terms require APR disclosure",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "approved",
+          "by": "Alex Chen",
+          "at": "2026-07-09T11:00:00Z",
+          "reason": "Every material"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Alex Chen",
+          "role": "Compliance",
+          "at": "2026-07-09T11:00:00Z",
+          "body": "Rate update only, matches the July rate sheet.",
+          "decision": "approve"
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-05-20T10:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "full",
+          "outcome": "approved",
+          "outcomeBy": "Alex Chen (Compliance)",
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Pay off debt faster"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 9.49% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "Check your rate in minutes"
+            },
+            {
+              "label": "Description",
+              "text": "One fixed monthly payment. Rates from 9.49% to 24.99% APR. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-06-11T09:30:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "lighter",
+          "outcome": "approved",
+          "outcomeBy": "Alex Chen (Compliance)",
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Pay off debt faster"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 9.24% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "Check your rate in minutes"
+            },
+            {
+              "label": "Description",
+              "text": "One fixed monthly payment. Rates from 9.24% to 24.99% APR. Federally insured by NCUA."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "submittedAt": "2026-07-08T13:00:00Z",
+          "submittedBy": "Sam Rivera",
+          "path": "lighter",
+          "outcome": "approved",
+          "outcomeBy": "Alex Chen (Compliance)",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-07-08T13:00:00Z",
+          "actor": "Sam Rivera",
+          "type": "submitted",
+          "text": "Submitted version 3. Lighter path: rate or fee update that matches the rate sheet."
+        },
+        {
+          "at": "2026-07-08T13:01:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks passed."
+        },
+        {
+          "at": "2026-07-09T11:00:00Z",
+          "actor": "Alex Chen",
+          "type": "decision",
+          "text": "Approved for Compliance on version 3. Approval ID CP-2026-0129-v3, expires Jan 10, 2027."
+        },
+        {
+          "at": "2026-07-15T08:00:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Found live on Google Ads. Matched version 3."
+        },
+        {
+          "at": "2026-11-01T22:28:00Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Live ad changed: Headline 2 and Description differ from version 3."
+        },
+        {
+          "at": "2026-11-01T22:28:30Z",
+          "actor": "Monitoring",
+          "type": "live",
+          "text": "Paused the ad on Google Ads automatically, because the match is by platform ID."
+        },
+        {
+          "at": "2026-11-01T22:29:00Z",
+          "actor": "Monitoring",
+          "type": "issue",
+          "text": "Opened issue \"Live ad text differs from the approved version\" for Sam Rivera."
+        }
+      ],
+      "live": [
+        {
+          "id": "li1",
+          "connector": "Google Ads",
+          "externalId": "718204992",
+          "match": "platform_id",
+          "status": "changed",
+          "foundAt": "2026-07-15T08:00:00Z",
+          "checkedAt": "2026-11-01T22:28:00Z",
+          "paused": true,
+          "fields": [
+            {
+              "label": "Headline 1",
+              "text": "Pay off debt faster"
+            },
+            {
+              "label": "Headline 2",
+              "text": "Personal loans from 5.99% APR"
+            },
+            {
+              "label": "Headline 3",
+              "text": "Check your rate in minutes"
+            },
+            {
+              "label": "Description",
+              "text": "One low monthly payment. Rates from 5.99% APR. Federally insured by NCUA."
+            }
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "id": "01a1993a-f3e0-7668-886f-7df89511ac54",
+          "title": "Live ad text differs from the approved version",
+          "severity": "high",
+          "status": "open",
+          "owner": "Sam Rivera",
+          "dueAt": "2026-11-04T17:00:00Z",
+          "openedAt": "2026-11-01T22:29:00Z",
+          "source": "monitoring",
+          "actions": [
+            {
+              "label": "Ad paused automatically",
+              "done": true
+            },
+            {
+              "label": "Restore the approved text on Google Ads",
+              "done": false
+            },
+            {
+              "label": "Or submit the live text as a new version",
+              "done": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01a112a1-4000-7d42-94be-d09364e3b51d",
+      "version": 2,
+      "versionCount": 2,
+      "submittedAt": "2026-11-02T09:12:00Z",
+      "submittedBy": "Priya Shah",
+      "path": "full",
+      "details": {
+        "targetStates": "Nationwide",
+        "launchDate": "2026-11-15",
+        "endDate": "2027-01-31",
+        "destinationUrl": "clearpathcu.example/loans/personal",
+        "platformId": "23851204417730592"
+      },
+      "fields": [
+        {
+          "label": "Primary text",
+          "segments": [
+            "Summer plans? Make them happen with a ClearPath personal loan. Borrow up to $25,000 for ",
+            "travel, home projects or a new start, ",
+            {
+              "text": "for as low as $199/month",
+              "finding": "f1"
+            },
+            ". ",
+            {
+              "text": "Approval in minutes",
+              "finding": "f2"
+            },
+            ", and checking your rate won't affect your credit score."
+          ]
+        },
+        {
+          "label": "Headline",
+          "segments": [
+            "Personal loans from 8.99% APR"
+          ]
+        },
+        {
+          "label": "Description",
+          "segments": [
+            "Rates from 8.99% to 24.99% APR. Terms 12 to 60 months."
+          ]
+        },
+        {
+          "label": "Call to action",
+          "segments": [
+            "Check your rate"
+          ]
+        },
+        {
+          "label": "Image",
+          "kind": "image",
+          "segments": [
+            "Your summer, funded. ClearPath Credit Union. Federally insured by NCUA."
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "f1",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "REGZ-1026.24",
+          "status": "open",
+          "text": "for as low as $199/month",
+          "explanation": "is a payment amount, which is a Reg Z trigger term. The ad must also show the APR, the loan amount and the term that the payment is based on.",
+          "suggestion": "Insert disclosure D-7 v3 after this sentence, or remove the payment amount."
+        },
+        {
+          "id": "f2",
+          "source": "ai",
+          "severity": "medium",
+          "ruleId": "UDAAP-03",
+          "status": "open",
+          "text": "Approval in minutes",
+          "explanation": "can read as a promise that every applicant gets approved, and fast. The decision depends on a credit review.",
+          "suggestion": "Use the approved building block BB-012: \"Get a decision in minutes\"."
+        },
+        {
+          "id": "f0",
+          "source": "code",
+          "severity": "high",
+          "ruleId": "UDAAP-03",
+          "status": "outdated",
+          "text": "Guaranteed approval",
+          "explanation": "is a banned phrase. Version 2 removed it."
+        }
+      ],
+      "checklist": [
+        {
+          "ruleId": "REGZ-1026.24",
+          "title": "Trigger terms require APR disclosure",
+          "layer": "code",
+          "result": "fail",
+          "finding": "f1"
+        },
+        {
+          "ruleId": "UDAAP-03",
+          "title": "No promise of guaranteed approval",
+          "layer": "ai",
+          "result": "fail",
+          "finding": "f2"
+        },
+        {
+          "ruleId": "RATE-01",
+          "title": "Every APR is inside the rate sheet range",
+          "layer": "code",
+          "result": "pass",
+          "note": "8.99% to 24.99% matches the October rate sheet."
+        },
+        {
+          "ruleId": "FCRA-02",
+          "title": "Rate check claims must match the credit pull",
+          "layer": "ai",
+          "result": "pass",
+          "note": "The soft-pull claim matches the rate check flow."
+        },
+        {
+          "ruleId": "NCUA-740",
+          "title": "Federal insurance statement is present",
+          "layer": "code",
+          "result": "pass"
+        },
+        {
+          "ruleId": "FAIR-01",
+          "title": "No wording or imagery that could steer applicants",
+          "layer": "ai",
+          "result": "pass"
+        },
+        {
+          "ruleId": "INJ-00",
+          "title": "No hidden instructions in the content",
+          "layer": "code",
+          "result": "pass"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Compliance",
+          "state": "waiting",
+          "members": [
+            "Jordan Kim",
+            "Alex Chen"
+          ],
+          "reason": "Every material"
+        },
+        {
+          "name": "Legal",
+          "state": "approved",
+          "by": "Maya Ruiz",
+          "at": "2026-11-02T14:20:00Z",
+          "reason": "Product is a loan, nationwide"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Maya Ruiz",
+          "role": "Legal",
+          "at": "2026-11-02T14:18:00Z",
+          "body": "Legal is fine with version 2. The image text and the NCUA statement are correct."
+        },
+        {
+          "id": "c2",
+          "author": "Dana Ortiz",
+          "role": "Marketing",
+          "at": "2026-11-02T16:05:00Z",
+          "body": "Can we keep the $199/month if we add the D-7 disclosure under the image instead of in the primary text?"
+        }
+      ],
+      "versions": [
+        {
+          "number": 1,
+          "submittedAt": "2026-10-30T15:02:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "outcome": "changes_requested",
+          "outcomeBy": "Alex Chen (Compliance)",
+          "fields": [
+            {
+              "label": "Primary text",
+              "text": "Summer plans? Make them happen with a ClearPath personal loan. Borrow up to $25,000 for anything, for as low as $199/month. Guaranteed approval, and checking your rate will not affect your credit score."
+            },
+            {
+              "label": "Headline",
+              "text": "Personal loans from 8.99% APR"
+            },
+            {
+              "label": "Description",
+              "text": "Low rates. Fast money."
+            },
+            {
+              "label": "Call to action",
+              "text": "Apply now"
+            },
+            {
+              "label": "Image",
+              "text": "Your summer, funded. ClearPath Credit Union."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "submittedAt": "2026-11-02T09:12:00Z",
+          "submittedBy": "Priya Shah",
+          "path": "full",
+          "current": true
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-30T15:02:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 1 by manual upload."
+        },
+        {
+          "at": "2026-10-30T15:03:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 2 problems: REGZ-1026.24, UDAAP-03."
+        },
+        {
+          "at": "2026-10-30T15:03:30Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found 1 problem: UDAAP-03."
+        },
+        {
+          "at": "2026-10-30T15:04:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance (rule \"Every material\") and Legal (rule \"Loan, nationwide\")."
+        },
+        {
+          "at": "2026-10-31T10:40:00Z",
+          "actor": "Alex Chen",
+          "type": "decision",
+          "text": "Requested changes for Compliance on version 1: Remove \"Guaranteed approval\" and add the APR disclosure."
+        },
+        {
+          "at": "2026-11-02T09:12:00Z",
+          "actor": "Priya Shah",
+          "type": "submitted",
+          "text": "Submitted version 2. Full review path, because the primary text changed."
+        },
+        {
+          "at": "2026-11-02T09:13:00Z",
+          "actor": "Rule check",
+          "type": "prereview",
+          "text": "Code checks found 1 problem: REGZ-1026.24. Marked 1 finding outdated."
+        },
+        {
+          "at": "2026-11-02T09:13:30Z",
+          "actor": "AI reviewer",
+          "type": "prereview",
+          "text": "AI review found 1 problem: UDAAP-03."
+        },
+        {
+          "at": "2026-11-02T09:14:00Z",
+          "actor": "Routing",
+          "type": "routed",
+          "text": "Required Compliance and Legal again."
+        },
+        {
+          "at": "2026-11-02T14:18:00Z",
+          "actor": "Maya Ruiz",
+          "type": "comment",
+          "text": "Commented on version 2."
+        },
+        {
+          "at": "2026-11-02T14:20:00Z",
+          "actor": "Maya Ruiz",
+          "type": "decision",
+          "text": "Approved for Legal on version 2."
+        },
+        {
+          "at": "2026-11-02T16:05:00Z",
+          "actor": "Dana Ortiz",
+          "type": "comment",
+          "text": "Commented on version 2."
+        }
+      ],
+      "live": [],
+      "issues": []
+    }
+  ]
+}

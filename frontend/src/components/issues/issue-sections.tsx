@@ -14,7 +14,10 @@ import { StatusPill } from '@/components/ui/status-pill'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate, formatDateTime, formatRelativeTime } from '@/i18n/format'
 import { cn } from '@/lib/utils'
-import { isOverdue, type Issue, type IssueAction, type IssueDetail } from './issue-data'
+import { useViewer } from '@/lib/session'
+import { useSave } from '@/lib/use-save'
+import { SaveError } from '@/components/save-error'
+import { canManageIssue, isOverdue, type Issue, type IssueAction, type IssueDetail } from './issue-data'
 import { IssueStatusPill } from './issue-meta'
 import { useIssueUpdate } from './issue-update'
 
@@ -115,12 +118,15 @@ export function ActionList({ issue, detail }: { issue: Issue; detail: IssueDetai
 
 function ActionRow({ action: a, issue, detail }: { action: IssueAction; issue: Issue; detail: IssueDetail }) {
   const { t } = useTranslation()
+  const viewer = useViewer()
   const { completeAction } = useIssueUpdate(issue.id)
+  const { pending, error, run } = useSave(() => undefined)
   const [editing, setEditing] = useState(false)
   const resolved = issue.status === 'resolved'
 
   let control: React.ReactNode = null
-  if (!a.done && !resolved) {
+  // Only the owner or a Manager runs a step (PRD F12); the server checks it too.
+  if (!a.done && !resolved && canManageIssue(viewer, issue)) {
     if (a.kind === 'new_version') {
       control = (
         <Button asChild variant="outline" size="sm">
@@ -134,7 +140,11 @@ function ActionRow({ action: a, issue, detail }: { action: IssueAction; issue: I
         </Button>
       )
     } else {
-      control = <Button variant="outline" size="sm" onClick={() => completeAction(a.id)}>{t('issue.actions.markDone')}</Button>
+      control = (
+        <Button variant="outline" size="sm" disabled={pending} onClick={() => void run(() => completeAction(a.id))}>
+          {t('issue.actions.markDone')}
+        </Button>
+      )
     }
   }
 
@@ -155,6 +165,7 @@ function ActionRow({ action: a, issue, detail }: { action: IssueAction; issue: I
         </div>
         {control}
       </div>
+      {error && <div className="px-3 pb-2.5 sm:pl-10"><SaveError error={error} /></div>}
       {editing && detail.notice && !a.done && <NoticeEditor issueId={issue.id} notice={detail.notice} onDone={() => setEditing(false)} />}
     </li>
   )
@@ -164,6 +175,7 @@ function ActionRow({ action: a, issue, detail }: { action: IssueAction; issue: I
 function NoticeEditor({ issueId, notice, onDone }: { issueId: string; notice: NonNullable<IssueDetail['notice']>; onDone: () => void }) {
   const { t } = useTranslation()
   const { sendNotice } = useIssueUpdate(issueId)
+  const { pending, error, run } = useSave(onDone)
   const [subject, setSubject] = useState(notice.subject)
   const [body, setBody] = useState(notice.body)
 
@@ -172,8 +184,7 @@ function NoticeEditor({ issueId, notice, onDone }: { issueId: string; notice: No
       className="grid gap-3 border-t bg-muted/40 px-3 py-3 sm:pl-10"
       onSubmit={(e) => {
         e.preventDefault()
-        sendNotice(subject.trim(), body.trim())
-        onDone()
+        void run(() => sendNotice(subject.trim(), body.trim()))
       }}
     >
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -198,9 +209,10 @@ function NoticeEditor({ issueId, notice, onDone }: { issueId: string; notice: No
         <Label htmlFor="notice-body">{t('issue.notice.body')}</Label>
         <Textarea id="notice-body" value={body} onChange={(e) => setBody(e.target.value)} rows={12} className="bg-background leading-relaxed" />
       </div>
+      <SaveError error={error} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onDone}>{t('issue.notice.cancel')}</Button>
-        <Button type="submit" size="sm" disabled={!subject.trim() || !body.trim()}>{t('issue.notice.send')}</Button>
+        <Button type="submit" size="sm" disabled={!subject.trim() || !body.trim() || pending}>{t('issue.notice.send')}</Button>
       </div>
     </form>
   )
@@ -209,8 +221,10 @@ function NoticeEditor({ issueId, notice, onDone }: { issueId: string; notice: No
 /** Events and comments in one list, oldest first. Append-only, so there are no edit controls. */
 export function Activity({ issueId, detail }: { issueId: string; detail: IssueDetail }) {
   const { t } = useTranslation()
+  const viewer = useViewer()
   const { comment } = useIssueUpdate(issueId)
   const [text, setText] = useState('')
+  const { pending, error, run } = useSave(() => setText(''))
   const events = [...detail.activity].sort((a, b) => a.at.localeCompare(b.at))
 
   return (
@@ -237,13 +251,13 @@ export function Activity({ issueId, detail }: { issueId: string; detail: IssueDe
           )
         })}
       </ol>
-      <form
+      {/* Viewers only read (PRD section 4). */}
+      {viewer.role !== 'viewer' && <form
         className="flex gap-2.5"
         onSubmit={(e) => {
           e.preventDefault()
           if (!text.trim()) return
-          comment(text.trim())
-          setText('')
+          void run(() => comment(text.trim()))
         }}
       >
         <span className="size-6 shrink-0" />
@@ -255,9 +269,10 @@ export function Activity({ issueId, detail }: { issueId: string; detail: IssueDe
             aria-label={t('review.commentPlaceholder')}
             className="min-h-16"
           />
-          <Button type="submit" variant="outline" size="sm" disabled={!text.trim()}>{t('review.comment')}</Button>
+          <SaveError error={error} />
+          <Button type="submit" variant="outline" size="sm" disabled={!text.trim() || pending}>{t('review.comment')}</Button>
         </div>
-      </form>
+      </form>}
     </section>
   )
 }

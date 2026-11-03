@@ -1,0 +1,257 @@
+{
+  "_note": "Summary, live item, actions, notice and activity of the demo issues that have them. rule.id is a rule or disclosure ID of the library.",
+  "details": [
+    {
+      "id": "01a18d20-cee0-79d2-89ba-130fb18dca45",
+      "summary": "Monitoring found a Meta ad that nobody submitted for review. It created a material with source \"found live\" and paused the ad. Submit it for review, or take it down.",
+      "rule": {
+        "id": "UDAAP-03",
+        "title": "No promise of guaranteed approval"
+      },
+      "liveItem": {
+        "connector": "Meta ads",
+        "externalId": "23851234567890",
+        "match": "platform_id",
+        "checkedAt": "2026-10-30T14:02:00Z",
+        "paused": true,
+        "fields": [
+          {
+            "label": "Primary text",
+            "text": "Need cash fast? Loans approved in 5 minutes, no credit check needed."
+          },
+          {
+            "label": "Headline",
+            "text": "Loans approved in 5 minutes"
+          },
+          {
+            "label": "Call to action",
+            "text": "Apply now"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "pause",
+          "label": "Pause the ad on Meta",
+          "done": true,
+          "doneBy": "Monitoring",
+          "doneAt": "2026-10-30T14:05:00Z"
+        },
+        {
+          "id": "a2",
+          "kind": "find_author",
+          "label": "Find out who launched the ad",
+          "done": true,
+          "doneBy": "Priya Shah",
+          "doneAt": "2026-10-31T10:20:00Z"
+        },
+        {
+          "id": "a3",
+          "kind": "take_down",
+          "label": "Delete the ad on Meta",
+          "done": false
+        },
+        {
+          "id": "a4",
+          "kind": "new_version",
+          "label": "Or submit it for review",
+          "done": false
+        }
+      ],
+      "activity": [
+        {
+          "at": "2026-10-30T14:02:00Z",
+          "actor": "Monitoring",
+          "text": "Found ad 23851234567890 on Meta, which no material matches. Created a material with source \"found live\"."
+        },
+        {
+          "at": "2026-10-30T14:05:00Z",
+          "actor": "Monitoring",
+          "text": "Paused the ad on Meta. Opened this issue and assigned it to Priya Shah, the default owner of the Meta ad account. Due Nov 1."
+        },
+        {
+          "at": "2026-10-30T15:40:00Z",
+          "actor": "Priya Shah",
+          "text": "Changed the status to In progress."
+        },
+        {
+          "at": "2026-10-31T10:20:00Z",
+          "actor": "Priya Shah",
+          "comment": true,
+          "text": "An agency contractor launched this from an old test campaign. It must not run: \"no credit check\" is not true for this product. I will delete it after Legal confirms we do not need to keep it."
+        }
+      ]
+    },
+    {
+      "id": "01a1993a-f3e0-7668-886f-7df89511ac54",
+      "summary": "The live Google ad shows a lower APR than the approved version, and it no longer shows the top of the APR range. Monitoring paused the ad.",
+      "rule": {
+        "id": "REGZ-1026.24",
+        "title": "Trigger terms require APR disclosure"
+      },
+      "liveItem": {
+        "connector": "Google Ads",
+        "externalId": "718204992",
+        "match": "platform_id",
+        "checkedAt": "2026-11-01T22:28:00Z",
+        "paused": true,
+        "fields": [
+          {
+            "label": "Headline 1",
+            "text": "Pay off debt faster"
+          },
+          {
+            "label": "Headline 2",
+            "text": "Personal loans from 5.99% APR"
+          },
+          {
+            "label": "Headline 3",
+            "text": "Check your rate in minutes"
+          },
+          {
+            "label": "Description",
+            "text": "One low monthly payment. Rates from 5.99% APR. Federally insured by NCUA."
+          }
+        ]
+      },
+      "approved": {
+        "version": 3,
+        "approvalId": "CP-2026-0129-v3",
+        "fields": [
+          {
+            "label": "Headline 1",
+            "text": "Pay off debt faster"
+          },
+          {
+            "label": "Headline 2",
+            "text": "Personal loans from 8.99% APR"
+          },
+          {
+            "label": "Headline 3",
+            "text": "Check your rate in minutes"
+          },
+          {
+            "label": "Description",
+            "text": "One fixed monthly payment. Rates from 8.99% to 24.99% APR. Federally insured by NCUA."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "pause",
+          "label": "Pause the ad on Google Ads",
+          "done": true,
+          "doneBy": "Monitoring",
+          "doneAt": "2026-11-01T22:29:00Z"
+        },
+        {
+          "id": "a2",
+          "kind": "restore",
+          "label": "Restore the approved text on Google Ads",
+          "done": false
+        },
+        {
+          "id": "a3",
+          "kind": "new_version",
+          "label": "Or submit the live text as a new version for review",
+          "done": false
+        }
+      ],
+      "activity": [
+        {
+          "at": "2026-11-01T22:28:00Z",
+          "actor": "Monitoring",
+          "text": "Found a difference between the live ad and approved version 3 (matched by platform ID 718204992)."
+        },
+        {
+          "at": "2026-11-01T22:29:00Z",
+          "actor": "Monitoring",
+          "text": "Paused the ad on Google Ads."
+        },
+        {
+          "at": "2026-11-01T22:29:00Z",
+          "actor": "Monitoring",
+          "text": "Opened this issue and assigned it to Sam Rivera, the material owner. Due Nov 4."
+        },
+        {
+          "at": "2026-11-02T08:14:00Z",
+          "actor": "Sam Rivera",
+          "comment": true,
+          "text": "The rate sheet changed on Oct 30 and someone on the paid team updated the ad directly. I will check with them before I restore it."
+        }
+      ]
+    },
+    {
+      "id": "01a19b87-a300-7083-a17b-e83caf805f10",
+      "summary": "The LendWise blog post no longer shows disclosure D-4 (cash back rewards terms). The approval has a condition that the post must show D-4 next to the reward amount.",
+      "rule": {
+        "id": "D-4 v2",
+        "title": "Cash back card rewards terms"
+      },
+      "condition": "Show disclosure D-4 directly below the reward amount.",
+      "liveItem": {
+        "connector": "Web crawler",
+        "url": "https://lendwise.example/blog/best-cash-back-cards-2026",
+        "match": "similarity",
+        "similarity": 0.91,
+        "checkedAt": "2026-11-02T09:10:00Z",
+        "paused": false,
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Apply in minutes and get a decision fast."
+          }
+        ]
+      },
+      "approved": {
+        "version": 1,
+        "approvalId": "CP-2026-0131-v1",
+        "fields": [
+          {
+            "label": "Page text",
+            "text": "ClearPath Cash Back Visa: earn 2% cash back on every purchase, with no annual fee. Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Apply in minutes and get a decision fast."
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "kind": "notice",
+          "label": "Send a correction notice to LendWise",
+          "done": false
+        },
+        {
+          "id": "a2",
+          "kind": "confirm_fix",
+          "label": "Check the live page after LendWise fixes it",
+          "done": false
+        }
+      ],
+      "notice": {
+        "to": "Tara Nguyen <tara@lendwise.example>",
+        "cc": "Marcus Lee",
+        "subject": "Correction needed: ClearPath Cash Back Visa post (CP-2026-0131-v1)",
+        "body": "Hi Tara,\n\nOur monitoring checked your post \"Best cash back cards of 2026\" on Nov 2 and found that it no longer shows the required rewards terms disclosure.\n\nWhat to fix:\n- Add this text directly below the 2% cash back amount: \"Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.\"\n\nPlease make the change by Nov 3. The approved version is CP-2026-0131-v1. Reply to this email when it is done, and we will check the page again.\n\nThank you,\nJordan Kim\nCompliance, ClearPath Credit Union"
+      },
+      "activity": [
+        {
+          "at": "2026-11-02T09:10:00Z",
+          "actor": "Monitoring",
+          "text": "Crawled the LendWise referral URL. Matched it to Cash back card, affiliate post by similarity (91%)."
+        },
+        {
+          "at": "2026-11-02T09:12:00Z",
+          "actor": "Monitoring",
+          "text": "Found that approval condition \"Show disclosure D-4\" is broken. Opened this issue and assigned it to Tara Nguyen (LendWise). Due Nov 3."
+        },
+        {
+          "at": "2026-11-02T09:12:00Z",
+          "actor": "AI reviewer",
+          "text": "Drafted a correction notice to LendWise."
+        }
+      ]
+    }
+  ]
+}

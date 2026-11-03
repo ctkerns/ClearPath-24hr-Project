@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Material } from '@/components/materials/material-data'
 import { useViewer } from '@/lib/session'
+import { useSave } from '@/lib/use-save'
+import { SaveError } from '@/components/save-error'
+import { useUsers } from '@/components/settings/user-data'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -29,10 +32,8 @@ function dateFromToday(days: number) {
  * for example when they disagree with an approval or see a problem that monitoring missed.
  * The owner is the material owner by default.
  */
-export function RaiseIssueDialog({ material, people, open, onClose }: {
+export function RaiseIssueDialog({ material, open, onClose }: {
   material: Material
-  /** People who can own the issue. TODO: read the workspace users from the API. */
-  people: string[]
   open: boolean
   onClose: () => void
 }) {
@@ -40,27 +41,32 @@ export function RaiseIssueDialog({ material, people, open, onClose }: {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         {/* Mounted only while open, so each time starts from clean defaults. */}
-        {open && <RaiseIssueForm material={material} people={people} onClose={onClose} />}
+        {open && <RaiseIssueForm material={material} onClose={onClose} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function RaiseIssueForm({ material, people, onClose }: { material: Material; people: string[]; onClose: () => void }) {
+function RaiseIssueForm({ material, onClose }: { material: Material; onClose: () => void }) {
   const viewer = useViewer()
+  const users = useUsers()
+  const { pending, error, run } = useSave(() => undefined)
   const { t } = useTranslation()
   const raise = useRaiseIssue()
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [severity, setSeverity] = useState<RiskLevel>('medium')
-  const [owner, setOwner] = useState(material.owner)
+  // Active people can own it: internal users, and the affiliates of this material's company (PRD R4).
+  const people = (users.data ?? []).filter(
+    (u) => u.status === 'active' && (u.role !== 'affiliate' || (!!material.affiliate && u.affiliate === material.affiliate)),
+  )
+  const [ownerId, setOwnerId] = useState<string>()
+  const owner = ownerId ?? people.find((u) => u.name === material.owner)?.id ?? viewer.id
   const [dueDate, setDueDate] = useState(() => dateFromToday(daysToFix.medium))
   // The due date follows the severity until the person picks a date.
   const [dueTouched, setDueTouched] = useState(false)
-  const ready = title.trim() && summary.trim() && dueDate
-
-  const owners = [...new Set([material.owner, ...people, viewer.name])]
+  const ready = title.trim() && summary.trim() && dueDate && users.data
 
   return (
     <form
@@ -68,9 +74,11 @@ function RaiseIssueForm({ material, people, onClose }: { material: Material; peo
       onSubmit={(e) => {
         e.preventDefault()
         if (!ready) return
-        const id = raise(material, { title: title.trim(), summary: summary.trim(), severity, owner, dueDate })
-        onClose()
-        void navigate({ to: '/issues/$issueId', params: { issueId: id } })
+        void run(async () => {
+          const id = await raise(material.id, { title: title.trim(), summary: summary.trim(), severity, ownerId: owner, dueDate })
+          onClose()
+          void navigate({ to: '/issues/$issueId', params: { issueId: id } })
+        })
       }}
     >
       <DialogHeader>
@@ -115,13 +123,13 @@ function RaiseIssueForm({ material, people, onClose }: { material: Material; peo
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor="issue-owner">{t('issues.field.owner')}</Label>
-          <Select value={owner} onValueChange={setOwner}>
+          <Select value={owner} onValueChange={setOwnerId}>
             <SelectTrigger id="issue-owner" className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {owners.map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                  {name === material.owner && <span className="text-muted-foreground"> · {t('issue.raise.materialOwner')}</span>}
+              {people.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                  {u.name === material.owner && <span className="text-muted-foreground"> · {t('issue.raise.materialOwner')}</span>}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -142,9 +150,10 @@ function RaiseIssueForm({ material, people, onClose }: { material: Material; peo
         </div>
       </div>
 
+      <SaveError error={error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('issue.notice.cancel')}</Button>
-        <Button type="submit" disabled={!ready}>{t('issue.raise.submit')}</Button>
+        <Button type="submit" disabled={!ready || pending}>{t('issue.raise.submit')}</Button>
       </DialogFooter>
     </form>
   )

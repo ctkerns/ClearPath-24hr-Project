@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import type { IssueStatus } from '@/components/issues/issue-data'
 import type { GroupState } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
+import { api } from '@/lib/api'
 
 // One material's current version, with its review: findings, checklist, groups and comments (PRD F4, F5).
-// TODO: replace the demo URL with the real API. Only one demo material has a seeded file; others return 404.
-const detailUrl = (id: string) => `/demo/materials/${id}.json`
+// GET /api/materials/<id>. It is null when the material has no version yet (some seeded drafts).
 
 /** Plain text, or text that a finding points to. */
 export type Segment = string | { text: string; finding: string }
@@ -29,7 +29,7 @@ export type MaterialDetail = {
   submittedAt: string
   submittedBy: string
   path: 'full' | 'lighter'
-  details: { targetStates: string; launchDate?: string; endDate?: string; destinationUrl?: string; platformId?: string }
+  details: { targetStates: string; launchDate?: string; endDate?: string; destinationUrl?: string; platformId?: string; targeting?: string }
   fields: { label: string; kind?: 'image'; segments: Segment[] }[]
   findings: Finding[]
   checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: 'pass' | 'fail'; finding?: string; note?: string }[]
@@ -38,11 +38,18 @@ export type MaterialDetail = {
   conditions?: string
   comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision }[]
   versions: VersionSummary[]
-  /** Append-only audit log (PRD F2). TODO: the API returns structured events, and the page writes the text. */
+  /** Append-only audit log (PRD F2). The server writes the text. TODO: structured events, and the page writes the text. */
   history: HistoryEvent[]
   live: LiveItem[]
   issues: MaterialIssue[]
+  /** Files uploaded with the current version: content, the ad image, or claim proofs (PRD F3). */
+  files: MaterialFile[]
 }
+
+export type MaterialFile = { id: string; name: string; contentType: string; size: number }
+
+/** Where the browser downloads an uploaded file. The server checks who may read it. */
+export const fileUrl = (id: string) => `/api/materials/files/${id}`
 
 export type VersionSummary = {
   number: number
@@ -98,15 +105,7 @@ export type Decision = 'approve' | 'approve_conditions' | 'request_changes' | 'r
 export function useMaterialDetail(id: string) {
   return useQuery({
     queryKey: ['material-detail', id],
-    queryFn: async (): Promise<MaterialDetail | null> => {
-      const res = await fetch(detailUrl(id))
-      // Vite answers a missing file with index.html, so check the type too.
-      if (res.status === 404 || !res.headers.get('content-type')?.includes('json')) return null
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    // Demo decisions live only in this cache, so never refetch over them. TODO: remove with the real API.
-    staleTime: Infinity,
+    queryFn: () => api<MaterialDetail | null>('GET', `/materials/${id}`),
   })
 }
 

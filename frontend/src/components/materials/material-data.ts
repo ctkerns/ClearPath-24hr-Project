@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import { FileText, Globe, Handshake, Mail, Megaphone, Search, type LucideIcon } from 'lucide-react'
 import type { MaterialStatus } from '@/components/ui/status-pill'
 
-// Materials repository data (PRD F2).
-// TODO: replace MATERIALS_URL with the real API. The server must filter by role:
-// an Affiliate gets only their own company's materials (PRD R4).
-const MATERIALS_URL = '/demo/materials.json'
+// Materials repository data (PRD F2). GET /api/materials.
+// The server filters by role: an Affiliate gets only their own company's materials (PRD R4).
 
 export const STATUSES = [
   'draft', 'submitted', 'in_review', 'changes_requested', 'rejected', 'approved', 'live', 'expired', 'retired',
@@ -54,13 +53,7 @@ export type Material = {
 export function useMaterials() {
   return useQuery({
     queryKey: ['materials'],
-    queryFn: async (): Promise<Material[]> => {
-      const res = await fetch(MATERIALS_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).materials
-    },
-    // Demo decisions change this cache (see review/decide.ts), so never refetch over them. TODO: remove with the real API.
-    staleTime: Infinity,
+    queryFn: () => api<Material[]>('GET', '/materials'),
   })
 }
 
