@@ -18,6 +18,7 @@ from fastapi import APIRouter
 from sqlalchemy import select
 
 from app.api import APIModel, InternalUser
+from app.business_days import business_days
 from app.material_access import Db, now
 from app.models import ReviewerGroup
 from app.models.materials import (
@@ -73,18 +74,6 @@ class ViolationRecord(APIModel):
 class Metrics(APIModel):
     decisions: list[DecisionRecord]
     violations: list[ViolationRecord]
-
-
-def business_days(start: datetime, end: datetime) -> float:
-    """Days between two times, without Saturdays and Sundays (UTC), to one decimal."""
-    total = timedelta()
-    day = start.replace(hour=0, minute=0, second=0, microsecond=0)
-    while day < end:
-        nxt = day + timedelta(days=1)
-        if day.weekday() < 5:
-            total += min(end, nxt) - max(start, day)
-        day = nxt
-    return round(max(total.total_seconds(), 0) / 86400, 1)
 
 
 def normal(text: str) -> str:

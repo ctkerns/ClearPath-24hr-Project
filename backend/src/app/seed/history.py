@@ -30,6 +30,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import OtherActor, entry
+from app.business_days import add_business_days
 from app.models import Base, ReviewerGroup, Role, User, UserStatus, Workspace, group_memberships
 from app.models.audit import AuditEvent
 from app.models.materials import (
@@ -174,20 +175,6 @@ GROUP_REASONS = {
 
 def utc(d: date, hour: float = 0) -> datetime:
     return datetime.combine(d, time(), UTC) + timedelta(hours=hour)
-
-
-def add_business_days(start: datetime, days: float) -> datetime:
-    """The time `days` business days after `start`, skipping Saturdays and Sundays (UTC)."""
-    left, t = timedelta(days=days), start
-    while True:
-        midnight = utc(t.date()) + DAY
-        if t.weekday() >= 5:
-            t = midnight
-            continue
-        if left <= midnight - t:
-            return (t + left).replace(microsecond=0)
-        left -= midnight - t
-        t = midnight
 
 
 @dataclass

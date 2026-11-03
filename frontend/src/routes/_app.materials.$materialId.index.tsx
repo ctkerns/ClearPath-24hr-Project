@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, Clock, CircleAlert, Ellipsis, ImageIcon, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DeadlineLabel } from '@/components/dashboard/deadline-label'
 import { RaiseIssueDialog } from '@/components/issues/raise-issue-dialog'
 import { FindingCard } from '@/components/review/finding-card'
 import { FlaggedText } from '@/components/review/flagged-text'
@@ -602,6 +603,7 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
                     {g.state !== 'waiting' && g.by && g.at
                       ? t(`review.groupBy.${g.state}`, { name: g.by, time: formatRelativeTime(g.at) })
                       : t(`materials.groupStateShort.${g.state}`)}
+                    {g.deadline && <> · <DeadlineLabel deadline={g.deadline} /></>}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {g.escalatedBy
