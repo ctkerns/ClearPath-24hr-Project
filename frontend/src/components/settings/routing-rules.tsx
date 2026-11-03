@@ -54,15 +54,15 @@ export function RoutingRules({ rules, groups, canEdit }: { rules: RoutingRule[];
                   className="mt-1 mr-1"
                   checked={r.enabled}
                   disabled={!canEdit}
-                  onCheckedChange={(on) => update.setEnabled(r.id, on)}
+                  onCheckedChange={(on) => void update.setEnabled(r.id, on).catch(console.error)}
                   aria-label={t('settingsRouting.rules.toggle', { name: r.name })}
                 />
                 {canEdit && (
                   <>
-                    <Button size="icon-xs" variant="ghost" disabled={i === 0} onClick={() => update.move(r.id, -1)} aria-label={t('settingsRouting.rules.moveUp', { name: r.name })}>
+                    <Button size="icon-xs" variant="ghost" disabled={i === 0} onClick={() => void update.move(r.id, -1).catch(console.error)} aria-label={t('settingsRouting.rules.moveUp', { name: r.name })}>
                       <ChevronUp />
                     </Button>
-                    <Button size="icon-xs" variant="ghost" disabled={i === rules.length - 1} onClick={() => update.move(r.id, 1)} aria-label={t('settingsRouting.rules.moveDown', { name: r.name })}>
+                    <Button size="icon-xs" variant="ghost" disabled={i === rules.length - 1} onClick={() => void update.move(r.id, 1).catch(console.error)} aria-label={t('settingsRouting.rules.moveDown', { name: r.name })}>
                       <ChevronDown />
                     </Button>
                     <Button size="icon-xs" variant="ghost" onClick={() => setEditing(r)} aria-label={t('settingsRouting.rules.edit', { name: r.name })}>

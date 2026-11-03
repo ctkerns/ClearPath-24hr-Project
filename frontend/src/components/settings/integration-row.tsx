@@ -80,7 +80,7 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
         </span>
         <span className={col.action}>
           {canEdit && i.status === 'connected' && (
-            <Button size="xs" variant="outline" onClick={() => syncNow(i.id)}>
+            <Button size="xs" variant="outline" onClick={() => void syncNow(i.id).catch(console.error)}>
               <RefreshCw aria-hidden="true" />
               {t('settingsIntegrations.syncNow')}
             </Button>
@@ -131,7 +131,7 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
                     {info.ownsContent && (
                       <span className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">{t('settingsIntegrations.accounts.defaultOwner')}</span>
-                        <Select value={a.defaultOwnerId ?? ''} onValueChange={(v) => setDefaultOwner(i.id, a.id, v)} disabled={!canEdit}>
+                        <Select value={a.defaultOwnerId ?? ''} onValueChange={(v) => void setDefaultOwner(i.id, a.id, v).catch(console.error)} disabled={!canEdit}>
                           <SelectTrigger size="sm" className="w-44" aria-label={t('settingsIntegrations.accounts.defaultOwnerFor', { account: a.name })}>
                             <SelectValue placeholder={t('settingsIntegrations.accounts.noOwner')} />
                           </SelectTrigger>

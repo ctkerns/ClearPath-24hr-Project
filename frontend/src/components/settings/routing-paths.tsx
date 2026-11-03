@@ -19,7 +19,7 @@ export function DefaultGroupSection({ settings, groups, canEdit }: { settings: R
     <section className="grid gap-3" aria-labelledby="routing-default">
       <SectionHeading id="routing-default">{t('settingsRouting.default.heading')}</SectionHeading>
       <div className="grid gap-x-6 gap-y-2 sm:grid-cols-[14rem_minmax(0,1fr)] sm:items-start">
-        <Select value={current?.id ?? ''} onValueChange={update.setDefaultGroup} disabled={!canEdit}>
+        <Select value={current?.id ?? ''} onValueChange={(id) => void update.setDefaultGroup(id).catch(console.error)} disabled={!canEdit}>
           <SelectTrigger className="w-full" aria-label={t('settingsRouting.default.heading')}><SelectValue placeholder={t('settingsRouting.choose')} /></SelectTrigger>
           <SelectContent>{groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
         </Select>
@@ -49,7 +49,7 @@ export function LighterPathSection({ settings, groups, canEdit }: { settings: Ro
       <div className="grid gap-x-6 gap-y-2 sm:grid-cols-[14rem_minmax(0,1fr)] sm:items-start">
         <Select
           value={settings.lighterPathGroupId ?? DEFAULT}
-          onValueChange={(v) => update.setLighterPathGroup(v === DEFAULT ? null : v)}
+          onValueChange={(v) => void update.setLighterPathGroup(v === DEFAULT ? null : v).catch(console.error)}
           disabled={!canEdit}
         >
           <SelectTrigger className="w-full" aria-label={t('settingsRouting.lighter.group')}><SelectValue /></SelectTrigger>
@@ -95,7 +95,7 @@ export function ChangeTypesSection({ settings, canEdit }: { settings: RoutingSet
               </div>
               <span className="flex items-center gap-2 self-start pt-0.5">
                 <span className="w-6 text-right text-xs text-muted-foreground">{on ? t('settingsRouting.on') : t('settingsRouting.off')}</span>
-                <Switch id={id} checked={on} disabled={!canEdit} onCheckedChange={(v) => update.setChangeType(type, v)} />
+                <Switch id={id} checked={on} disabled={!canEdit} onCheckedChange={(v) => void update.setChangeType(type, v).catch(console.error)} />
               </span>
             </li>
           )

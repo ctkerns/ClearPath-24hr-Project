@@ -1,0 +1,125 @@
+{
+  "_note": "Demo routing (PRD F6). Same IDs as the old frontend demo file. requiredGroupIds are reviewer group IDs; updatedBy is a user name. Rules keep this order.",
+  "routing": {
+    "lighterPathGroupId": null,
+    "noMaterialChangeTypes": {
+      "rate_fee": true,
+      "offer_date": true,
+      "disclosure_refresh": true,
+      "block_swap": true,
+      "formatting": true,
+      "tracking_link": false
+    },
+    "rules": [
+      {
+        "id": "01973a12-4e00-7a11-8c01-1a2b3c4d5e01",
+        "name": "Compliance reviews everything",
+        "enabled": true,
+        "conditions": {
+          "products": [],
+          "channels": [],
+          "states": []
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7b41-9e0a-3f6d2a1c8b01"
+        ],
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-03-04T15:20:00Z"
+      },
+      {
+        "id": "01973a12-4e00-7b22-9d02-2b3c4d5e6f02",
+        "name": "Loans sold nationwide",
+        "enabled": true,
+        "conditions": {
+          "products": [
+            "personal_loan",
+            "auto_loan",
+            "heloc",
+            "mortgage"
+          ],
+          "channels": [],
+          "nationwide": true,
+          "states": []
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7c52-8f1b-4a7e3b2d9c02"
+        ],
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-03-04T15:24:00Z"
+      },
+      {
+        "id": "01973a12-4e00-7c33-8e03-3c4d5e6f7a03",
+        "name": "Home lending",
+        "enabled": true,
+        "conditions": {
+          "products": [
+            "mortgage",
+            "heloc"
+          ],
+          "channels": [],
+          "states": []
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7d63-9a2c-5b8f4c3eac03"
+        ],
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-03-04T15:27:00Z"
+      },
+      {
+        "id": "01973a12-4e00-7d44-9f04-4d5e6f7a8b04",
+        "name": "Affiliate content",
+        "enabled": true,
+        "conditions": {
+          "products": [],
+          "channels": [
+            "affiliate"
+          ],
+          "states": []
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7e74-8b3d-6c9a5d4fbd04"
+        ],
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-05-18T10:02:00Z"
+      },
+      {
+        "id": "01973a12-4e00-7e55-8a05-5e6f7a8b9c05",
+        "name": "Affiliates with recent problems",
+        "enabled": true,
+        "conditions": {
+          "products": [],
+          "channels": [],
+          "source": "affiliate",
+          "affiliateHistory": true,
+          "states": []
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7e74-8b3d-6c9a5d4fbd04",
+          "01973a10-2c00-7c52-8f1b-4a7e3b2d9c02"
+        ],
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-08-11T13:45:00Z"
+      },
+      {
+        "id": "01973a12-4e00-7f66-9b06-6f7a8b9c0d06",
+        "name": "New York credit card offers",
+        "enabled": false,
+        "conditions": {
+          "products": [
+            "credit_card"
+          ],
+          "channels": [],
+          "states": [
+            "NY"
+          ]
+        },
+        "requiredGroupIds": [
+          "01973a10-2c00-7c52-8f1b-4a7e3b2d9c02"
+        ],
+        "note": "Off until Legal confirms the new NY disclosure wording.",
+        "updatedBy": "Alex Chen",
+        "updatedAt": "2026-10-06T09:12:00Z"
+      }
+    ]
+  }
+}
