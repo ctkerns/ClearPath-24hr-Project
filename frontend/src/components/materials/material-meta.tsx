@@ -90,15 +90,14 @@ export function PersonAvatar({ name, className }: { name: string; className?: st
 }
 
 /**
- * Icon for the Status field: a small status pill (rounded box with a dot), so the menu icon
+ * Icon for the Status field: a small status pill (rounded box with a label line), so the menu icon
  * matches how statuses are drawn in the list. Same props as a Lucide icon.
  */
 export function StatusFieldIcon({ className, strokeWidth = 1.75, ...props }: React.ComponentProps<'svg'> & { strokeWidth?: number }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} aria-hidden="true" className={cn('size-4 shrink-0', className)} {...props}>
       <rect x="2.5" y="7" width="19" height="10" rx="2" />
-      <circle cx="7.5" cy="12" r="1.75" fill="currentColor" stroke="none" />
-      <path d="M11.5 12h6" strokeLinecap="round" />
+      <path d="M7 12h10" strokeLinecap="round" />
     </svg>
   )
 }

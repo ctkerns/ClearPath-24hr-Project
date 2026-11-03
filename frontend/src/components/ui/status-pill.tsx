@@ -16,19 +16,19 @@ export type MaterialStatus =
   | "retired"
 
 const statusPillVariants = cva(
-  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap before:size-1.5 before:shrink-0 before:rounded-full before:content-['']",
+  "inline-flex w-fit shrink-0 items-center rounded-sm px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor]",
   {
     variants: {
       status: {
-        draft: "bg-neutral-soft text-neutral before:bg-current",
-        submitted: "text-info shadow-[inset_0_0_0_1px_var(--color-info)] before:border before:border-current",
-        in_review: "bg-info-soft text-info before:bg-current",
-        changes_requested: "bg-risk-medium-soft text-risk-medium before:bg-current",
-        rejected: "bg-risk-high-soft text-risk-high before:bg-current",
-        approved: "bg-risk-low-soft text-risk-low before:bg-current",
-        live: "bg-risk-low text-white before:bg-white",
-        expired: "text-neutral shadow-[inset_0_0_0_1px_var(--color-border)] before:bg-current",
-        retired: "text-muted-foreground line-through before:border before:border-current",
+        draft: "bg-neutral-soft text-neutral",
+        submitted: "bg-background text-info",
+        in_review: "bg-info-soft text-info",
+        changes_requested: "bg-risk-medium-soft text-risk-medium",
+        rejected: "bg-risk-high-soft text-risk-high",
+        approved: "bg-risk-low-soft text-risk-low",
+        live: "bg-risk-low text-white shadow-[inset_0_0_0_1px_var(--color-risk-low)]",
+        expired: "bg-background text-neutral",
+        retired: "bg-background text-muted-foreground line-through",
       },
     },
   }
