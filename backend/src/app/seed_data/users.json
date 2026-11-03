@@ -1,0 +1,147 @@
+{
+  "_note": "Demo workspace users (PRD A6). Same IDs as frontend/public/demo/users.json, so the demo data matches. Groups and affiliates come later, with their tables.",
+  "users": [
+    {
+      "id": "019737ce-f700-7e9a-b0cc-4e4625729cee",
+      "email": "maya.ruiz@demo.clearpathcu.org",
+      "name": "Maya Ruiz",
+      "title": "Compliance operations",
+      "role": "admin",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T11:14:00Z"
+    },
+    {
+      "id": "01973fbf-6f80-756f-bbb1-b5c18412e40f",
+      "email": "alex.chen@demo.clearpathcu.org",
+      "name": "Alex Chen",
+      "title": "Compliance manager",
+      "role": "manager",
+      "status": "active",
+      "lastActiveAt": "2026-11-01T10:49:00Z"
+    },
+    {
+      "id": "019747af-e800-7d5f-9b81-fafc213492fc",
+      "email": "jordan.kim@demo.clearpathcu.org",
+      "name": "Jordan Kim",
+      "title": "Compliance analyst",
+      "role": "reviewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T15:45:00Z"
+    },
+    {
+      "id": "01974fa0-6080-7e87-af7d-ebee63954435",
+      "email": "dana.ortiz@demo.clearpathcu.org",
+      "name": "Dana Ortiz",
+      "title": "Compliance analyst",
+      "role": "reviewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T13:38:00Z"
+    },
+    {
+      "id": "01975790-d900-704f-b25b-f15704630706",
+      "email": "tara.nguyen@demo.clearpathcu.org",
+      "name": "Tara Nguyen",
+      "title": "Counsel",
+      "role": "reviewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T12:42:00Z"
+    },
+    {
+      "id": "01975f81-5180-7baa-b65d-9842092121fa",
+      "email": "omar.haddad@demo.clearpathcu.org",
+      "name": "Omar Haddad",
+      "title": "Senior counsel",
+      "role": "reviewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-01T18:31:00Z"
+    },
+    {
+      "id": "01976771-ca00-743b-984f-5d6fa0a86bcc",
+      "email": "grace.liu@demo.clearpathcu.org",
+      "name": "Grace Liu",
+      "title": "Mortgage compliance",
+      "role": "reviewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T12:24:00Z"
+    },
+    {
+      "id": "01976f62-4280-77e8-950f-6fe7058397c4",
+      "email": "priya.shah@demo.clearpathcu.org",
+      "name": "Priya Shah",
+      "title": "Marketing",
+      "role": "submitter",
+      "status": "active",
+      "lastActiveAt": "2026-11-01T10:46:00Z"
+    },
+    {
+      "id": "01977752-bb00-73a2-8d7c-2d0d4d36ad8a",
+      "email": "sam.rivera@demo.clearpathcu.org",
+      "name": "Sam Rivera",
+      "title": "Marketing",
+      "role": "submitter",
+      "status": "active",
+      "lastActiveAt": "2026-11-01T13:54:00Z"
+    },
+    {
+      "id": "01977f43-3380-76f0-9cb5-3b6dd2cec0de",
+      "email": "marcus.lee@demo.clearpathcu.org",
+      "name": "Marcus Lee",
+      "title": "Affiliate manager",
+      "role": "submitter",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T10:37:00Z"
+    },
+    {
+      "id": "01978733-ac00-79cf-98b3-bf84d86e5901",
+      "email": "ben.okafor@demo.clearpathcu.org",
+      "name": "Ben Okafor",
+      "title": "Internal audit",
+      "role": "viewer",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T10:56:00Z"
+    },
+    {
+      "id": "01978f24-2480-755c-b29f-68f230818435",
+      "email": "erin.walsh@lendwise.example",
+      "name": "Erin Walsh",
+      "title": "Partner marketing",
+      "role": "affiliate",
+      "status": "active",
+      "lastActiveAt": "2026-11-02T13:12:00Z"
+    },
+    {
+      "id": "01979714-9d00-7808-8fc6-330646f4583b",
+      "email": "leo@rateradar.example",
+      "name": "Leo Park",
+      "title": "Growth lead",
+      "role": "affiliate",
+      "status": "active",
+      "lastActiveAt": "2026-11-01T18:13:00Z"
+    },
+    {
+      "id": "01979f05-1580-7dec-833e-351cc0d19c8e",
+      "email": "nina.patel@demo.clearpathcu.org",
+      "name": "Nina Patel",
+      "title": "Compliance analyst",
+      "role": "reviewer",
+      "status": "invited"
+    },
+    {
+      "id": "0197a6f5-8e00-7b21-9c4a-2d7e5f13a8b6",
+      "email": "chris.doyle@demo.clearpathcu.org",
+      "name": "Chris Doyle",
+      "title": "Compliance analyst",
+      "role": "reviewer",
+      "status": "deactivated",
+      "lastActiveAt": "2026-08-14T16:05:00Z"
+    },
+    {
+      "id": "0197aee6-0680-7c3d-8a55-6b1f0e92d4c7",
+      "email": "kai@loanlink.example",
+      "name": "Kai Morgan",
+      "title": "Partner marketing",
+      "role": "affiliate",
+      "status": "invited"
+    }
+  ]
+}

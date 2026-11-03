@@ -14,6 +14,6 @@ RUN uv sync --locked --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
-# Bring the database up to the newest migration, then start the API.
+# Bring the database up to the newest migration, create the demo data if it is missing, then start the API.
 # "exec" makes the API the main process, so `docker compose stop` stops it cleanly.
-CMD ["sh", "-c", "alembic upgrade head && exec fastapi run src/app/main.py --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && exec fastapi run src/app/main.py --host 0.0.0.0 --port 8000"]
