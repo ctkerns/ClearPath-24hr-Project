@@ -13,6 +13,9 @@ COPY . .
 RUN uv sync --locked --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
+# Only Caddy reaches this port, so trust its X-Forwarded-For: the API then sees the real client IP
+# (the sign-in limits count failures per IP).
+ENV FORWARDED_ALLOW_IPS="*"
 EXPOSE 8000
 # Bring the database up to the newest migration, create the demo data if it is missing, then start the API.
 # "exec" makes the API the main process, so `docker compose stop` stops it cleanly.

@@ -1119,7 +1119,8 @@
     "error": {
       "missing": "Enter your email and password.",
       "invalid": "The email or password is not correct.",
-      "unavailable": "ClearPath cannot reach the server. Try again in a minute."
+      "unavailable": "ClearPath cannot reach the server. Try again in a minute.",
+      "tooMany": "Too many failed sign-ins. Wait 15 minutes, then try again."
     },
     "demo": {
       "heading": "Try the demo",
@@ -1137,6 +1138,23 @@
       }
     },
     "footer": "An internal tool of ClearPath Credit Union. The audit log records every sign-in."
+  },
+  "acceptInvite": {
+    "heading": "Join {{workspace}}",
+    "intro": "Choose a password to finish your invite. You then sign in with this email.",
+    "checking": "Checking your invite…",
+    "name": "Your name",
+    "email": "Work email",
+    "password": "New password",
+    "passwordHint": "At least {{count}} characters.",
+    "submit": "Set password and sign in",
+    "toSignIn": "Go to sign-in",
+    "error": {
+      "short": "Use at least {{count}} characters for the password.",
+      "invalid": "This invite link does not work. It was used already, or the invite was cancelled. Ask your Admin for a new invite.",
+      "expired": "This invite link has expired. Ask your Admin to send the invite again.",
+      "unavailable": "ClearPath cannot reach the server. Try again in a minute."
+    }
   },
   "settingsGroups": {
     "intro": "Each item goes to one or more reviewer groups. Only members approve for their group.",

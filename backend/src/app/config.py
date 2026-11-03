@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,6 +22,19 @@ class Settings(BaseSettings):
     upload_dir: Path = Path(__file__).parents[2] / "uploads"
     # The largest file one upload may have
     upload_max_bytes: int = 20 * 1024 * 1024
+
+    # The address people open in the browser. Links in emails start with it.
+    app_url: str = "http://localhost:8080"
+    # "console" writes each email to the log, for local use. TODO: "smtp" for real delivery (see app/mail.py).
+    mail_backend: Literal["console", "smtp"] = "console"
+    # An invite link works this long. A resend makes a new link (PRD F16).
+    invite_lifetime: timedelta = timedelta(days=7)
+    password_min_length: int = 12
+
+    # Failed sign-ins allowed in each window, per email and per client IP (PRD F1). Then sign-in returns 429.
+    sign_in_window: timedelta = timedelta(minutes=15)
+    sign_in_max_failures_per_email: int = 5
+    sign_in_max_failures_per_ip: int = 20
 
 
 settings = Settings()

@@ -6,6 +6,13 @@ FastAPI app. Run it with `docker compose up` from the repo root.
 
 `docker compose up -d postgres`, then `uv run pytest`. Tests use their own database, `clearpath_test`.
 
+## Invites and email
+
+An invite (PRD F16) emails a link to `{APP_URL}/accept-invite?token=...`. With the default `MAIL_BACKEND=console`,
+nothing is sent: the backend log shows the email, so copy the link from there. TODO: the `smtp` backend in `app/mail.py`.
+
+Failed sign-ins are limited per email and per client IP (`sign_in_*` in `config.py`); then sign-in returns 429.
+
 ## Adding an area (for example the policy library)
 
 Each area keeps its code in its own files, so work on two areas at once seldom conflicts.
