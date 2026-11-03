@@ -330,10 +330,10 @@ export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue:
       {detail?.rule && (
         <section className="grid gap-2">
           <SectionHeading>{t('issue.panel.rule')}</SectionHeading>
-          <p className="grid gap-0.5 text-sm">
+          <Link to="/library/rules/$ruleId" params={{ ruleId: detail.rule.id }} className="group grid gap-0.5 text-sm">
             <code className="text-xs text-muted-foreground">{detail.rule.id}</code>
-            <span>{detail.rule.title}</span>
-          </p>
+            <span className="group-hover:underline">{detail.rule.title}</span>
+          </Link>
         </section>
       )}
     </aside>

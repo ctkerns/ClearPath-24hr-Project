@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "@tanstack/react-router"
 import { cn } from "cn"
 import { useTranslation } from "react-i18next"
 import { SeverityLabel, type RiskLevel } from "@/components/ui/risk-tag"
@@ -61,7 +62,8 @@ function FindingCard({
           </span>
         )}
         <SeverityLabel level={severity} className={cn(outdated && "text-muted-foreground")} />
-        <code className="text-xs text-muted-foreground">{ruleId}</code>
+        {/* stopPropagation: a click on the rule opens the rule, not the finding marks. */}
+        <Link to="/library/rules/$ruleId" params={{ ruleId }} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline">{ruleId}</Link>
         <span className="ml-auto flex items-center gap-1.5">
           {outdated && (
             <span className="rounded-sm bg-neutral-soft px-1.5 text-xs font-semibold text-neutral">{t("finding.outdated")}</span>

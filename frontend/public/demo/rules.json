@@ -1,0 +1,536 @@
+{
+  "rules": [
+    {
+      "id": "REGZ-1026.24",
+      "version": 3,
+      "title": "Trigger terms require APR disclosure",
+      "kind": "regulation",
+      "text": "If an ad for closed-end credit states a trigger term (the amount or percentage of a down payment, the number of payments or period of repayment, the amount of any payment, or the amount of any finance charge), it must also state the down payment, the terms of repayment, and the annual percentage rate. If the rate can increase after the loan is made, the ad must say so.",
+      "jurisdiction": "federal",
+      "products": [
+        "personal_loan",
+        "auto_loan",
+        "mortgage"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1026.24(d)",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1026/24/"
+      },
+      "effectiveDate": "2024-01-01",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "code",
+      "check": {
+        "type": "trigger_terms",
+        "terms": [
+          "% APR",
+          "monthly payment",
+          "payments of",
+          "down payment",
+          "months to repay"
+        ],
+        "disclosure": "D-7"
+      },
+      "pendingChange": true,
+      "versions": [
+        {
+          "version": 3,
+          "effectiveDate": "2024-01-01",
+          "by": "Alex Chen",
+          "note": "Added \"months to repay\" as a trigger term."
+        },
+        {
+          "version": 2,
+          "effectiveDate": "2023-04-10",
+          "by": "Alex Chen",
+          "note": "The required disclosure is now D-7 instead of free text."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "REGZ-1026.16",
+      "version": 2,
+      "title": "Open-end credit ads state the terms with any trigger term",
+      "kind": "regulation",
+      "text": "If an ad for a credit card or a home equity line of credit states a finance charge, a periodic rate, or a membership fee, it must also state any minimum or fixed finance charge, the periodic rate as an APR, and any membership or participation fee.",
+      "jurisdiction": "federal",
+      "products": [
+        "credit_card",
+        "heloc"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1026.16(b)",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1026/16/"
+      },
+      "effectiveDate": "2023-06-01",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "code",
+      "check": {
+        "type": "trigger_terms",
+        "terms": [
+          "intro rate",
+          "% APR",
+          "annual fee",
+          "cash back"
+        ],
+        "disclosure": "D-4"
+      },
+      "versions": [
+        {
+          "version": 2,
+          "effectiveDate": "2023-06-01",
+          "by": "Alex Chen",
+          "note": "Added \"cash back\" for rewards cards."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "REGDD-1030.8",
+      "version": 1,
+      "title": "Savings rates are stated as Annual Percentage Yield",
+      "kind": "regulation",
+      "text": "An ad that states a rate of return on a deposit account must state it as an \"annual percentage yield\" (the abbreviation APY may also be used). If the rate is variable or has a time limit, the ad must say so, and it must state the minimum balance to earn the APY.",
+      "jurisdiction": "federal",
+      "products": [
+        "savings"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1030.8",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1030/8/"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Alex Chen",
+      "severity": "medium",
+      "layer": "code",
+      "check": {
+        "type": "trigger_terms",
+        "terms": [
+          "% rate",
+          "interest rate",
+          "earn"
+        ],
+        "disclosure": "D-2"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "NCUA-740",
+      "version": 1,
+      "title": "Federal insurance statement is present",
+      "kind": "regulation",
+      "text": "Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
+      "jurisdiction": "federal",
+      "products": [],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 740.5",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-VII/subchapter-A/part-740/section-740.5"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Alex Chen",
+      "severity": "medium",
+      "layer": "code",
+      "check": {
+        "type": "required_disclosure",
+        "disclosure": "D-1"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "EHL-01",
+      "version": 1,
+      "title": "Mortgage ads show the Equal Housing Opportunity statement",
+      "kind": "regulation",
+      "text": "Ads for loans secured by a home must show the Equal Housing Opportunity logo or the statement \"Equal Housing Opportunity\" or \"Equal Housing Lender\".",
+      "jurisdiction": "federal",
+      "products": [
+        "mortgage",
+        "heloc"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 701.31(d)",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-VII/subchapter-A/part-701/section-701.31"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "severity": "medium",
+      "layer": "code",
+      "check": {
+        "type": "required_disclosure",
+        "disclosure": "D-3"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "SAFE-01",
+      "version": 1,
+      "title": "Mortgage ads show the NMLS ID",
+      "kind": "regulation",
+      "text": "Ads for mortgage loans and home equity lines must show the credit union's NMLS unique identifier. Ads that name a loan officer must also show that person's NMLS ID.",
+      "jurisdiction": "federal",
+      "products": [
+        "mortgage",
+        "heloc"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1007.105",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-X/part-1007"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "severity": "medium",
+      "layer": "code",
+      "check": {
+        "type": "phrase_required",
+        "phrases": [
+          "NMLS #"
+        ]
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "CANSPAM-01",
+      "version": 1,
+      "title": "Marketing email has an unsubscribe link and a postal address",
+      "kind": "regulation",
+      "text": "Each commercial email must include a clear way to opt out of future email and a valid physical postal address. The subject line must not mislead about the content.",
+      "jurisdiction": "federal",
+      "products": [],
+      "channels": [
+        "mailchimp"
+      ],
+      "citation": {
+        "label": "15 U.S.C. 7704",
+        "url": "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Alex Chen",
+      "severity": "medium",
+      "layer": "code",
+      "check": {
+        "type": "phrase_required",
+        "phrases": [
+          "{{unsubscribe}}",
+          "PO Box",
+          "Street"
+        ]
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "UDAAP-03",
+      "version": 2,
+      "title": "No promise of guaranteed approval",
+      "kind": "regulation",
+      "text": "Do not say or suggest that approval is certain, instant, or does not depend on credit, unless that is true for every applicant. Words such as \"guaranteed\", \"everyone qualifies\" or \"approved in minutes\" are deceptive when approval depends on underwriting.",
+      "jurisdiction": "federal",
+      "products": [
+        "personal_loan",
+        "credit_card",
+        "auto_loan",
+        "heloc",
+        "mortgage"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "12 U.S.C. 5531, 5536",
+        "url": "https://www.consumerfinance.gov/compliance/supervision-examinations/unfair-deceptive-or-abusive-acts-or-practices-udaaps-examination-procedures/"
+      },
+      "effectiveDate": "2023-02-15",
+      "owner": "Maya Ruiz",
+      "severity": "high",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Flag any claim about the speed, certainty or ease of approval. Do not flag a factual statement about how long the application takes to fill in."
+      },
+      "versions": [
+        {
+          "version": 2,
+          "effectiveDate": "2023-02-15",
+          "by": "Maya Ruiz",
+          "note": "Clarified that the time to fill in the application is not an approval claim."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "FCRA-02",
+      "version": 1,
+      "title": "Rate check claims must match the credit pull",
+      "kind": "regulation",
+      "text": "An ad that says checking your rate does not affect your credit score is true only for a soft credit inquiry. If the application uses a hard inquiry, the ad must not make that claim.",
+      "jurisdiction": "federal",
+      "products": [
+        "personal_loan",
+        "auto_loan",
+        "credit_card"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "15 U.S.C. 1681b",
+        "url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "severity": "medium",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Find claims about the credit score impact of checking a rate. Compare them with the product's credit pull type in the product settings."
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "FAIR-01",
+      "version": 1,
+      "title": "No wording or imagery that could steer applicants",
+      "kind": "regulation",
+      "text": "Ads must not use words, images or targeting that could discourage a person from applying because of race, color, religion, national origin, sex, marital status, age, or receipt of public assistance.",
+      "jurisdiction": "federal",
+      "products": [],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1002.4(b)",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1002/4/"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "severity": "high",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Review the text, the images and the targeting settings together. Flag targeting that excludes protected groups, even when the text is neutral."
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "CA-FIN-22161",
+      "version": 1,
+      "title": "California: no false or misleading statements in loan ads",
+      "kind": "regulation",
+      "text": "Licensees must not advertise in a way that is false, misleading or deceptive, including statements about rates, terms or conditions that are not available to most applicants.",
+      "jurisdiction": "CA",
+      "products": [
+        "personal_loan",
+        "auto_loan"
+      ],
+      "channels": [],
+      "citation": {
+        "label": "Cal. Fin. Code 22161",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=22161&lawCode=FIN"
+      },
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "severity": "medium",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Flag a lowest advertised rate that is not marked as for the best credit, and offers that are not available in California."
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "RATE-01",
+      "version": 2,
+      "title": "Every APR is inside the rate sheet range",
+      "kind": "policy",
+      "text": "Each APR, APY or fee in the content must be inside the current rate sheet range for that product on the launch date.",
+      "jurisdiction": "all",
+      "products": [],
+      "channels": [],
+      "effectiveDate": "2024-03-01",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "code",
+      "check": {
+        "type": "rate_sheet"
+      },
+      "versions": [
+        {
+          "version": 2,
+          "effectiveDate": "2024-03-01",
+          "by": "Alex Chen",
+          "note": "Checks fees too, not only rates."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Alex Chen",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "POL-04",
+      "version": 4,
+      "title": "Banned phrases",
+      "kind": "policy",
+      "text": "These phrases are never allowed in ClearPath marketing, in any channel, because they overstate certainty or cost.",
+      "jurisdiction": "all",
+      "products": [],
+      "channels": [],
+      "effectiveDate": "2025-05-01",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "code",
+      "check": {
+        "type": "phrase_banned",
+        "phrases": [
+          "no credit check",
+          "guaranteed approval",
+          "instant approval",
+          "free money",
+          "risk-free",
+          "lowest rate anywhere"
+        ]
+      },
+      "versions": [
+        {
+          "version": 4,
+          "effectiveDate": "2025-05-01",
+          "by": "Alex Chen",
+          "note": "Added \"lowest rate anywhere\"."
+        },
+        {
+          "version": 3,
+          "effectiveDate": "2024-08-12",
+          "by": "Alex Chen",
+          "note": "Added \"risk-free\"."
+        }
+      ]
+    },
+    {
+      "id": "POL-07",
+      "version": 1,
+      "title": "Affiliates use the approved brand name",
+      "kind": "policy",
+      "text": "Affiliate content must name the credit union as \"ClearPath Credit Union\" or \"ClearPath\", and must not suggest that the affiliate is the lender.",
+      "jurisdiction": "all",
+      "products": [],
+      "channels": [
+        "affiliate"
+      ],
+      "effectiveDate": "2024-06-01",
+      "owner": "Alex Chen",
+      "severity": "low",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Flag misspelled or old brand names, and wording such as \"our loans\" on an affiliate site."
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2024-06-01",
+          "by": "Alex Chen",
+          "note": "First version."
+        }
+      ]
+    },
+    {
+      "id": "INJ-00",
+      "version": 1,
+      "title": "No hidden instructions in the content",
+      "kind": "policy",
+      "text": "Content must not contain hidden text, instructions to automated reviewers, or text in a color that matches its background. The AI reviewer treats all content as untrusted.",
+      "jurisdiction": "all",
+      "products": [],
+      "channels": [],
+      "effectiveDate": "2025-01-15",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "code",
+      "check": {
+        "type": "hidden_text"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2025-01-15",
+          "by": "Alex Chen",
+          "note": "First version."
+        }
+      ]
+    }
+  ]
+}

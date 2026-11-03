@@ -1,0 +1,220 @@
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Bot, ChevronLeft, ExternalLink, Lock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { dependentMaterials, useRules, type RuleCheck } from '@/components/library/rule-data'
+import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
+import { useRuleList } from '@/components/library/use-rule-list'
+import { useMaterials } from '@/components/materials/material-data'
+import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
+import { demoViewer } from '@/components/review/material-detail-data'
+import { SeverityLabel } from '@/components/ui/risk-tag'
+import { Skeleton } from '@/components/ui/skeleton'
+import { StatusPill } from '@/components/ui/status-pill'
+import { formatDate } from '@/i18n/format'
+
+// Not nested under the Rules list route (the trailing _ in the file name), so the list does not need an Outlet.
+// It still sits inside the Library layout, so the tabs stay visible and Rules stays active.
+export const Route = createFileRoute('/_app/library/rules_/$ruleId')({
+  component: RulePage,
+})
+
+/** One rule, read like a page in a policy manual: the rule text first, then how the tool checks it. */
+function RulePage() {
+  const { t } = useTranslation()
+  const { ruleId } = Route.useParams()
+  const rules = useRules()
+  const materials = useMaterials()
+  const { label } = useRuleList()
+  const rule = rules.data?.find((r) => r.id === ruleId)
+  // R3: only Managers and Admins change the library.
+  const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+
+  if (rules.isPending) return <RuleSkeleton />
+  if (!rule) {
+    return (
+      <div className="grid justify-items-start gap-3">
+        <BackLink />
+        <p className="font-medium">{t('rules.notFound')}</p>
+      </div>
+    )
+  }
+  const dependents = dependentMaterials(rule, materials.data ?? [])
+
+  return (
+    <div className="grid gap-6">
+      <header className="grid gap-2">
+        <BackLink />
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">{rule.citation?.label ?? t('rules.kind.policy')}</span>
+          <span>{t('rules.versionShort', { version: rule.version })}</span>
+          {rule.pendingChange && (
+            <Link to="/library/regulatory-changes" className="hover:opacity-80"><PendingChangeTag /></Link>
+          )}
+        </p>
+        <h1 className="text-xl font-semibold">{rule.title}</h1>
+        {!canEdit && (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="size-3.5" aria-hidden="true" />
+            {t('rules.readOnly')}
+          </p>
+        )}
+      </header>
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-10">
+        <div className="grid min-w-0 content-start gap-8">
+          {/* The rule text reads like a clause in a policy document: a rule line on the left, larger text. */}
+          <blockquote className="max-w-3xl border-l-2 border-primary pl-4 text-base leading-relaxed">{rule.text}</blockquote>
+
+          <section className="grid gap-3">
+            <SectionHeading>{t('rules.check.heading')}</SectionHeading>
+            <CheckDescription check={rule.check} />
+          </section>
+
+          <section className="grid gap-3">
+            <SectionHeading>{t('rules.versions.heading')}</SectionHeading>
+            <ol className="overflow-hidden rounded-lg border">
+              {rule.versions.map((v) => (
+                <li key={v.version} className="grid gap-x-3 gap-y-0.5 border-b px-3 py-2 last:border-b-0 sm:grid-cols-[4rem_7rem_9rem_minmax(0,1fr)] sm:items-center">
+                  <span className="text-xs font-medium">{t('rules.versionShort', { version: v.version })}{v.version === rule.version && <span className="font-normal text-muted-foreground"> · {t('rules.versions.current')}</span>}</span>
+                  <time dateTime={v.effectiveDate} className="text-xs text-muted-foreground tabular-nums">{formatDate(v.effectiveDate)}</time>
+                  <span className="flex items-center gap-1.5 text-xs"><PersonAvatar name={v.by} className="size-5 text-[8px]" />{v.by}</span>
+                  <span>{v.note}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
+
+        <aside className="grid content-start gap-6 lg:sticky lg:top-16">
+          <dl className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
+            <Detail label={t('rules.field.jurisdiction')}>{label('jurisdiction', rule.jurisdiction)}</Detail>
+            <Detail label={t('rules.field.product')}>{rule.products.length ? rule.products.map((p) => label('product', p)).join(', ') : t('rules.allProducts')}</Detail>
+            <Detail label={t('rules.field.channel')}>{rule.channels.length ? rule.channels.map((c) => label('channel', c)).join(', ') : t('rules.allChannels')}</Detail>
+            <Detail label={t('rules.field.severity')}><SeverityLabel level={rule.severity} /></Detail>
+            <Detail label={t('rules.field.layer')}><CheckLayerTag layer={rule.layer} className="text-foreground" /></Detail>
+            <Detail label={t('rules.citation')}>
+              {rule.citation ? (
+                <a href={rule.citation.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                  {rule.citation.label}<ExternalLink className="size-3" aria-hidden="true" />
+                </a>
+              ) : <span className="text-muted-foreground">{t('rules.noCitation')}</span>}
+            </Detail>
+            <Detail label={t('rules.effective')}>{formatDate(rule.effectiveDate)}</Detail>
+            <Detail label={t('rules.owner')}>
+              <span className="flex items-center gap-1.5"><PersonAvatar name={rule.owner} className="size-5 text-[9px]" />{rule.owner}</span>
+            </Detail>
+          </dl>
+
+          <section className="grid gap-2">
+            <SectionHeading>{t('rules.dependents.heading', { count: dependents.length })}</SectionHeading>
+            <p className="text-xs text-muted-foreground">{t('rules.dependents.note')}</p>
+            {dependents.length > 0 && (
+              <ul className="overflow-hidden rounded-lg border">
+                {dependents.map((m) => (
+                  <li key={m.id} className="border-b last:border-b-0">
+                    <Link to="/materials/$materialId" params={{ materialId: m.id }} className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/60">
+                      <ChannelIcon channel={m.channel} className="size-3.5 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">{m.title}</span>
+                      <StatusPill status={m.status} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+/** What the tool does for this rule, in plain words, with the terms or phrases it looks for. */
+function CheckDescription({ check }: { check: RuleCheck }) {
+  const { t } = useTranslation()
+  switch (check.type) {
+    case 'trigger_terms':
+      return (
+        <div className="grid gap-2">
+          <p>{t('rules.check.triggerTerms', { disclosure: check.disclosure })}</p>
+          <Terms items={check.terms} />
+        </div>
+      )
+    case 'required_disclosure':
+      return <p>{t('rules.check.requiredDisclosure', { disclosure: check.disclosure })}</p>
+    case 'phrase_required':
+      return (
+        <div className="grid gap-2">
+          <p>{t('rules.check.phraseRequired')}</p>
+          <Terms items={check.phrases} />
+        </div>
+      )
+    case 'phrase_banned':
+      return (
+        <div className="grid gap-2">
+          <p>{t('rules.check.phraseBanned')}</p>
+          <Terms items={check.phrases} />
+        </div>
+      )
+    case 'rate_sheet':
+      return (
+        <p>
+          {t('rules.check.rateSheet')}{' '}
+          <Link to="/library/rate-sheet" className="text-primary hover:underline">{t('libraryTabs.rateSheet')}</Link>
+        </p>
+      )
+    case 'hidden_text':
+      return <p>{t('rules.check.hiddenText')}</p>
+    case 'ai':
+      return (
+        <div className="grid gap-2">
+          <p className="flex items-start gap-2">
+            <Bot className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            {t('rules.check.ai')}
+          </p>
+          <p className="max-w-3xl rounded-md border bg-muted/40 px-3 py-2">{check.guidance}</p>
+        </div>
+      )
+  }
+}
+
+/** Terms or phrases as quiet chips, in the monospace face, because the check matches them exactly. */
+function Terms({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {items.map((x) => <li key={x}><code className="rounded-sm border bg-muted/40 px-1.5 py-0.5 text-xs">{x}</code></li>)}
+    </ul>
+  )
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{children}</h2>
+}
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0">{children}</dd>
+    </>
+  )
+}
+
+function BackLink() {
+  const { t } = useTranslation()
+  return (
+    <Link to="/library/rules" className="inline-flex w-fit items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+      <ChevronLeft className="size-3.5" />
+      {t('libraryTabs.rules')}
+    </Link>
+  )
+}
+
+function RuleSkeleton() {
+  return (
+    <div className="grid gap-4">
+      <Skeleton className="h-3 w-20" />
+      <Skeleton className="h-6 w-96 max-w-full" />
+      <Skeleton className="mt-4 h-40 w-full" />
+    </div>
+  )
+}

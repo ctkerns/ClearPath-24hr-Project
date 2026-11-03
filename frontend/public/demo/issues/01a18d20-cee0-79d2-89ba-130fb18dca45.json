@@ -3,7 +3,7 @@
   "summary": "Monitoring found a Meta ad that nobody submitted for review. It created a material with source \"found live\" and paused the ad. Submit it for review, or take it down.",
   "rule": {
     "id": "UDAAP-03",
-    "title": "No guarantees of approval or speed"
+    "title": "No promise of guaranteed approval"
   },
   "liveItem": {
     "connector": "Meta ads",

@@ -3,7 +3,7 @@
   "summary": "The live Google ad shows a lower APR than the approved version, and it no longer shows the top of the APR range. Monitoring paused the ad.",
   "rule": {
     "id": "REGZ-1026.24",
-    "title": "Trigger terms need the full APR range"
+    "title": "Trigger terms require APR disclosure"
   },
   "liveItem": {
     "connector": "Google Ads",

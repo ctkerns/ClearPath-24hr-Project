@@ -10,8 +10,9 @@ export const Route = createFileRoute('/_app/library')({
 function LibraryLayout() {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto grid max-w-5xl gap-4">
-      <h1 className="text-lg font-semibold">{t('page.library')}</h1>
+    <div className="mx-auto grid w-full max-w-7xl gap-4">
+      {/* No visible heading: the active tab in the top bar already names the page. */}
+      <h1 className="sr-only">{t('page.library')}</h1>
       <LinkTabs
         label={t('page.library')}
         tabs={[

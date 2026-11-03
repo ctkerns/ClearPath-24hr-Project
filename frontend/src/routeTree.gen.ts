@@ -33,6 +33,7 @@ import { Route as AppSettingsReviewerGroupsRouteImport } from './routes/_app.set
 import { Route as AppSettingsRoutingRouteImport } from './routes/_app.settings.routing'
 import { Route as AppSettingsUsersRouteImport } from './routes/_app.settings.users'
 import { Route as AppSettingsWorkspaceRouteImport } from './routes/_app.settings.workspace'
+import { Route as AppLibraryRulesRuleIdRouteImport } from './routes/_app.library.rules_.$ruleId'
 import { Route as AppMaterialsMaterialIdIndexRouteImport } from './routes/_app.materials.$materialId.index'
 import { Route as AppMaterialsMaterialIdNewVersionRouteImport } from './routes/_app.materials.$materialId.new-version'
 
@@ -158,6 +159,11 @@ const AppSettingsWorkspaceRoute = AppSettingsWorkspaceRouteImport.update({
   path: '/workspace',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppLibraryRulesRuleIdRoute = AppLibraryRulesRuleIdRouteImport.update({
+  id: '/rules_/$ruleId',
+  path: '/rules/$ruleId',
+  getParentRoute: () => AppLibraryRoute,
+} as any)
 const AppMaterialsMaterialIdIndexRoute =
   AppMaterialsMaterialIdIndexRouteImport.update({
     id: '/materials/$materialId/',
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/library/': typeof AppLibraryIndexRoute
   '/materials/': typeof AppMaterialsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
+  '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/library': typeof AppLibraryIndexRoute
   '/materials': typeof AppMaterialsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
+  '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/materials/$materialId': typeof AppMaterialsMaterialIdIndexRoute
 }
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/_app/library/': typeof AppLibraryIndexRoute
   '/_app/materials/': typeof AppMaterialsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
+  '/_app/library/rules_/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/_app/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/_app/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/library/'
     | '/materials/'
     | '/settings/'
+    | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
     | '/materials/$materialId/'
   fileRoutesByTo: FileRoutesByTo
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/materials'
     | '/settings'
+    | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
     | '/materials/$materialId'
   id:
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/_app/library/'
     | '/_app/materials/'
     | '/_app/settings/'
+    | '/_app/library/rules_/$ruleId'
     | '/_app/materials/$materialId/new-version'
     | '/_app/materials/$materialId/'
   fileRoutesById: FileRoutesById
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsWorkspaceRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/library/rules_/$ruleId': {
+      id: '/_app/library/rules_/$ruleId'
+      path: '/rules/$ruleId'
+      fullPath: '/library/rules/$ruleId'
+      preLoaderRoute: typeof AppLibraryRulesRuleIdRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
     '/_app/materials/$materialId/': {
       id: '/_app/materials/$materialId/'
       path: '/materials/$materialId'
@@ -535,6 +554,7 @@ interface AppLibraryRouteChildren {
   AppLibraryRegulatoryChangesRoute: typeof AppLibraryRegulatoryChangesRoute
   AppLibraryRulesRoute: typeof AppLibraryRulesRoute
   AppLibraryIndexRoute: typeof AppLibraryIndexRoute
+  AppLibraryRulesRuleIdRoute: typeof AppLibraryRulesRuleIdRoute
 }
 
 const AppLibraryRouteChildren: AppLibraryRouteChildren = {
@@ -544,6 +564,7 @@ const AppLibraryRouteChildren: AppLibraryRouteChildren = {
   AppLibraryRegulatoryChangesRoute: AppLibraryRegulatoryChangesRoute,
   AppLibraryRulesRoute: AppLibraryRulesRoute,
   AppLibraryIndexRoute: AppLibraryIndexRoute,
+  AppLibraryRulesRuleIdRoute: AppLibraryRulesRuleIdRoute,
 }
 
 const AppLibraryRouteWithChildren = AppLibraryRoute._addFileChildren(

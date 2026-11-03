@@ -596,5 +596,82 @@
     "manager": "Manager",
     "admin": "Admin",
     "affiliate": "Affiliate"
+  },
+  "rules": {
+    "preset": {
+      "all": "All",
+      "regulation": "Regulations",
+      "policy": "Company policy",
+      "pending": "Change pending"
+    },
+    "searchPlaceholder": "Filter by ID, title or citation…",
+    "sort": {
+      "title": "Title",
+      "effective": "Newest effective date",
+      "severity": "Severity"
+    },
+    "field": {
+      "kind": "Source",
+      "severity": "Severity",
+      "layer": "Check",
+      "jurisdiction": "Jurisdiction",
+      "product": "Product",
+      "channel": "Channel",
+      "change": "Change status"
+    },
+    "kind": {
+      "regulation": "Regulation",
+      "policy": "Company policy"
+    },
+    "layer": {
+      "code": "Code check",
+      "ai": "AI check"
+    },
+    "change": {
+      "pending": "Change pending",
+      "current": "Current"
+    },
+    "federal": "Federal",
+    "allProducts": "All products",
+    "allChannels": "All channels",
+    "pendingChange": "Change pending",
+    "column": {
+      "title": "Title",
+      "check": "Check",
+      "jurisdiction": "Jurisdiction",
+      "appliesTo": "Applies to",
+      "severity": "Severity",
+      "effective": "Effective",
+      "source": "Source"
+    },
+    "empty": "No rules match these filters.",
+    "loadError": "Rules did not load. Reload the page to try again.",
+    "notFound": "This rule does not exist.",
+    "versionShort": "v{{version}}",
+    "readOnly": "Only Managers can change rules. You can read them and use them in reviews.",
+    "citation": "Citation",
+    "noCitation": "Company policy, no legal citation",
+    "effective": "Effective",
+    "owner": "Owner",
+    "check": {
+      "heading": "How ClearPath checks it",
+      "triggerTerms": "Code check. When the content contains any of these terms, it must also contain disclosure {{disclosure}}.",
+      "requiredDisclosure": "Code check. Every material it applies to must contain disclosure {{disclosure}}.",
+      "phraseRequired": "Code check. The content must contain at least one of these:",
+      "phraseBanned": "Code check. The content must not contain any of these phrases:",
+      "rateSheet": "Code check. Each rate and fee in the content is compared with the current range for its product in the",
+      "hiddenText": "Code check. Looks for hidden text, zero-width characters, and text in the same color as its background.",
+      "ai": "AI check. The AI reviewer reads the content with this guidance. Its findings are suggestions; a reviewer decides."
+    },
+    "versions": {
+      "heading": "Versions",
+      "current": "current"
+    },
+    "dependents": {
+      "heading_one": "{{count}} approved material uses it",
+      "heading_other": "{{count}} approved materials use it",
+      "note": "When this rule changes, these materials are flagged for re-review."
+    },
+    "allStates": "All states"
   }
 }
