@@ -1,0 +1,256 @@
+{
+  "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+  "version": 3,
+  "versionCount": 3,
+  "submittedAt": "2026-07-08T13:00:00Z",
+  "submittedBy": "Sam Rivera",
+  "path": "lighter",
+  "details": {
+    "targetStates": "Nationwide",
+    "launchDate": "2026-07-15",
+    "endDate": "2027-01-10",
+    "destinationUrl": "clearpathcu.example/loans/debt-payoff",
+    "platformId": "718204992"
+  },
+  "fields": [
+    {
+      "label": "Headline 1",
+      "segments": [
+        "Pay off debt faster"
+      ]
+    },
+    {
+      "label": "Headline 2",
+      "segments": [
+        "Personal loans from 8.99% APR"
+      ]
+    },
+    {
+      "label": "Headline 3",
+      "segments": [
+        "Check your rate in minutes"
+      ]
+    },
+    {
+      "label": "Description",
+      "segments": [
+        "One fixed monthly payment. Rates from 8.99% to 24.99% APR. Federally insured by NCUA."
+      ]
+    }
+  ],
+  "findings": [],
+  "checklist": [
+    {
+      "ruleId": "REGZ-1026.24",
+      "title": "Trigger terms require APR disclosure",
+      "layer": "code",
+      "result": "pass"
+    },
+    {
+      "ruleId": "RATE-01",
+      "title": "Every APR is inside the rate sheet range",
+      "layer": "code",
+      "result": "pass"
+    },
+    {
+      "ruleId": "UDAAP-03",
+      "title": "No promise of guaranteed approval",
+      "layer": "ai",
+      "result": "pass"
+    },
+    {
+      "ruleId": "NCUA-740",
+      "title": "Federal insurance statement is present",
+      "layer": "code",
+      "result": "pass"
+    },
+    {
+      "ruleId": "INJ-00",
+      "title": "No hidden instructions in the content",
+      "layer": "code",
+      "result": "pass"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Compliance",
+      "state": "approved",
+      "by": "Alex Chen",
+      "at": "2026-07-09T11:00:00Z",
+      "reason": "Every material"
+    }
+  ],
+  "comments": [
+    {
+      "id": "c1",
+      "author": "Alex Chen",
+      "role": "Compliance",
+      "at": "2026-07-09T11:00:00Z",
+      "body": "Rate update only, matches the July rate sheet.",
+      "decision": "approve"
+    }
+  ],
+  "versions": [
+    {
+      "number": 1,
+      "submittedAt": "2026-05-20T10:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "full",
+      "outcome": "approved",
+      "outcomeBy": "Alex Chen (Compliance)",
+      "fields": [
+        {
+          "label": "Headline 1",
+          "text": "Pay off debt faster"
+        },
+        {
+          "label": "Headline 2",
+          "text": "Personal loans from 9.49% APR"
+        },
+        {
+          "label": "Headline 3",
+          "text": "Check your rate in minutes"
+        },
+        {
+          "label": "Description",
+          "text": "One fixed monthly payment. Rates from 9.49% to 24.99% APR. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "submittedAt": "2026-06-11T09:30:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "lighter",
+      "outcome": "approved",
+      "outcomeBy": "Alex Chen (Compliance)",
+      "fields": [
+        {
+          "label": "Headline 1",
+          "text": "Pay off debt faster"
+        },
+        {
+          "label": "Headline 2",
+          "text": "Personal loans from 9.24% APR"
+        },
+        {
+          "label": "Headline 3",
+          "text": "Check your rate in minutes"
+        },
+        {
+          "label": "Description",
+          "text": "One fixed monthly payment. Rates from 9.24% to 24.99% APR. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "submittedAt": "2026-07-08T13:00:00Z",
+      "submittedBy": "Sam Rivera",
+      "path": "lighter",
+      "outcome": "approved",
+      "outcomeBy": "Alex Chen (Compliance)",
+      "current": true
+    }
+  ],
+  "history": [
+    {
+      "at": "2026-07-08T13:00:00Z",
+      "actor": "Sam Rivera",
+      "type": "submitted",
+      "text": "Submitted version 3. Lighter path: rate or fee update that matches the rate sheet."
+    },
+    {
+      "at": "2026-07-08T13:01:00Z",
+      "actor": "Rule check",
+      "type": "prereview",
+      "text": "Code checks passed."
+    },
+    {
+      "at": "2026-07-09T11:00:00Z",
+      "actor": "Alex Chen",
+      "type": "decision",
+      "text": "Approved for Compliance on version 3. Approval ID CP-2026-0129-v3, expires Jan 10, 2027."
+    },
+    {
+      "at": "2026-07-15T08:00:00Z",
+      "actor": "Monitoring",
+      "type": "live",
+      "text": "Found live on Google Ads. Matched version 3."
+    },
+    {
+      "at": "2026-11-01T22:28:00Z",
+      "actor": "Monitoring",
+      "type": "live",
+      "text": "Live ad changed: Headline 2 and Description differ from version 3."
+    },
+    {
+      "at": "2026-11-01T22:28:30Z",
+      "actor": "Monitoring",
+      "type": "live",
+      "text": "Paused the ad on Google Ads automatically, because the match is by platform ID."
+    },
+    {
+      "at": "2026-11-01T22:29:00Z",
+      "actor": "Monitoring",
+      "type": "issue",
+      "text": "Opened issue \"Live ad text differs from the approved version\" for Sam Rivera."
+    }
+  ],
+  "live": [
+    {
+      "id": "li1",
+      "connector": "Google Ads",
+      "externalId": "718204992",
+      "match": "platform_id",
+      "status": "changed",
+      "foundAt": "2026-07-15T08:00:00Z",
+      "checkedAt": "2026-11-01T22:28:00Z",
+      "paused": true,
+      "fields": [
+        {
+          "label": "Headline 1",
+          "text": "Pay off debt faster"
+        },
+        {
+          "label": "Headline 2",
+          "text": "Personal loans from 5.99% APR"
+        },
+        {
+          "label": "Headline 3",
+          "text": "Check your rate in minutes"
+        },
+        {
+          "label": "Description",
+          "text": "One low monthly payment. Rates from 5.99% APR. Federally insured by NCUA."
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "id": "ISS-0032",
+      "title": "Live ad text differs from the approved version",
+      "severity": "high",
+      "status": "open",
+      "owner": "Sam Rivera",
+      "dueAt": "2026-11-04T17:00:00Z",
+      "openedAt": "2026-11-01T22:29:00Z",
+      "source": "monitoring",
+      "actions": [
+        {
+          "label": "Ad paused automatically",
+          "done": true
+        },
+        {
+          "label": "Restore the approved text on Google Ads",
+          "done": false
+        },
+        {
+          "label": "Or submit the live text as a new version",
+          "done": false
+        }
+      ]
+    }
+  ]
+}

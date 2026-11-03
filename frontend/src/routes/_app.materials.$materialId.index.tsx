@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Check, ChevronDown, ChevronLeft, Clock, CircleAlert, Ellipsis, ImageIcon, Upload, X } from 'lucide-react'
+import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, Clock, CircleAlert, Ellipsis, ImageIcon, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FindingCard } from '@/components/review/finding-card'
 import { FlaggedText } from '@/components/review/flagged-text'
 import { approvedByViewer, groupsForViewer } from '@/components/review/decide'
 import { DecisionDialog } from '@/components/review/decision-dialog'
-import { demoViewer, useMaterialDetail, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { HistoryTab } from '@/components/review/history-tab'
+import { LiveTab } from '@/components/review/live-tab'
+import { TrackedText } from '@/components/review/tracked-text'
+import { demoViewer, useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
 import { useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
@@ -18,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -25,14 +29,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
 import { cn } from '@/lib/utils'
 
-const tabs = ['content', 'versions', 'history', 'live'] as const
+const tabs = ['content', 'history', 'live'] as const
 type MaterialTab = (typeof tabs)[number]
 
-// The tab is in the URL (?tab=versions) so a link opens the right tab.
+// The tab and the viewed version are in the URL (?tab=history, ?v=1), so a link opens the same view.
 export const Route = createFileRoute('/_app/materials/$materialId/')({
-  validateSearch: (search: Record<string, unknown>): { tab?: MaterialTab } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: MaterialTab; v?: number } => {
     const tab = tabs.find((t) => t === search.tab)
-    return tab && tab !== 'content' ? { tab } : {}
+    const v = Number(search.v)
+    return { tab: tab && tab !== 'content' ? tab : undefined, v: Number.isInteger(v) && v > 0 ? v : undefined }
   },
   component: MaterialPage,
 })
@@ -40,7 +45,7 @@ export const Route = createFileRoute('/_app/materials/$materialId/')({
 function MaterialPage() {
   const { t } = useTranslation()
   const { materialId } = Route.useParams()
-  const { tab = 'content' } = Route.useSearch()
+  const { tab = 'content', v } = Route.useSearch()
   const navigate = Route.useNavigate()
   const list = useMaterials()
   const detail = useMaterialDetail(materialId)
@@ -77,11 +82,17 @@ function MaterialPage() {
           ))}
         </TabsList>
         <TabsContent value="content" className="pt-4">
-          {detail.data ? <ReviewView material={material} detail={detail.data} /> : <NoSeededContent />}
+          {detail.data ? (
+            <ReviewView
+              material={material}
+              detail={detail.data}
+              version={detail.data.versions.some((x) => x.number === v) ? v! : detail.data.version}
+              onVersion={(n) => navigate({ search: { v: n === detail.data?.version ? undefined : n }, replace: true })}
+            />
+          ) : <NoSeededContent />}
         </TabsContent>
-        <TabsContent value="versions" className="pt-4 text-muted-foreground">{t('review.later.versions')}</TabsContent>
-        <TabsContent value="history" className="pt-4 text-muted-foreground">{t('review.later.history')}</TabsContent>
-        <TabsContent value="live" className="pt-4 text-muted-foreground">{t('review.later.live')}</TabsContent>
+        <TabsContent value="history" className="pt-4">{detail.data ? <HistoryTab detail={detail.data} /> : <NoSeededContent />}</TabsContent>
+        <TabsContent value="live" className="pt-4">{detail.data ? <LiveTab material={material} detail={detail.data} /> : <NoSeededContent />}</TabsContent>
       </Tabs>
     </div>
   )
@@ -119,7 +130,6 @@ function Header({ material: m, detail, onDecide }: { material: Material; detail:
             <span className="flex items-center gap-1.5"><ChannelIcon channel={m.channel} className="size-3.5" />{label('channel', m.channel)}</span>
             <span>{label('product', m.product)}</span>
             <span className="flex items-center gap-1.5"><PersonAvatar name={m.owner} className="size-4 text-[8px]" />{m.owner}</span>
-            {detail && <span>{t('review.versionOf', { version: detail.version, count: detail.versionCount })}</span>}
             {m.approvalId && <code>{m.approvalId}</code>}
             {m.expiresAt && <span>{t('materials.expiresOn', { date: formatDate(m.expiresAt) })}</span>}
           </p>
@@ -184,21 +194,37 @@ function DecisionButtons({ onDecide }: { onDecide: (d: Decision) => void }) {
  * Click flagged text or a finding to link the two. Below xl the findings go under the content,
  * and below lg the review panel goes under everything.
  */
-function ReviewView({ material, detail }: { material: Material; detail: MaterialDetail }) {
+function ReviewView({ material, detail, version, onVersion }: {
+  material: Material
+  detail: MaterialDetail
+  version: number
+  onVersion: (v: number) => void
+}) {
   const [active, setActive] = useState<string | null>(null)
   const open = detail.findings.filter((f) => f.status === 'open')
   const numbers = new Map(open.map((f, i) => [f.id, i + 1]))
+  const isCurrent = version === detail.version
 
   const focus = (id: string, target: 'mark' | 'finding') => {
+    if (!isCurrent) onVersion(detail.version)
     setActive(id)
-    document.getElementById(`${target}-${id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    // Wait one frame, so the marks exist again after switching back to the current version.
+    requestAnimationFrame(() => document.getElementById(`${target}-${id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
   }
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid gap-6">
-          <ContentPanel material={material} detail={detail} numbers={numbers} active={active} onMark={(id) => focus(id, 'finding')} />
+          <ContentPanel
+            material={material}
+            detail={detail}
+            version={version}
+            onVersion={onVersion}
+            numbers={numbers}
+            active={active}
+            onMark={(id) => focus(id, 'finding')}
+          />
           <Conversation detail={detail} />
         </div>
         <FindingsColumn findings={detail.findings} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
@@ -208,60 +234,171 @@ function ReviewView({ material, detail }: { material: Material; detail: Material
   )
 }
 
+/** "Version 1 of 2 · Changes requested · Oct 30, 2026", for the version menus. */
+function VersionOption({ v, count }: { v: MaterialDetail['versions'][number]; count: number }) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <span className="font-medium">{t('review.versionOf', { version: v.number, count })}</span>
+      <span className="text-muted-foreground">
+        {' · '}
+        {v.current ? t('review.current') : v.outcome ? t(`status.${v.outcome}`) : ''}
+        {' · '}
+        {formatDate(v.submittedAt)}
+      </span>
+    </>
+  )
+}
+
 function SectionHeading({ children, className }: { children: React.ReactNode; className?: string }) {
   return <h2 className={cn('text-xs font-semibold tracking-wide text-muted-foreground uppercase', className)}>{children}</h2>
 }
 
-/** The submitted content, field by field, as the platform will show it. */
-function ContentPanel({ material, detail, numbers, active, onMark }: {
+/**
+ * The submitted content, field by field. The version menu in the panel header picks the version,
+ * like version history in Google Docs. "Show changes" marks what changed since the version before it.
+ * Finding marks show only on the current version, because findings belong to it.
+ */
+function ContentPanel({ material, detail, version, onVersion, numbers, active, onMark }: {
   material: Material
   detail: MaterialDetail
+  version: number
+  onVersion: (v: number) => void
   numbers: Map<string, number>
   active: string | null
   onMark: (id: string) => void
 }) {
   const { t } = useTranslation()
   const label = useOptionLabel()
+  // The version to compare with. null shows the viewed version alone.
+  const [compareTo, setCompareTo] = useState<number | null>(null)
   const severity = new Map(detail.findings.map((f) => [f.id, f.severity]))
+  const kinds = new Map(detail.fields.map((f) => [f.label, f.kind]))
+
+  const sorted = [...detail.versions].sort((a, b) => b.number - a.number)
+  const viewed = detail.versions.find((v) => v.number === version) ?? sorted[0]
+  const compared = compareTo !== version ? detail.versions.find((v) => v.number === compareTo) : undefined
+  const isCurrent = version === detail.version
+  const tracking = !!compared
+  const before = compared ? versionFields(detail, compared) : []
+  const fields = viewed ? versionFields(detail, viewed) : []
 
   return (
     <section className="rounded-lg border">
-      <div className="flex items-center gap-2 border-b bg-muted px-3 py-2 text-xs">
-        <ChannelIcon channel={material.channel} className="size-3.5" />
-        <span className="font-semibold">{label('channel', material.channel)}</span>
-        <span className="text-muted-foreground">{t('review.versionOf', { version: detail.version, count: detail.versionCount })}</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b bg-muted px-3 py-1.5 text-xs">
+        <span className="flex items-center gap-2 font-semibold">
+          <ChannelIcon channel={material.channel} className="size-3.5" />
+          {label('channel', material.channel)}
+        </span>
+        {/* The viewed version, then the version to compare with. The arrows between them swap the two. */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Select value={String(version)} onValueChange={(v) => onVersion(Number(v))}>
+            <SelectTrigger size="sm" className="h-7 w-auto gap-1.5 bg-background text-xs" aria-label={t('review.versionMenu')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="start">
+              {sorted.map((v) => (
+                <SelectItem key={v.number} value={String(v.number)} className="text-xs">
+                  <VersionOption v={v} count={detail.versionCount} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {sorted.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-muted-foreground"
+                disabled={!compared}
+                onClick={() => {
+                  if (!compared) return
+                  setCompareTo(version)
+                  onVersion(compared.number)
+                }}
+                aria-label={t('review.changes.swap')}
+                title={t('review.changes.swap')}
+              >
+                <ArrowRightLeft />
+              </Button>
+              <Select value={compared ? String(compared.number) : 'none'} onValueChange={(v) => setCompareTo(v === 'none' ? null : Number(v))}>
+                <SelectTrigger size="sm" className="h-7 w-auto gap-1.5 bg-background text-xs" aria-label={t('review.changes.compareTo')}>
+                  <span className="text-muted-foreground">{t('review.changes.compareTo')}:</span>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="start">
+                  <SelectItem value="none" className="text-xs">{t('review.changes.none')}</SelectItem>
+                  {sorted.filter((v) => v.number !== version).map((v) => (
+                    <SelectItem key={v.number} value={String(v.number)} className="text-xs">
+                      <VersionOption v={v} count={detail.versionCount} />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+        </div>
       </div>
+
+      {!isCurrent && viewed && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b bg-info-soft px-3 py-2 text-xs text-info">
+          {t('review.changes.oldVersion', {
+            version: viewed.number,
+            name: viewed.submittedBy,
+            date: formatDate(viewed.submittedAt),
+            current: detail.version,
+          })}
+          <button type="button" onClick={() => onVersion(detail.version)} className="font-semibold underline underline-offset-2">
+            {t('review.changes.backToCurrent')}
+          </button>
+        </p>
+      )}
+
       <dl className="grid gap-4 p-4">
-        {detail.fields.map((field) => (
-          <div key={field.label} className="grid gap-1">
-            <dt className="text-xs font-medium text-muted-foreground">{field.label}</dt>
-            <dd className="text-base leading-relaxed">
-              {field.kind === 'image' && (
-                <div className="mb-2 grid aspect-[1.91/1] max-w-md place-items-center rounded-md border bg-muted text-muted-foreground">
-                  <ImageIcon className="size-6" strokeWidth={1.5} aria-hidden="true" />
-                </div>
-              )}
-              {field.kind === 'image' && <span className="mr-1 text-xs text-muted-foreground">{t('review.textInImage')}</span>}
-              {field.segments.map((s, i) =>
-                typeof s === 'string' ? (
-                  <span key={i}>{s}</span>
+        {fields.map((field) => {
+          const isImage = kinds.get(field.label) === 'image'
+          const segments = detail.fields.find((f) => f.label === field.label)?.segments
+          const prevText = before.find((f) => f.label === field.label)?.text ?? ''
+          return (
+            <div key={field.label} className="grid gap-1">
+              <dt className="text-xs font-medium text-muted-foreground">
+                {field.label}
+                {tracking && prevText === field.text && <span className="font-normal"> · {t('review.changes.unchanged')}</span>}
+              </dt>
+              <dd className="text-base leading-relaxed">
+                {isImage && (
+                  <div className="mb-2 grid aspect-[1.91/1] max-w-md place-items-center rounded-md border bg-muted text-muted-foreground">
+                    <ImageIcon className="size-6" strokeWidth={1.5} aria-hidden="true" />
+                  </div>
+                )}
+                {isImage && <span className="mr-1 text-xs text-muted-foreground">{t('review.textInImage')}</span>}
+                {tracking ? (
+                  <TrackedText before={prevText} after={field.text} />
+                ) : isCurrent && segments ? (
+                  segments.map((s, i) =>
+                    typeof s === 'string' ? (
+                      <span key={i}>{s}</span>
+                    ) : (
+                      <FlaggedText
+                        key={i}
+                        id={`mark-${s.finding}`}
+                        severity={severity.get(s.finding) ?? 'medium'}
+                        number={numbers.get(s.finding)}
+                        active={active === s.finding}
+                        onClick={() => onMark(s.finding)}
+                        className="cursor-pointer scroll-mt-32"
+                      >
+                        {s.text}
+                      </FlaggedText>
+                    ),
+                  )
                 ) : (
-                  <FlaggedText
-                    key={i}
-                    id={`mark-${s.finding}`}
-                    severity={severity.get(s.finding) ?? 'medium'}
-                    number={numbers.get(s.finding)}
-                    active={active === s.finding}
-                    onClick={() => onMark(s.finding)}
-                    className="cursor-pointer scroll-mt-32"
-                  >
-                    {s.text}
-                  </FlaggedText>
-                ),
-              )}
-            </dd>
-          </div>
-        ))}
+                  field.text
+                )}
+              </dd>
+            </div>
+          )
+        })}
       </dl>
     </section>
   )
@@ -447,7 +584,7 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
           <Detail label={t('review.detail.targetStates')}>{detail.details.targetStates}</Detail>
           {detail.details.launchDate && <Detail label={t('review.detail.dates')}>{formatDate(detail.details.launchDate)} – {detail.details.endDate ? formatDate(detail.details.endDate) : '—'}</Detail>}
           {detail.details.destinationUrl && <Detail label={t('review.detail.destination')}><span className="break-all">{detail.details.destinationUrl}</span></Detail>}
-          {detail.details.metaAdId && <Detail label={t('review.detail.platformId')}><code className="break-all">{detail.details.metaAdId}</code></Detail>}
+          {detail.details.platformId && <Detail label={t('review.detail.platformId')}><code className="break-all">{detail.details.platformId}</code></Detail>}
           <Detail label={t('review.detail.path')}>{t(`review.path.${detail.path}`)}</Detail>
           <Detail label={t('review.detail.submitted')}>{t('review.submittedBy', { name: detail.submittedBy, time: formatRelativeTime(detail.submittedAt) })}</Detail>
           {m.affiliate && <Detail label={t('materials.field.affiliate')}>{m.affiliate}</Detail>}

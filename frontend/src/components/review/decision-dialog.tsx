@@ -51,18 +51,22 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
   const decide = useDecide(materialId)
   const [text, setText] = useState('')
   const [group, setGroup] = useState<string>()
+  const [override, setOverride] = useState('')
 
   const mine = decision === 'retract' ? approvedByViewer(detail) : groupsForViewer(detail)
   const openFindings = detail.findings.filter((f) => f.status === 'open').length
   const othersWaiting = detail.groups.filter((g) => g.state !== 'approved' && !mine.includes(g.name)).map((g) => g.name)
   const isApprove = decision === 'approve' || decision === 'approve_conditions'
+  // An open High finding blocks approval unless the Reviewer writes an override reason (PRD F6).
+  const highOpen = detail.findings.filter((f) => f.status === 'open' && f.severity === 'high').length
+  const needsOverride = isApprove && highOpen > 0
   const escalateOptions = demoGroups.filter((name) => !detail.groups.some((g) => g.name === name))
-  const ready = (!textRequired[decision] || text.trim().length > 0) && (decision !== 'escalate' || group)
+  const ready = (!textRequired[decision] || text.trim().length > 0) && (decision !== 'escalate' || group) && (!needsOverride || override.trim().length > 0)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!ready) return
-    decide({ decision, text: text.trim(), group })
+    decide({ decision, text: text.trim(), group, override: needsOverride ? override.trim() : undefined })
     onDone()
   }
 
@@ -85,11 +89,28 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
             : t('review.dialog.lastGroup')}
         </p>
       )}
-      {isApprove && openFindings > 0 && (
+      {isApprove && openFindings > 0 && !needsOverride && (
         <p className="flex gap-2 rounded-md bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
           <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
           {t('review.dialog.openFindings', { count: openFindings })}
         </p>
+      )}
+      {needsOverride && (
+        <div className="grid gap-1.5 rounded-md border border-risk-high/40 bg-risk-high-soft p-3">
+          <Label htmlFor="override-text" className="flex items-center gap-1.5 text-risk-high">
+            <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+            {t('review.dialog.override.label', { count: highOpen })}
+          </Label>
+          <Textarea
+            id="override-text"
+            value={override}
+            onChange={(e) => setOverride(e.target.value)}
+            placeholder={t('review.dialog.override.placeholder')}
+            required
+            className="min-h-16"
+          />
+          <p className="text-xs text-risk-high">{t('review.dialog.override.help')}</p>
+        </div>
       )}
 
       {decision === 'escalate' && (

@@ -58,7 +58,6 @@
   },
   "materialTabs": {
     "content": "Content",
-    "versions": "Versions",
     "history": "History",
     "live": "Live status and issues"
   },
@@ -244,7 +243,7 @@
       "targetStates": "States",
       "dates": "Runs",
       "destination": "Links to",
-      "platformId": "Meta ad ID",
+      "platformId": "Platform ID",
       "path": "Review path",
       "submitted": "Submitted"
     },
@@ -255,11 +254,6 @@
     "submittedBy": "{{name}}, {{time}}",
     "noSeed": "This demo material has no seeded content yet.",
     "noSeedLink": "Open \"Summer personal loan, Meta feed ad\" to see a full review",
-    "later": {
-      "versions": "Versions and side-by-side diff come next.",
-      "history": "The audit log comes next.",
-      "live": "Live items and linked issues come next."
-    },
     "conditions": "Approval conditions",
     "escalatedBy": "Escalated by {{name}}: {{reason}}",
     "groupBy": {
@@ -327,7 +321,51 @@
         "placeholder": "For example: The rate sheet changed after I approved.",
         "help": "Your groups count as waiting again. You can retract only your own approval.",
         "confirm": "Retract approval"
+      },
+      "override": {
+        "label_one": "{{count}} High finding is open. Approving needs an override reason.",
+        "label_other": "{{count}} High findings are open. Approving needs an override reason.",
+        "placeholder": "For example: The APR disclosure is in the image, which the code check does not read.",
+        "help": "The audit log records this reason with your name."
       }
+    },
+    "current": "Current",
+    "history": {
+      "note": "The audit log is append-only. Nobody can edit or delete entries."
+    },
+    "live": {
+      "emptyTitle": "Not live",
+      "emptyBody": "Monitoring has not found this material on its channel. After approval, monitoring compares the live content with the approved version and opens an issue for any difference.",
+      "issues_one": "{{count}} issue",
+      "issues_other": "{{count}} issues",
+      "source": {
+        "monitoring": "Opened by monitoring",
+        "reviewer": "Opened by a reviewer"
+      },
+      "due": "Due {{time}}",
+      "actions": "Actions",
+      "done": "Done",
+      "todo": "To do",
+      "paused": "Paused",
+      "match": {
+        "platform_id": "Matched by platform ID (certain)",
+        "similarity": "Matched by similarity (a person must check)"
+      },
+      "found": "First found {{date}}",
+      "checked": "checked {{time}}",
+      "noApproved": "No approved version to compare with. This content was found live before anyone approved it.",
+      "changesSince": "Live content, with changes since approved version {{version}}"
+    },
+    "versionMenu": "Choose a version",
+    "changes": {
+      "added": "Added:",
+      "removed": "Removed:",
+      "unchanged": "Unchanged",
+      "oldVersion": "You are viewing version {{version}}, submitted by {{name}} on {{date}}. Findings, comments and decisions are on version {{current}}.",
+      "backToCurrent": "Back to the current version",
+      "compareTo": "Compare to",
+      "none": "None",
+      "swap": "Swap the two versions"
     }
   }
 }

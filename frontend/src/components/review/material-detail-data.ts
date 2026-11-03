@@ -28,7 +28,7 @@ export type MaterialDetail = {
   submittedAt: string
   submittedBy: string
   path: 'full' | 'lighter'
-  details: { targetStates: string; launchDate?: string; endDate?: string; destinationUrl?: string; metaAdId?: string }
+  details: { targetStates: string; launchDate?: string; endDate?: string; destinationUrl?: string; platformId?: string }
   fields: { label: string; kind?: 'image'; segments: Segment[] }[]
   findings: Finding[]
   checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: 'pass' | 'fail'; finding?: string; note?: string }[]
@@ -36,7 +36,60 @@ export type MaterialDetail = {
   /** Set by "Approve with conditions" (PRD F5). */
   conditions?: string
   comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision }[]
+  versions: VersionSummary[]
+  /** Append-only audit log (PRD F2). TODO: the API returns structured events, and the page writes the text. */
+  history: HistoryEvent[]
+  live: LiveItem[]
+  issues: MaterialIssue[]
 }
+
+export type VersionSummary = {
+  number: number
+  submittedAt: string
+  submittedBy: string
+  path: 'full' | 'lighter'
+  outcome?: 'approved' | 'changes_requested' | 'rejected'
+  outcomeBy?: string
+  /** The current version has no fields here; its content is in MaterialDetail.fields. */
+  current?: boolean
+  fields?: { label: string; text: string }[]
+}
+
+export type HistoryEvent = {
+  at: string
+  actor: string
+  type: 'submitted' | 'prereview' | 'routed' | 'decision' | 'comment' | 'live' | 'issue'
+  text: string
+}
+
+/** Content found live on a channel, and how it compares with the approved version (PRD F10). */
+export type LiveItem = {
+  id: string
+  connector: string
+  externalId: string
+  /** platform_id is certain, so automatic pause is safe. similarity can be wrong, so a person checks it. */
+  match: 'platform_id' | 'similarity'
+  status: 'matched' | 'changed' | 'unapproved' | 'expired_approval' | 'condition_broken'
+  foundAt: string
+  checkedAt: string
+  paused?: boolean
+  fields: { label: string; text: string }[]
+}
+
+export type MaterialIssue = {
+  id: string
+  title: string
+  severity: RiskLevel
+  status: 'open' | 'resolved'
+  owner: string
+  dueAt: string
+  openedAt: string
+  source: 'monitoring' | 'reviewer'
+  actions: { label: string; done: boolean }[]
+}
+
+/** Plain text of a field, without the finding marks. */
+export const fieldText = (segments: Segment[]) => segments.map((s) => (typeof s === 'string' ? s : s.text)).join('')
 
 /** The decisions from PRD F5, plus retracting your own approval. */
 export type Decision = 'approve' | 'approve_conditions' | 'request_changes' | 'reject' | 'escalate' | 'retract'
@@ -64,3 +117,7 @@ export function useMaterialDetail(id: string) {
  * The demo user is a Reviewer in the Compliance group, so the decision buttons show.
  */
 export const demoViewer = { name: 'Jordan Kim', role: 'reviewer', groups: ['Compliance'] }
+
+/** Fields of any version as plain text. The current version's fields live in detail.fields. */
+export const versionFields = (detail: MaterialDetail, v: VersionSummary) =>
+  v.current ? detail.fields.map((f) => ({ label: f.label, text: fieldText(f.segments) })) : (v.fields ?? [])

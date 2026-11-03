@@ -7,7 +7,8 @@ import { demoViewer, type Decision, type MaterialDetail } from './material-detai
 // TODO: replace with a POST to the decisions API; the server checks the role, writes the audit log,
 // creates the approval ID and expiry, and returns the new state.
 
-export type DecisionInput = { decision: Decision; text: string; group?: string }
+/** override: the written reason for approving with an open High finding (PRD F6). */
+export type DecisionInput = { decision: Decision; text: string; group?: string; override?: string }
 
 /** Required groups that still wait and that the viewer belongs to. A decision counts for all of them. */
 export const groupsForViewer = (detail: MaterialDetail) =>
@@ -17,10 +18,22 @@ export const groupsForViewer = (detail: MaterialDetail) =>
 export const approvedByViewer = (detail: MaterialDetail) =>
   detail.groups.filter((g) => g.state === 'approved' && g.by === demoViewer.name).map((g) => g.name)
 
+function historyText(decision: Decision, groups: string[], version: number, text: string, group?: string) {
+  const on = `on version ${version}`
+  switch (decision) {
+    case 'approve': return `Approved for ${groups.join(', ')} ${on}.`
+    case 'approve_conditions': return `Approved with conditions for ${groups.join(', ')} ${on}: ${text}`
+    case 'request_changes': return `Requested changes for ${groups.join(', ')} ${on}: ${text}`
+    case 'reject': return `Rejected for ${groups.join(', ')} ${on}: ${text}`
+    case 'escalate': return `Escalated: added ${group} as a required group. ${text}`
+    case 'retract': return `Retracted own approval ${on}: ${text}`
+  }
+}
+
 export function useDecide(materialId: string) {
   const queryClient = useQueryClient()
 
-  return ({ decision, text, group }: DecisionInput) => {
+  return ({ decision, text, group, override }: DecisionInput) => {
     const detail = queryClient.getQueryData<MaterialDetail | null>(['material-detail', materialId])
     if (!detail) return
     const now = new Date().toISOString()
@@ -70,7 +83,7 @@ export function useDecide(materialId: string) {
       author: demoViewer.name,
       role: demoViewer.groups.join(', '),
       at: now,
-      body: decision === 'escalate' && group ? `${group}: ${text}` : text,
+      body: [decision === 'escalate' && group ? `${group}: ${text}` : text, override && `Override: ${override}`].filter(Boolean).join('\n'),
       decision,
     }
 
@@ -79,6 +92,8 @@ export function useDecide(materialId: string) {
       groups,
       conditions: decision === 'approve_conditions' ? text : decision === 'retract' ? undefined : detail.conditions,
       comments: [...detail.comments, comment],
+      // Demo only: the server writes the audit log, and the text comes from the event type.
+      history: [...detail.history, { at: now, actor: demoViewer.name, type: 'decision', text: historyText(decision, mine, detail.version, text, group) + (override ? ` Override reason: ${override}` : '') }],
     })
     queryClient.setQueryData<Material[]>(['materials'], (list) =>
       list?.map((m) =>
