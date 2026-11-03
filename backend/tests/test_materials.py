@@ -26,6 +26,10 @@ RETIRED = "01a08795-8c00-7cb9-93fd-75d440fc0a38"
 APPROVED = "01a10017-2800-7389-b220-910ed92e6d2d"  # approved, expires 2026-11-20
 
 
+# Personal loan content that passes the code checks (PRD F4), so only the seeded findings matter
+CLEAN_LOAN = [{"label": "Headline", "text": "Pay off debt faster with ClearPath."}, {"label": "Footer", "text": "Federally insured by NCUA."}]
+
+
 def submission(**change):
     body = {
         "title": "Winter savings email",
@@ -121,7 +125,7 @@ async def test_submit_new_material(client):
     # The server routes it: savings matches only the seeded rule for everything (PRD F6).
     assert [(g["name"], g["reason"]) for g in d["groups"]] == [("Compliance", "Compliance reviews everything")]
     assert d["fields"][0] == {"label": "Subject line", "segments": ["Save more this winter"]}
-    assert [e["type"] for e in d["history"]] == ["submitted", "routed"]
+    assert [e["type"] for e in d["history"]] == ["submitted", "routed", "prereview"]
     row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == d["id"])
     assert (row["status"], row["owner"], row["title"]) == ("in_review", "Priya Shah", "Winter savings email")
 
@@ -162,7 +166,7 @@ async def test_affiliate_submits_for_own_company(client):
 
 async def test_new_version(client):
     await as_user(client, MANAGER)
-    res = await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta", product="personal_loan"))
+    res = await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta", product="personal_loan", fields=CLEAN_LOAN))
     assert res.status_code == 201, res.text
     d = res.json()
     assert (d["version"], d["versionCount"]) == (3, 3)
@@ -170,6 +174,7 @@ async def test_new_version(client):
     # New decisions: Legal approved version 2, but waits again (a nationwide loan needs Legal, PRD F6).
     assert [(g["name"], g["state"]) for g in d["groups"]] == [("Compliance", "waiting"), ("Legal", "waiting")]
     assert d["versions"][1]["fields"][1] == {"label": "Headline", "text": "Personal loans from 8.99% APR"}
+    assert d["history"][-1] == {**d["history"][-1], "actor": "Rule check", "text": "Code checks passed. Marked 2 findings outdated."}
     assert d["details"]["platformId"] == "23851204417730592"  # kept, for monitoring
     assert d["comments"][0]["author"] == "Maya Ruiz"  # comments stay
 
@@ -228,7 +233,8 @@ async def test_new_version_ignores_client_groups(client):
     body = submission(channel="meta", product="mortgage", groups=[{"name": "Compliance"}])
     d = (await client.post(f"/api/materials/{SUMMER}/versions", json=body)).json()
     assert routed(d) == MORTGAGE_NATIONWIDE and d["path"] == "full"
-    assert d["history"][-1]["text"] == (
+    # The Routed entry, then the pre-review entry from "Rule check" (PRD F4)
+    assert [h["text"] for h in d["history"] if h["text"].startswith("Required ")][-1] == (
         'Required Compliance (rule "Compliance reviews everything"), Legal (rule "Loans sold nationwide"), '
         'Mortgage (rule "Home lending").'
     )
@@ -348,7 +354,7 @@ async def test_who_may_decide(client):
 
 async def test_no_self_approval(client):
     await as_user(client, MANAGER)
-    await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta", product="personal_loan"))
+    await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta", product="personal_loan", fields=CLEAN_LOAN))
     res = await decide(client, SUMMER, "approve")
     assert res.status_code == 403 and "submitted" in res.json()["detail"]  # R1
     await as_user(client, REVIEWER)

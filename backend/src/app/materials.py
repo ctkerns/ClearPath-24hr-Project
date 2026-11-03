@@ -12,11 +12,11 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import Field, field_validator, model_validator
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import issues
+from app import issues, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import record
 from app.config import settings
@@ -565,12 +565,6 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     for f in files:
         f.version_id = version.id
 
-    # Findings on the old version become outdated (PRD F4).
-    await db.execute(
-        update(Finding)
-        .where(Finding.material_id == m.id, Finding.status == FindingStatus.OPEN)
-        .values(status=FindingStatus.OUTDATED)
-    )
     # The new version needs new decisions. The old ones stay in the versions, comments, and history.
     m.reviews.clear()
     await db.flush()
@@ -587,6 +581,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     db.add(event(m, viewer, EventType.SUBMITTED, f"Submitted version {number} by manual upload."))
     db.add(event(m, None, EventType.ROUTED, routing.history_text(), actor_name="Routing"))
     record(db, viewer, "material", m.id, "routed", {"version": number, **routing.audit()})  # PRD F6
+    await prereview.run(db, m, version)  # code checks; marks old findings outdated (PRD F4)
     await notify_groups(db, viewer, NotificationType.ASSIGNMENT, m, [g for g, _ in groups])  # PRD F13
 
 

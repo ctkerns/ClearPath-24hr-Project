@@ -104,11 +104,12 @@ async def test_review_flow_record(client):
         "channel": "meta",
         "product": "personal_loan",
         "fields": [{"label": "Headline", "text": "Loans for winter"}, {"label": "Primary text", "text": "Approval guaranteed. Rates from 8.99% APR."}],
-        "nationwide": True,
-        "groups": [{"name": "Compliance", "reason": "Every material"}],
+        # One state, not nationwide: the server routes it to Compliance only (Legal reviews loans sold nationwide).
+        "nationwide": False,
+        "states": ["CA"],
     }
     material_id = (await client.post("/api/materials", json=body)).json()["id"]
-    # Pre-review does not exist yet (PRD F4), so the AI finding is added here.
+    # Code pre-review runs on submit (PRD F4 layer 1). The AI layer does not exist yet, so its finding is added here.
     async with SessionLocal() as db, db.begin():
         version = await db.scalar(select(MaterialVersion).where(MaterialVersion.material_id == uuid.UUID(material_id)))
         db.add(Finding(workspace_id=version.workspace_id, material_id=version.material_id, version_id=version.id,
@@ -131,7 +132,7 @@ async def test_review_flow_record(client):
     record = next(d for d in (await metrics(client))["decisions"] if d["channel"] == "meta")
     assert {k: v for k, v in record.items() if k not in ("decidedAt", "turnaroundDays")} == {
         "channel": "meta", "product": "personal_loan", "groups": ["Compliance"], "path": "full", "rounds": 2,
-        "outcome": "approved", "findings": ["UDAAP-03"], "aiFindings": 1, "aiOutdated": 1,
+        "outcome": "approved", "findings": ["REGZ-1026.24", "UDAAP-03", "NCUA-740"], "aiFindings": 1, "aiOutdated": 1,
         "humanComments": 2, "humanUncovered": 1, "laterViolation": False,
     }
     assert 0 <= record["turnaroundDays"] < 1

@@ -727,7 +727,7 @@
       },
       "terms": "Trigger terms",
       "phrases": "Phrases",
-      "listHint": "One per line. The check matches them exactly.",
+      "listHint": "One per line. Case and spaces do not matter. {number} matches any number and {amount} a dollar amount, for example {amount}/month.",
       "listMissing": "Add at least one line.",
       "listTooLong": "Use at most 100 lines, each up to 200 characters.",
       "disclosure": "Required disclosure",
