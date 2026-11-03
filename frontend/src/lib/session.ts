@@ -13,6 +13,7 @@ export type SessionUser = {
   title: string | null
   role: Role
   workspaceId: string
+  workspaceName: string
   isDemo: boolean
   /** Names of the reviewer groups this user approves for (PRD F6). */
   groups: string[]

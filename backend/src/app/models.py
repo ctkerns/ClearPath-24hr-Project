@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, LargeBinary, MetaData, String, Table, Text, func, text
+from sqlalchemy import ARRAY, Column, DateTime, Enum, ForeignKey, Index, LargeBinary, MetaData, String, Table, Text, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 # Fixed names for indexes and constraints, so Alembic can find and change them in later migrations.
@@ -78,6 +78,10 @@ class Workspace(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     name: Mapped[str] = mapped_column(String(200))
     is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    # Two-letter state codes where the credit union is licensed (PRD F7), in alphabetical order (DC after DE)
+    licensed_states: Mapped[list[str]] = mapped_column(ARRAY(String(2)), server_default=text("'{}'"))
+    # Days from approval to expiry for new approvals (PRD F9, F15)
+    approval_days: Mapped[int] = mapped_column(server_default=text("90"))
     created_at: Mapped[datetime] = now_default()
 
 

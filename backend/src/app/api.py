@@ -9,7 +9,7 @@ from app.auth import current_user
 from app.models import Role, User
 from app.schemas import APIModel
 
-__all__ = ["APIModel", "Admin", "InternalUser", "Manager", "bad_request", "conflict", "not_found", "require_role"]
+__all__ = ["APIModel", "Admin", "InternalUser", "Manager", "SignedIn", "bad_request", "conflict", "not_found", "require_role"]
 
 
 def require_role(minimum: Role) -> Callable[..., Coroutine[Any, Any, User]]:
@@ -25,6 +25,7 @@ def require_role(minimum: Role) -> Callable[..., Coroutine[Any, Any, User]]:
 
 
 # The usual checks, as types for endpoint parameters
+SignedIn = Annotated[User, Depends(current_user)]  # any role, affiliates too
 InternalUser = Annotated[User, Depends(require_role(Role.VIEWER))]  # any role except affiliate
 Manager = Annotated[User, Depends(require_role(Role.MANAGER))]
 Admin = Annotated[User, Depends(require_role(Role.ADMIN))]

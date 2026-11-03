@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDateTime } from '@/i18n/format'
 import { useWorkspace } from '@/lib/workspace'
+import { useSave } from '@/lib/use-save'
+import { SaveError } from '@/components/save-error'
 
 export const Route = createFileRoute('/_app/settings/workspace')({
   component: WorkspaceTab,
@@ -98,7 +100,9 @@ function WorkspaceTab() {
 
 function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canEdit: boolean }) {
   const { t } = useTranslation()
-  const save = useSaveWorkspaceSettings()
+  const saveSettings = useSaveWorkspaceSettings()
+  // The form starts over with the saved values (the parent keys it by them), so nothing to do after a save.
+  const save = useSave(() => undefined)
   const [states, setStates] = useState(settings.licensedStates)
   const [days, setDays] = useState(String(settings.approvalDays))
 
@@ -113,8 +117,8 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
       className="grid gap-8"
       onSubmit={(e) => {
         e.preventDefault()
-        if (!dirty || !valid) return
-        save({ licensedStates: US_STATES.filter((s) => states.includes(s)), approvalDays: dayCount })
+        if (!dirty || !valid || save.pending) return
+        void save.run(() => saveSettings({ licensedStates: US_STATES.filter((s) => states.includes(s)), approvalDays: dayCount }))
       }}
     >
       <Section title={t('settingsWorkspace.states.heading')}>
@@ -165,9 +169,11 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
         </ul>
       </Section>
 
+      <SaveError error={save.error} />
+
       {canEdit && (
         <div className="flex gap-2 border-t pt-4">
-          <Button type="submit" size="sm" disabled={!dirty || !valid}>{t('settingsWorkspace.save')}</Button>
+          <Button type="submit" size="sm" disabled={!dirty || !valid || save.pending}>{t('settingsWorkspace.save')}</Button>
           <Button
             type="button"
             size="sm"

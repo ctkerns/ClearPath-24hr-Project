@@ -1,0 +1,7 @@
+{
+  "_note": "Demo workspace settings (PRD section 10 Workspace tab, F7, F15).",
+  "workspace": {
+    "licensedStates": ["AZ", "CA", "CO", "FL", "GA", "IL", "MI", "NC", "NY", "OH", "PA", "TX", "WA"],
+    "approvalDays": 90
+  }
+}

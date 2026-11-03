@@ -27,7 +27,7 @@ DEMO_WORKSPACE_NAME = "ClearPath demo"
 SEED_DATA = Path(__file__).parent / "seed_data"
 
 
-def _load(name: str, key: str) -> list[dict]:
+def _load(name: str, key: str):
     return json.loads((SEED_DATA / name).read_text())[key]
 
 
@@ -55,7 +55,13 @@ async def delete_demo(db: AsyncSession) -> None:
 
 
 async def create_demo(db: AsyncSession) -> int:
-    workspace = Workspace(name=DEMO_WORKSPACE_NAME, is_demo=True)
+    settings = _load("workspace.json", "workspace")
+    workspace = Workspace(
+        name=DEMO_WORKSPACE_NAME,
+        is_demo=True,
+        licensed_states=settings["licensedStates"],
+        approval_days=settings["approvalDays"],
+    )
     db.add(workspace)
     await db.flush()  # gets the workspace id from Postgres
 

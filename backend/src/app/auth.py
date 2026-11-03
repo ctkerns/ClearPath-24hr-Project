@@ -44,6 +44,7 @@ class CurrentUser(APIModel):
     title: str | None
     role: Role
     workspace_id: uuid.UUID
+    workspace_name: str
     is_demo: bool  # true in the demo workspace (PRD A1)
     groups: list[str]  # reviewer group names: what this user can approve for (PRD F6)
 
@@ -56,6 +57,7 @@ class CurrentUser(APIModel):
             title=user.title,
             role=user.role,
             workspace_id=user.workspace_id,
+            workspace_name=user.workspace.name,
             is_demo=user.workspace.is_demo,
             groups=[g.name for g in user.groups],
         )
