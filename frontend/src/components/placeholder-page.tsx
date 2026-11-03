@@ -19,7 +19,7 @@ export function PlaceholderPage({
 }) {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto grid max-w-5xl gap-4">
+    <div className="mx-auto grid w-full max-w-5xl gap-4">
       <header className="grid gap-1">
         {title && <h1 className="text-lg font-semibold">{title}</h1>}
         <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

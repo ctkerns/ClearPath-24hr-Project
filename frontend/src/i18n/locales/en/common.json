@@ -13,7 +13,8 @@
     "metrics": "Metrics",
     "settings": "Settings",
     "designSystem": "Design system",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "account": "Account"
   },
   "status": {
     "draft": "Draft",
@@ -77,5 +78,10 @@
     "routing": "Routing",
     "integrations": "Integrations",
     "workspace": "Workspace"
+  },
+  "workspace": {
+    "demoLabel": "Demo workspace",
+    "demoNote": "Seeded data. Integrations are off, so nothing here reaches a real platform.",
+    "label": "Workspace"
   }
 }

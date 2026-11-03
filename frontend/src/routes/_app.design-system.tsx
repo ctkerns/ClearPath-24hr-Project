@@ -67,7 +67,7 @@ const statuses: MaterialStatus[] = [
 function DesignSystemPage() {
   return (
     <div className="mx-auto flex max-w-6xl gap-10">
-      <nav aria-label="Design system sections" className="sticky top-[4.5rem] hidden w-40 shrink-0 self-start lg:block">
+      <nav aria-label="Design system sections" className="sticky top-[6.25rem] hidden w-40 shrink-0 self-start lg:block">
         <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Ledger</p>
         <ul className="grid gap-0.5">
           {sections.map(([id, label]) => (
@@ -401,7 +401,7 @@ const sampleRows: {
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }) {
   return (
-    <section id={id} className="grid scroll-mt-16 gap-4">
+    <section id={id} className="grid scroll-mt-24 gap-4">
       <div className="grid gap-1 border-b pb-2">
         <h2 className="text-lg font-semibold">{title}</h2>
         {note && <p className="max-w-[72ch] text-muted-foreground">{note}</p>}
