@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, type LinkProps } from '@tanstack/react-router'
+import { ChartColumn, CircleDot, Files, House, LibraryBig, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { activeIndicatorClass, useActiveIndicator } from '@/lib/use-active-indicator'
 import { AppLogo } from '@/components/app-logo'
@@ -13,19 +14,19 @@ export const Route = createFileRoute('/_app')({
 
 // Active link: dark text, and a cobalt underline on the bar's bottom edge that slides between links (Ledger).
 const navLinkClass =
-  'flex h-full items-center px-2.5 whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground ' +
+  'flex h-full items-center gap-1.5 px-2.5 whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground ' +
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring ' +
   '[&.active]:font-medium [&.active]:text-foreground'
 
 function AppLayout() {
   const { t } = useTranslation()
   const { containerRef, indicatorRef } = useActiveIndicator<HTMLElement>()
-  const mainLinks: { to: LinkProps['to']; label: string }[] = [
-    { to: '/home', label: t('nav.home') },
-    { to: '/materials', label: t('nav.materials') },
-    { to: '/issues', label: t('nav.issues') },
-    { to: '/library', label: t('nav.library') },
-    { to: '/metrics', label: t('nav.metrics') },
+  const mainLinks: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
+    { to: '/home', label: t('nav.home'), icon: House },
+    { to: '/materials', label: t('nav.materials'), icon: Files },
+    { to: '/issues', label: t('nav.issues'), icon: CircleDot },
+    { to: '/library', label: t('nav.library'), icon: LibraryBig },
+    { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
   ]
 
   return (
@@ -39,6 +40,7 @@ function AppLayout() {
           <nav ref={containerRef} aria-label={t('nav.main')} className="relative flex h-full min-w-0 flex-1 overflow-x-auto">
             {mainLinks.map((link) => (
               <Link key={link.to} to={link.to} className={navLinkClass}>
+                <link.icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
                 {link.label}
               </Link>
             ))}
