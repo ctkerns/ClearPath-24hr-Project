@@ -19,4 +19,5 @@ ENV FORWARDED_ALLOW_IPS="*"
 EXPOSE 8000
 # Bring the database up to the newest migration, create the demo data if it is missing, then start the API.
 # "exec" makes the API the main process, so `docker compose stop` stops it cleanly.
-CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && exec fastapi run src/app/main.py --host 0.0.0.0 --port 8000"]
+# "::" listens on IPv6 and IPv4: Railway's private network uses IPv6.
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && exec fastapi run src/app/main.py --host :: --port 8000"]

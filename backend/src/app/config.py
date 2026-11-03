@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +14,15 @@ class Settings(BaseSettings):
     # Default matches a Postgres on the host, for running the backend outside Docker.
     # compose.yaml sets this to the "postgres" service.
     database_url: str = "postgresql+psycopg://clearpath:clearpath@localhost:5432/clearpath"
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg(cls, url: str) -> str:
+        """Hosts such as Railway give "postgresql://" or "postgres://". SQLAlchemy needs the driver name in it."""
+        for prefix in ("postgresql://", "postgres://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url.removeprefix(prefix)
+        return url
 
     # Secure cookies go only over HTTPS. True by default; compose.yaml sets false for http://localhost.
     cookie_secure: bool = True

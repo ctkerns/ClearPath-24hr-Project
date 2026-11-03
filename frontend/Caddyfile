@@ -1,13 +1,15 @@
-# ":80" serves plain HTTP. For a real domain, replace ":80" with the domain name
+# Plain HTTP on $PORT (default 80). Railway sets PORT and ends HTTPS in front of Caddy, so keep HTTP there.
+# On your own server with a real domain, replace ":{$PORT:80}" with the domain name
 # and Caddy gets an HTTPS certificate automatically.
-:80 {
+:{$PORT:80} {
 	encode zstd gzip
 
 	# API requests go to the FastAPI service. Same origin as the app, so session cookies need no CORS setup.
 	# "handle" blocks are exclusive: a request runs only the first block that matches,
 	# so try_files below never rewrites /api/* to index.html.
+	# BACKEND_HOST is "backend" in compose.yaml; on Railway it is "backend.railway.internal".
 	handle /api/* {
-		reverse_proxy backend:8000
+		reverse_proxy {$BACKEND_HOST:backend}:8000
 	}
 
 	handle {
