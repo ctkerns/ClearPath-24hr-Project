@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
+from urllib.parse import urlsplit
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import auth
 from app.db import engine, get_db
 
 
@@ -22,6 +25,21 @@ app = FastAPI(
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
 )
+
+UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+@app.middleware("http")
+async def same_origin_only(request: Request, call_next):
+    """CSRF protection in addition to SameSite cookies: a request that changes data must come from
+    a page on this same host. Browsers always send the Origin header with these requests."""
+    origin = request.headers.get("origin")
+    if request.method in UNSAFE_METHODS and origin and urlsplit(origin).netloc != request.headers.get("host"):
+        return JSONResponse({"detail": "Cross-origin request blocked"}, status_code=403)
+    return await call_next(request)
+
+
+app.include_router(auth.router)
 
 
 class Health(BaseModel):

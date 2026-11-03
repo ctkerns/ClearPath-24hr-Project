@@ -1,0 +1,55 @@
+"""Test setup. Tests use a separate database, clearpath_test, on the same Postgres as `docker compose up`.
+
+Run: `docker compose up -d postgres`, then `uv run pytest` in backend/.
+"""
+
+import os
+
+# Must be set before any app module is imported, because app.config reads it at import time.
+BASE_URL = os.environ.get("TEST_DATABASE_SERVER", "postgresql+psycopg://clearpath:clearpath@localhost:5432")
+os.environ["DATABASE_URL"] = f"{BASE_URL}/clearpath_test"
+os.environ["COOKIE_SECURE"] = "false"  # the test client uses http://
+
+from pathlib import Path  # noqa: E402
+
+import psycopg  # noqa: E402
+import pytest  # noqa: E402
+from alembic import command  # noqa: E402
+from alembic.config import Config  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+
+from app.db import SessionLocal, engine  # noqa: E402
+from app.main import app  # noqa: E402
+from app.seed import create_demo  # noqa: E402
+
+
+@pytest.fixture(scope="session", autouse=True)
+def database():
+    """Creates clearpath_test if it is missing, and applies every migration (tests the migrations too)."""
+    with psycopg.connect(f"{BASE_URL.replace('+psycopg', '')}/clearpath", autocommit=True) as conn:
+        if not conn.execute("SELECT 1 FROM pg_database WHERE datname = 'clearpath_test'").fetchone():
+            conn.execute("CREATE DATABASE clearpath_test")
+    command.upgrade(Config(str(Path(__file__).parents[1] / "alembic.ini")), "head")
+
+
+@pytest.fixture(autouse=True)
+async def demo_data(database):
+    """Each test starts with only the seeded demo workspace."""
+    async with engine.begin() as conn:
+        await conn.execute(text("TRUNCATE sessions, users, workspaces CASCADE"))
+    async with SessionLocal() as db, db.begin():
+        await create_demo(db)
+    yield
+
+
+@pytest.fixture
+async def client():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as c:
+        yield c
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def close_engine():
+    yield
+    await engine.dispose()

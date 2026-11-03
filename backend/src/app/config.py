@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +11,11 @@ class Settings(BaseSettings):
     # Default matches a Postgres on the host, for running the backend outside Docker.
     # compose.yaml sets this to the "postgres" service.
     database_url: str = "postgresql+psycopg://clearpath:clearpath@localhost:5432/clearpath"
+
+    # Secure cookies go only over HTTPS. True by default; compose.yaml sets false for http://localhost.
+    cookie_secure: bool = True
+    # A session ends this long after sign-in. Then the user signs in again.
+    session_lifetime: timedelta = timedelta(hours=12)
 
 
 settings = Settings()
