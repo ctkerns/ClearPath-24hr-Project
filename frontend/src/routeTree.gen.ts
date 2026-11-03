@@ -30,6 +30,7 @@ import { Route as AppMaterialsIndexRouteImport } from './routes/_app.materials.i
 import { Route as AppMaterialsNewRouteImport } from './routes/_app.materials.new'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app.settings.index'
 import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app.settings.integrations'
+import { Route as AppSettingsIssuesRouteImport } from './routes/_app.settings.issues'
 import { Route as AppSettingsReviewerGroupsRouteImport } from './routes/_app.settings.reviewer-groups'
 import { Route as AppSettingsRoutingRouteImport } from './routes/_app.settings.routing'
 import { Route as AppSettingsUsersRouteImport } from './routes/_app.settings.users'
@@ -148,6 +149,11 @@ const AppSettingsIntegrationsRoute = AppSettingsIntegrationsRouteImport.update({
   path: '/integrations',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppSettingsIssuesRoute = AppSettingsIssuesRouteImport.update({
+  id: '/issues',
+  path: '/issues',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 const AppSettingsReviewerGroupsRoute =
   AppSettingsReviewerGroupsRouteImport.update({
     id: '/reviewer-groups',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/library/rules': typeof AppLibraryRulesRoute
   '/materials/new': typeof AppMaterialsNewRoute
   '/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/settings/issues': typeof AppSettingsIssuesRoute
   '/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
   '/settings/routing': typeof AppSettingsRoutingRoute
   '/settings/users': typeof AppSettingsUsersRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/library/rules': typeof AppLibraryRulesRoute
   '/materials/new': typeof AppMaterialsNewRoute
   '/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/settings/issues': typeof AppSettingsIssuesRoute
   '/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
   '/settings/routing': typeof AppSettingsRoutingRoute
   '/settings/users': typeof AppSettingsUsersRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/_app/library/rules': typeof AppLibraryRulesRoute
   '/_app/materials/new': typeof AppMaterialsNewRoute
   '/_app/settings/integrations': typeof AppSettingsIntegrationsRoute
+  '/_app/settings/issues': typeof AppSettingsIssuesRoute
   '/_app/settings/reviewer-groups': typeof AppSettingsReviewerGroupsRoute
   '/_app/settings/routing': typeof AppSettingsRoutingRoute
   '/_app/settings/users': typeof AppSettingsUsersRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/library/rules'
     | '/materials/new'
     | '/settings/integrations'
+    | '/settings/issues'
     | '/settings/reviewer-groups'
     | '/settings/routing'
     | '/settings/users'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/library/rules'
     | '/materials/new'
     | '/settings/integrations'
+    | '/settings/issues'
     | '/settings/reviewer-groups'
     | '/settings/routing'
     | '/settings/users'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/_app/library/rules'
     | '/_app/materials/new'
     | '/_app/settings/integrations'
+    | '/_app/settings/issues'
     | '/_app/settings/reviewer-groups'
     | '/_app/settings/routing'
     | '/_app/settings/users'
@@ -567,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsIntegrationsRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/settings/issues': {
+      id: '/_app/settings/issues'
+      path: '/issues'
+      fullPath: '/settings/issues'
+      preLoaderRoute: typeof AppSettingsIssuesRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
     '/_app/settings/reviewer-groups': {
       id: '/_app/settings/reviewer-groups'
       path: '/reviewer-groups'
@@ -681,6 +700,7 @@ const AppLibraryRouteWithChildren = AppLibraryRoute._addFileChildren(
 
 interface AppSettingsRouteChildren {
   AppSettingsIntegrationsRoute: typeof AppSettingsIntegrationsRoute
+  AppSettingsIssuesRoute: typeof AppSettingsIssuesRoute
   AppSettingsReviewerGroupsRoute: typeof AppSettingsReviewerGroupsRoute
   AppSettingsRoutingRoute: typeof AppSettingsRoutingRoute
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
@@ -691,6 +711,7 @@ interface AppSettingsRouteChildren {
 
 const AppSettingsRouteChildren: AppSettingsRouteChildren = {
   AppSettingsIntegrationsRoute: AppSettingsIntegrationsRoute,
+  AppSettingsIssuesRoute: AppSettingsIssuesRoute,
   AppSettingsReviewerGroupsRoute: AppSettingsReviewerGroupsRoute,
   AppSettingsRoutingRoute: AppSettingsRoutingRoute,
   AppSettingsUsersRoute: AppSettingsUsersRoute,

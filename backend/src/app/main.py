@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import audit_log, auth, export, groups, integrations, invites, library, materials, metrics, notifications, prereview, routing, search, users, workspace
+from app import audit_log, auth, channels, export, groups, integrations, invites, library, materials, metrics, notifications, prereview, routing, search, users, workspace
 from app.db import engine, get_db
 
 
@@ -46,6 +46,7 @@ ROUTERS = [
     users.router,
     groups.router,
     workspace.router,
+    channels.router,
     library.router,
     routing.router,
     integrations.router,

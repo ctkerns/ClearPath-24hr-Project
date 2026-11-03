@@ -85,6 +85,18 @@ async def test_reviewer_raises_issue(client):
     assert material["history"][-1]["type"] == "issue"
 
 
+async def test_issue_without_due_date_gets_the_workspace_default(client):
+    await as_user(client, MANAGER)
+    await client.patch("/api/workspace/issue-due-days", json={"high": 2})
+    owner = await user_id(client, SUBMITTER)
+    body = {"materialId": SUMMER, "title": "Rate is wrong", "summary": "8.99% is not on the rate sheet.", "severity": "high", "ownerId": owner}
+    before = datetime.now(UTC)
+    res = await client.post("/api/issues", json=body)
+    assert res.status_code == 201, res.text
+    due_at = datetime.fromisoformat(res.json()["dueAt"])
+    assert before + timedelta(days=2) <= due_at <= datetime.now(UTC) + timedelta(days=2)
+
+
 @pytest.mark.parametrize(
     ("change", "code"),
     [

@@ -1,7 +1,8 @@
 {
-  "_note": "Demo workspace settings (PRD section 10 Workspace tab, F7, F15).",
+  "_note": "Demo workspace settings (PRD section 10 Workspace tab, F7, F15), and the default days to fix an issue by severity (F12, Issues tab).",
   "workspace": {
     "licensedStates": ["AZ", "CA", "CO", "FL", "GA", "IL", "MI", "NC", "NY", "OH", "PA", "TX", "WA"],
-    "approvalDays": 90
+    "approvalDays": 90,
+    "issueDueDays": { "high": 1, "medium": 3, "low": 7 }
   }
 }

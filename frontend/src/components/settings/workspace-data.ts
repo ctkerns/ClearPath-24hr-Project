@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { RiskLevel } from '@/components/ui/risk-tag'
 import { api } from '@/lib/api'
 
 // Workspace settings (PRD section 10 "Workspace", F7, F15). Admins only change them.
 // This query is the one source of the licensed states and the approval length: the submit form, building blocks,
 // routing and decisions all read it, so a Workspace tab save shows everywhere at once.
+// It also has the default days to fix an issue (F12), which Managers change in the Issues tab.
 
 /** The 50 states and DC, in the order the picker shows them. */
 export const US_STATES = [
@@ -23,7 +25,12 @@ export type WorkspaceSettings = {
   isDemo: boolean
   licensedStates: string[]
   approvalDays: number
+  /** Default days from raising an issue to its due date, by severity. */
+  issueDueDays: Record<RiskLevel, number>
 }
+
+/** The bounds the server checks for each issue due day setting. */
+export const ISSUE_DUE_DAYS_MAX = 90
 
 const KEY = ['workspace-settings']
 
@@ -46,6 +53,20 @@ export function useSaveWorkspaceSettings() {
   const queryClient = useQueryClient()
   return async (change: Partial<Pick<WorkspaceSettings, 'licensedStates' | 'approvalDays'>>) => {
     const saved = await api<WorkspaceSettings>('PATCH', '/workspace', change)
+    queryClient.setQueryData(KEY, saved)
+  }
+}
+
+/** Default days to fix a new issue, by severity (PRD F12). Undefined while loading. */
+export function useIssueDueDays(): Record<RiskLevel, number> | undefined {
+  return useWorkspaceSettings().data?.issueDueDays
+}
+
+/** Managers and Admins; the server checks. Rejects with an ApiError. */
+export function useSaveIssueDueDays() {
+  const queryClient = useQueryClient()
+  return async (days: Partial<Record<RiskLevel, number>>) => {
+    const saved = await api<WorkspaceSettings>('PATCH', '/workspace/issue-due-days', days)
     queryClient.setQueryData(KEY, saved)
   }
 }

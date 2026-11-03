@@ -289,12 +289,16 @@ def test_rate_sheet_without_a_sheet_is_skipped():
 WS_RULE_OWNER = "maya.ruiz@demo.clearpathcu.org"
 
 
+# Meta's text fields in platform order (app/channels.py), so the response keeps the order of `texts`
+META_LABELS = ["Primary text", "Headline", "Description", "Call to action"]
+
+
 def loan(*texts: str, **change) -> dict:
     body = {
         "title": "Test loan ad",
         "channel": "meta",
         "product": "personal_loan",
-        "fields": [{"label": f"Field {i + 1}", "text": t} for i, t in enumerate(texts)],
+        "fields": [{"label": label, "text": t} for label, t in zip(META_LABELS, texts, strict=False)],
         "nationwide": True,
         "groups": [{"name": "Compliance"}],
     }

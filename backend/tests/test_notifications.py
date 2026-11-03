@@ -7,7 +7,7 @@ from app.models import Role, User, UserStatus, Workspace
 from app.models.notifications import Notification
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, with_channel_fields
 
 SAM = "sam.rivera@demo.clearpathcu.org"
 MARCUS = "marcus.lee@demo.clearpathcu.org"
@@ -25,7 +25,7 @@ def submission(**change):
         "fields": [{"label": "Body", "text": "Rates from 4.00% APY."}],
         "nationwide": True,
     }
-    return body | change
+    return with_channel_fields(body, change)
 
 
 async def sent(type=None):

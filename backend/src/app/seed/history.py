@@ -56,6 +56,7 @@ from app.models.materials import (
     Severity,
 )
 from app.seed.context import SeedContext
+from app.workspace import issue_due_days
 
 RANDOM_SEED = 20261103
 DAY = timedelta(days=1)
@@ -95,11 +96,14 @@ MISSED_AT_APPROVAL = 8  # approvals where a problem was found later that was alr
 
 # ---- Content ----
 
-FIELDS = {  # field labels; the last one is the long text where findings point
+# Field labels; the last one is the long text where findings point. Labels from app/channels.py, but not every field,
+# and Affiliate and Other also get a title line that the submit form does not have (a new version drops it).
+# The number of labels per channel stays fixed: it drives the random draws, so the seeded year stays the same.
+FIELDS = {
     Channel.META: ["Headline", "Call to action", "Primary text"],
     Channel.GOOGLE: ["Headline 1", "Headline 2", "Description"],
     Channel.MAILCHIMP: ["Subject line", "Preview text", "Body"],
-    Channel.WORDPRESS: ["Hero", "Body"],
+    Channel.WORDPRESS: ["Page title", "Body"],
     Channel.AFFILIATE: ["Page title", "Page text"],
     Channel.OTHER: ["Headline", "Body"],
 }
@@ -217,6 +221,7 @@ class History:
         self.groups = ctx.groups
         self.rules = ctx.extra["rules"]
         self.approval_days = ctx.workspace.approval_days
+        self.issue_due_days = {s: issue_due_days(ctx.workspace, s) for s in Severity}  # PRD F12
         self.people = people
         self.now = today
         self.monday = utc(today.date() - timedelta(days=today.weekday()))
@@ -562,7 +567,7 @@ class History:
                 status=IssueStatus.RESOLVED if done else rng.choice([IssueStatus.OPEN, IssueStatus.IN_PROGRESS]),
                 source=IssueSource.REVIEWER if reviewer else IssueSource.MONITORING, owner_id=owner.id,
                 opened_by_id=reviewer.id if reviewer else None, opened_at=found,
-                due_at=found + timedelta(days=1 if severity is Severity.HIGH else 3),
+                due_at=found + timedelta(days=self.issue_due_days[severity]),
                 resolved_at=resolved_at if done else None,
                 approved_version_id=a.version.id if a else None, present_at_approval=missed, seeded=True,
                 actions=[], comments=[],

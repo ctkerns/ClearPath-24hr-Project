@@ -10,7 +10,7 @@ from app.models.audit import AuditEvent
 from app.models.materials import Comment, Material, MaterialStatus, MaterialVersion
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, EXAMPLE_FIELDS, with_channel_fields
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 LEGAL = "tara.nguyen@demo.clearpathcu.org"  # Legal reviewer
@@ -27,7 +27,7 @@ APPROVED = "01a10017-2800-7389-b220-910ed92e6d2d"  # approved, expires 2026-11-2
 
 
 # Personal loan content that passes the code checks (PRD F4), so only the seeded findings matter
-CLEAN_LOAN = [{"label": "Headline", "text": "Pay off debt faster with ClearPath."}, {"label": "Footer", "text": "Federally insured by NCUA."}]
+CLEAN_LOAN = [{"label": "Headline", "text": "Pay off debt faster with ClearPath."}, {"label": "Primary text", "text": "Federally insured by NCUA."}]
 
 
 def submission(**change):
@@ -38,7 +38,7 @@ def submission(**change):
         "fields": [{"label": "Subject line", "text": "Save more this winter"}, {"label": "Body", "text": "Rates from 4.00% APY."}],
         "nationwide": True,
     }
-    return body | change
+    return with_channel_fields(body, change)
 
 
 # Reading
@@ -145,12 +145,58 @@ async def test_viewer_cannot_submit(client):
         ({"launchDate": "2026-12-10", "endDate": "2026-12-01"}, 422),
         ({"title": " "}, 400),
         ({"channel": "fax"}, 422),
+        # Content fields come from the channel (app/channels.py)
+        ({"fields": [{"label": "Headline", "text": "Save more"}]}, 422),  # a Meta field on a Mailchimp email
+        ({"fields": [{"label": "Body", "text": "a"}, {"label": "Body", "text": "b"}]}, 422),
+        ({"fields": [{"label": "Body", "text": "a", "kind": "image"}]}, 422),
+        ({"fields": [{"label": "URL", "text": "https://x.example"}, {"label": "Body", "text": "a"}]}, 422),
+        ({"fields": [{"label": "Subject line", "text": " "}, {"label": "Body", "text": ""}]}, 422),  # no content at all
+        ({"fields": [{"label": "Subject", "text": ""}, {"label": "Body", "text": "a"}]}, 422),  # unknown even when empty
     ],
 )
 async def test_invalid_submission(client, change, code):
     await as_user(client, SUBMITTER)
     res = await client.post("/api/materials", json=submission(**change))
     assert res.status_code == code, res.text
+
+
+async def test_channels_list_their_fields(client):
+    await as_user(client, AFFILIATE)  # everyone who submits reads them
+    res = await client.get("/api/channels")
+    assert res.status_code == 200
+    channels = {c["channel"]: c["fields"] for c in res.json()}
+    assert list(channels) == ["meta", "google", "mailchimp", "wordpress", "affiliate", "other"]
+    assert channels["meta"][0] == {"label": "Primary text", "multiline": True}
+    assert channels["meta"][-1] == {"label": "Image", "multiline": False, "kind": "image"}
+    assert [f["label"] for f in channels["mailchimp"]] == ["Subject line", "Preview text", "Body"]
+    client.cookies.clear()
+    assert (await client.get("/api/channels")).status_code == 401
+
+
+@pytest.mark.parametrize("channel", list(EXAMPLE_FIELDS))
+async def test_every_channel_takes_its_fields(client, channel):
+    await as_user(client, SUBMITTER)
+    res = await client.post("/api/materials", json=submission(channel=channel))
+    assert res.status_code == 201, res.text
+    assert [f["label"] for f in res.json()["fields"]] == [f["label"] for f in EXAMPLE_FIELDS[channel]]
+
+
+async def test_fields_are_kept_in_platform_order(client):
+    await as_user(client, SUBMITTER)
+    fields = [
+        {"label": "Image", "text": "Save today"},
+        {"label": "Headline", "text": "Save more"},
+        {"label": "Primary text", "text": "Rates from 4.00% APY."},
+        {"label": "Description", "text": "  "},  # empty: dropped
+    ]
+    d = (await client.post("/api/materials", json=submission(channel="meta", fields=fields))).json()
+    # The kind comes from the channel
+    assert [(f["label"], f.get("kind")) for f in d["fields"]] == [("Primary text", None), ("Headline", None), ("Image", "image")]
+    # A new version follows the same rules
+    bad = submission(channel="meta", fields=[{"label": "Body", "text": "x"}])
+    assert (await client.post(f"/api/materials/{d['id']}/versions", json=bad)).status_code == 422
+    url = submission(channel="meta", fields=[{"label": "URL", "text": "https://clearpathcu.example/save"}])
+    assert (await client.post(f"/api/materials/{d['id']}/versions", json=url)).status_code == 201
 
 
 async def test_affiliate_submits_for_own_company(client):
