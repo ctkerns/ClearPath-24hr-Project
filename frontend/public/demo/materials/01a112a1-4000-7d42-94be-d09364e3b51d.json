@@ -1,0 +1,68 @@
+{
+  "id": "01a112a1-4000-7d42-94be-d09364e3b51d",
+  "version": 2,
+  "versionCount": 2,
+  "submittedAt": "2026-11-02T09:12:00Z",
+  "submittedBy": "Priya Shah",
+  "path": "full",
+  "details": {
+    "targetStates": "Nationwide",
+    "launchDate": "2026-11-15",
+    "endDate": "2027-01-31",
+    "destinationUrl": "clearpathcu.example/loans/personal",
+    "metaAdId": "23851204417730592"
+  },
+  "fields": [
+    {
+      "label": "Primary text",
+      "segments": [
+        "Summer plans? Make them happen with a ClearPath personal loan. Borrow up to $25,000 for ",
+        "travel, home projects or a new start, ",
+        { "text": "for as low as $199/month", "finding": "f1" },
+        ". ",
+        { "text": "Approval in minutes", "finding": "f2" },
+        ", and checking your rate won't affect your credit score."
+      ]
+    },
+    { "label": "Headline", "segments": ["Personal loans from 8.99% APR"] },
+    { "label": "Description", "segments": ["Rates from 8.99% to 24.99% APR. Terms 12 to 60 months."] },
+    { "label": "Call to action", "segments": ["Check your rate"] },
+    { "label": "Image", "kind": "image", "segments": ["Your summer, funded. ClearPath Credit Union. Federally insured by NCUA."] }
+  ],
+  "findings": [
+    {
+      "id": "f1", "source": "code", "severity": "high", "ruleId": "REGZ-1026.24", "status": "open",
+      "text": "for as low as $199/month",
+      "explanation": "is a payment amount, which is a Reg Z trigger term. The ad must also show the APR, the loan amount and the term that the payment is based on.",
+      "suggestion": "Insert disclosure D-7 v3 after this sentence, or remove the payment amount."
+    },
+    {
+      "id": "f2", "source": "ai", "severity": "medium", "ruleId": "UDAAP-03", "status": "open",
+      "text": "Approval in minutes",
+      "explanation": "can read as a promise that every applicant gets approved, and fast. The decision depends on a credit review.",
+      "suggestion": "Use the approved building block BB-012: \"Get a decision in minutes\"."
+    },
+    {
+      "id": "f0", "source": "code", "severity": "high", "ruleId": "UDAAP-03", "status": "outdated",
+      "text": "Guaranteed approval",
+      "explanation": "is a banned phrase. Version 2 removed it."
+    }
+  ],
+  "checklist": [
+    { "ruleId": "REGZ-1026.24", "title": "Trigger terms require APR disclosure", "layer": "code", "result": "fail", "finding": "f1" },
+    { "ruleId": "UDAAP-03", "title": "No promise of guaranteed approval", "layer": "ai", "result": "fail", "finding": "f2" },
+    { "ruleId": "RATE-01", "title": "Every APR is inside the rate sheet range", "layer": "code", "result": "pass", "note": "8.99% to 24.99% matches the October rate sheet." },
+    { "ruleId": "FCRA-02", "title": "Rate check claims must match the credit pull", "layer": "ai", "result": "pass", "note": "The soft-pull claim matches the rate check flow." },
+    { "ruleId": "NCUA-740", "title": "Federal insurance statement is present", "layer": "code", "result": "pass" },
+    { "ruleId": "FAIR-01", "title": "No wording or imagery that could steer applicants", "layer": "ai", "result": "pass" },
+    { "ruleId": "INJ-00", "title": "No hidden instructions in the content", "layer": "code", "result": "pass" }
+  ],
+  "groups": [
+    { "name": "Compliance", "state": "waiting", "members": ["Jordan Kim", "Alex Chen"], "reason": "Every material" },
+    { "name": "Legal", "state": "approved", "by": "Maya Ruiz", "at": "2026-11-02T14:20:00Z", "reason": "Product is a loan, nationwide" }
+  ],
+  "comments": [
+    { "id": "c1", "author": "Maya Ruiz", "role": "Legal", "at": "2026-11-02T14:18:00Z", "body": "Legal is fine with version 2. The image text and the NCUA statement are correct." },
+    { "id": "c2", "author": "Dana Ortiz", "role": "Marketing", "at": "2026-11-02T16:05:00Z", "body": "Can we keep the $199/month if we add the D-7 disclosure under the image instead of in the primary text?" }
+  ]
+}

@@ -16,8 +16,8 @@ type FindingCardProps = Omit<React.ComponentProps<"article">, "children"> & {
   number?: number
   severity: RiskLevel
   ruleId: string
-  /** "ai" shows the "AI suggestion" label (PRD F4). */
-  source: "ai" | "human"
+  /** "ai" shows the "AI suggestion" label; "code" shows the "Rule check" author (PRD F4). */
+  source: "ai" | "code" | "human"
   author?: string
   flaggedText: string
   explanation: React.ReactNode
@@ -66,7 +66,9 @@ function FindingCard({
           {outdated && (
             <span className="rounded-sm bg-neutral-soft px-1.5 text-xs font-semibold text-neutral">{t("finding.outdated")}</span>
           )}
-          {source === "ai" ? (
+          {source === "code" ? (
+            <span className="text-xs font-medium text-muted-foreground">{t("finding.ruleCheck")}</span>
+          ) : source === "ai" ? (
             <span className="rounded-sm border border-dashed px-1.5 text-[10.5px] whitespace-nowrap text-muted-foreground">
               {t("finding.aiSuggestion")}
             </span>

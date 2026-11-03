@@ -36,7 +36,8 @@
   "finding": {
     "aiSuggestion": "AI suggestion",
     "outdated": "Outdated",
-    "fix": "Fix:"
+    "fix": "Fix:",
+    "ruleCheck": "Rule check"
   },
   "placeholder": {
     "label": "Placeholder",
@@ -203,6 +204,61 @@
       "approved": "approved",
       "changes": "changes requested",
       "rejected": "rejected"
+    }
+  },
+  "review": {
+    "notFound": "This material does not exist, or you do not have access to it.",
+    "versionOf": "Version {{version}} of {{count}}",
+    "moreActions": "More actions",
+    "raiseIssue": "Raise an issue",
+    "decision": {
+      "approve": "Approve",
+      "moreApprove": "More approval options",
+      "approveWithConditions": "Approve with conditions…",
+      "requestChanges": "Request changes",
+      "reject": "Reject",
+      "escalate": "Escalate (add a group)"
+    },
+    "textInImage": "Text in image:",
+    "findings_one": "{{count}} open finding",
+    "findings_other": "{{count}} open findings",
+    "outdated_one": "{{count}} outdated",
+    "outdated_other": "{{count}} outdated",
+    "comments_one": "{{count}} comment",
+    "comments_other": "{{count}} comments",
+    "commentPlaceholder": "Add a comment",
+    "comment": "Comment",
+    "requiredGroups": "Required groups",
+    "yourGroup": "Your group",
+    "approvedBy": "Approved by {{name}}, {{time}}",
+    "requiredBecause": "Required: {{reason}}",
+    "checklist": "Checklist · {{failed}} failed, {{passed}} passed",
+    "pass": "Passed",
+    "fail": "Failed",
+    "layer": {
+      "code": "Code check",
+      "ai": "AI check"
+    },
+    "details": "Details",
+    "detail": {
+      "targetStates": "States",
+      "dates": "Runs",
+      "destination": "Links to",
+      "platformId": "Meta ad ID",
+      "path": "Review path",
+      "submitted": "Submitted"
+    },
+    "path": {
+      "full": "Full review",
+      "lighter": "Lighter path"
+    },
+    "submittedBy": "{{name}}, {{time}}",
+    "noSeed": "This demo material has no seeded content yet.",
+    "noSeedLink": "Open \"Summer personal loan, Meta feed ad\" to see a full review",
+    "later": {
+      "versions": "Versions and side-by-side diff come next.",
+      "history": "The audit log comes next.",
+      "live": "Live items and linked issues come next."
     }
   }
 }
