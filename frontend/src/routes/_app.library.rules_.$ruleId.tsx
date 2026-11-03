@@ -7,7 +7,7 @@ import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
 import { useMaterials } from '@/components/materials/material-data'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
@@ -21,6 +21,7 @@ export const Route = createFileRoute('/_app/library/rules_/$ruleId')({
 
 /** One rule, read like a page in a policy manual: the rule text first, then how the tool checks it. */
 function RulePage() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { ruleId } = Route.useParams()
   const rules = useRules()
@@ -28,7 +29,7 @@ function RulePage() {
   const { label } = useRuleList()
   const rule = rules.data?.find((r) => r.id === ruleId)
   // R3: only Managers and Admins change the library.
-  const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (rules.isPending) return <RuleSkeleton />
   if (!rule) {

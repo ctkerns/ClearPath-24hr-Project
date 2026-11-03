@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Material } from '@/components/materials/material-data'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { uuidv7 } from '@/lib/uuid'
 import { hasRole, type WorkspaceUser } from './user-data'
+import type { Role } from '@/components/review/material-detail-data'
 
 // Reviewer groups (PRD section 4, F5, F6, screen 9). This file holds what a group is: name, description, review target.
 // Who is in a group lives on each user (users.json, useUsers), so membership has one source of truth.
@@ -38,7 +39,7 @@ export function useReviewerGroups() {
 }
 
 /** Only Managers and higher change reviewer groups. */
-export const canManageGroups = () => hasRole(demoViewer.role, 'manager')
+export const canManageGroups = (role: Role) => hasRole(role, 'manager')
 
 /** Only Reviewers and higher can be group members, because members approve for the group (PRD F6). */
 export const canJoinGroup = (u: WorkspaceUser) => u.status !== 'deactivated' && hasRole(u.role, 'reviewer')
@@ -60,6 +61,7 @@ export type GroupInput = { name: string; description: string; targetBusinessDays
  * TODO: replace with API calls. A rename must also update routing rules and open reviews on the server.
  */
 export function useGroupUpdate() {
+  const viewer = useViewer()
   const queryClient = useQueryClient()
   const now = () => new Date().toISOString()
 
@@ -71,13 +73,13 @@ export function useGroupUpdate() {
   return {
     create(input: GroupInput) {
       const at = now()
-      const group: ReviewerGroup = { id: uuidv7(), ...input, isDefault: false, createdBy: demoViewer.name, createdAt: at, updatedBy: demoViewer.name, updatedAt: at }
+      const group: ReviewerGroup = { id: uuidv7(), ...input, isDefault: false, createdBy: viewer.name, createdAt: at, updatedBy: viewer.name, updatedAt: at }
       setGroups((list) => [...list, group])
       return group.id
     },
     edit(id: string, input: GroupInput) {
       const old = queryClient.getQueryData<ReviewerGroup[]>(['reviewer-groups'])?.find((g) => g.id === id)
-      setGroups((list) => list.map((g) => (g.id === id ? { ...g, ...input, updatedBy: demoViewer.name, updatedAt: now() } : g)))
+      setGroups((list) => list.map((g) => (g.id === id ? { ...g, ...input, updatedBy: viewer.name, updatedAt: now() } : g)))
       // Members keep their group after a rename.
       if (old && old.name !== input.name) {
         setUsers((u) => (u.groups.includes(old.name) ? { ...u, groups: u.groups.map((n) => (n === old.name ? input.name : n)) } : u))

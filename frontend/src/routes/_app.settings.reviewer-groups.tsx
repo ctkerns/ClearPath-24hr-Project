@@ -12,6 +12,7 @@ import { useUsers, type WorkspaceUser } from '@/components/settings/user-data'
 import { Button } from '@/components/ui/button'
 import type { Material } from '@/components/materials/material-data'
 import { cn } from '@/lib/utils'
+import { useViewer } from '@/lib/session'
 
 export const Route = createFileRoute('/_app/settings/reviewer-groups')({
   component: ReviewerGroupsTab,
@@ -22,13 +23,14 @@ export const Route = createFileRoute('/_app/settings/reviewer-groups')({
  * Each row opens the group's page, where a Manager edits it and its members.
  */
 function ReviewerGroupsTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const groups = useReviewerGroups()
   const users = useUsers()
   const materials = useMaterials()
   const [creating, setCreating] = useState(false)
-  const canEdit = canManageGroups()
+  const canEdit = canManageGroups(viewer.role)
   const all = groups.data ?? []
 
   return (

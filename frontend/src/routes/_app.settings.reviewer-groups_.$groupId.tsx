@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate } from '@/i18n/format'
+import { useViewer } from '@/lib/session'
 
 // Not nested under the groups list route (the trailing _), so the list needs no Outlet.
 // It still sits inside the Settings layout, so the tabs stay visible and Reviewer groups stays active.
@@ -24,6 +25,7 @@ export const Route = createFileRoute('/_app/settings/reviewer-groups_/$groupId')
 
 /** One reviewer group: what it reviews, its members, and what waits on it now (PRD F6). */
 function GroupPage() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { groupId } = Route.useParams()
   const groups = useReviewerGroups()
@@ -32,7 +34,7 @@ function GroupPage() {
   const update = useGroupUpdate()
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
-  const canEdit = canManageGroups()
+  const canEdit = canManageGroups(viewer.role)
   const group = groups.data?.find((g) => g.id === groupId)
 
   if (groups.isPending) return <GroupSkeleton />

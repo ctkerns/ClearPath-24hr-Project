@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Check, Lock, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { hasRole } from '@/components/settings/user-data'
 import {
   EXPIRY_WARNING_DAYS,
@@ -26,11 +26,12 @@ export const Route = createFileRoute('/_app/settings/workspace')({
 
 /** Workspace settings (PRD section 10): details, licensed states (F7), approval expiry (F15), and the demo reset. Admins only. */
 function WorkspaceTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const workspace = useWorkspace()
   const settings = useWorkspaceSettings()
   const resetDemo = useResetDemo()
-  const canEdit = hasRole(demoViewer.role, 'admin')
+  const canEdit = hasRole(viewer.role, 'admin')
   const [confirming, setConfirming] = useState(false)
   const [resetAt, setResetAt] = useState<string>()
 

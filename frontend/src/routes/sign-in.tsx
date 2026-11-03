@@ -7,15 +7,17 @@ import { PersonAvatar } from '@/components/materials/material-meta'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { DEMO_ACCOUNTS, DEMO_PASSWORD, getSession, safeRedirect, signIn, type SessionUser } from '@/lib/session'
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, safeRedirect, sessionQuery, signIn, type DemoAccount } from '@/lib/session'
 
 // Outside the _app layout: the only page with no app shell. The landing page of the tool (PRD F1).
 export const Route = createFileRoute('/sign-in')({
   validateSearch: (raw: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof raw.redirect === 'string' ? raw.redirect : undefined,
   }),
-  beforeLoad: ({ search }) => {
-    if (getSession()) throw redirect({ to: safeRedirect(search.redirect) })
+  // Already signed in: go straight on. If the server cannot answer, show the form anyway.
+  beforeLoad: async ({ search, context }) => {
+    const viewer = await context.queryClient.ensureQueryData(sessionQuery).catch(() => null)
+    if (viewer) throw redirect({ to: safeRedirect(search.redirect) })
   },
   component: SignInPage,
 })
@@ -41,12 +43,12 @@ function SignInPage() {
       // A full page load, so the app starts clean with this user's session.
       window.location.assign(safeRedirect(next))
     } catch (err) {
-      setError(t(err instanceof Error && err.message === 'storage_blocked' ? 'signIn.error.storage' : 'signIn.error.invalid'))
+      setError(t(err instanceof Error && err.message === 'invalid_credentials' ? 'signIn.error.invalid' : 'signIn.error.unavailable'))
       setPending(undefined)
     }
   }
 
-  const tryAccount = (account: SessionUser) => {
+  const tryAccount = (account: DemoAccount) => {
     setEmail(account.email)
     setPassword(DEMO_PASSWORD)
     void submit(account.email, DEMO_PASSWORD)

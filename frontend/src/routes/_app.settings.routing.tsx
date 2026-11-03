@@ -7,6 +7,7 @@ import { ChangeTypesSection, DefaultGroupSection, LighterPathSection } from '@/c
 import { RoutingRules } from '@/components/settings/routing-rules'
 import { RoutingTest } from '@/components/settings/routing-test'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useViewer } from '@/lib/session'
 
 export const Route = createFileRoute('/_app/settings/routing')({
   component: RoutingTab,
@@ -18,10 +19,11 @@ export const Route = createFileRoute('/_app/settings/routing')({
  * The "Test routing" panel runs the rules on an example item.
  */
 function RoutingTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const routing = useRouting()
   const groups = useReviewerGroups()
-  const canEdit = canManageRouting()
+  const canEdit = canManageRouting(viewer.role)
 
   if (routing.isPending || groups.isPending) {
     return (

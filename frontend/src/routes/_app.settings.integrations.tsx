@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Info, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { INTEGRATION_GROUPS, ownerCandidates, providerInfo, useIntegrations } from '@/components/settings/integration-data'
 import { IntegrationListHeader, IntegrationRow } from '@/components/settings/integration-row'
 import { hasRole, useUsers } from '@/components/settings/user-data'
@@ -17,11 +17,12 @@ export const Route = createFileRoute('/_app/settings/integrations')({
  * Only Admins connect, disconnect, sync or set default owners. Everyone else sees the same list, read-only.
  */
 function IntegrationsTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { isDemo } = useWorkspace()
   const integrations = useIntegrations()
   const users = useUsers()
-  const canEdit = hasRole(demoViewer.role, 'admin')
+  const canEdit = hasRole(viewer.role, 'admin')
 
   if (integrations.isPending) return <IntegrationsSkeleton />
   if (integrations.isError) return <p className="text-muted-foreground">{t('settingsIntegrations.loadError')}</p>

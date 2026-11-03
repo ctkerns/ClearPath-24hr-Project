@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Channel, Product } from '@/components/materials/material-data'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import i18n from '@/i18n'
 import { uuidv7 } from '@/lib/uuid'
 import type { ReviewerGroup } from './group-data'
 import { hasRole } from './user-data'
+import type { Role } from '@/components/review/material-detail-data'
 
 // Review routing (PRD F6, screen 9): routing rules, the lighter path, and the no-material-change types.
 // The default group is a flag on the reviewer group itself (ReviewerGroup.isDefault), so this tab writes it there.
@@ -63,7 +64,7 @@ export function useRouting() {
 }
 
 /** Only Managers and higher change routing (PRD section 4). */
-export const canManageRouting = () => hasRole(demoViewer.role, 'manager')
+export const canManageRouting = (role: Role) => hasRole(role, 'manager')
 
 export type RuleInput = Pick<RoutingRule, 'name' | 'conditions' | 'requiredGroupIds' | 'note'>
 
@@ -74,8 +75,9 @@ export const emptyRule: RuleInput = { name: '', conditions: { products: [], chan
  * TODO: replace with API calls. The server records each change in the audit log; open reviews keep their groups.
  */
 export function useRoutingUpdate() {
+  const viewer = useViewer()
   const queryClient = useQueryClient()
-  const stamp = () => ({ updatedBy: demoViewer.name, updatedAt: new Date().toISOString() })
+  const stamp = () => ({ updatedBy: viewer.name, updatedAt: new Date().toISOString() })
 
   const set = (change: (s: RoutingSettings) => RoutingSettings) =>
     queryClient.setQueryData<RoutingSettings>(['routing'], (s) => (s ? change(s) : s))

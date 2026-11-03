@@ -8,7 +8,7 @@ import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { listRowClass } from '@/components/list/list-filters'
 import { daysUntil, LIVE_PROBLEMS, useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, GroupApprovals, PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { useReviewerGroups } from '@/components/settings/group-data'
 import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
@@ -31,7 +31,7 @@ function DashboardPage() {
   const materials = useMaterials()
   const issues = useIssues()
   const groups = useReviewerGroups()
-  const viewer = demoViewer
+  const viewer = useViewer()
 
   if (materials.isPending || issues.isPending || groups.isPending) return <DashboardSkeleton />
   const allMaterials = materials.data ?? []

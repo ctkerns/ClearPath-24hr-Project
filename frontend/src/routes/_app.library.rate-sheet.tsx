@@ -5,7 +5,7 @@ import { changedCount, useRateSheets, validateRateSheetSearch } from '@/componen
 import { RateSheetHistory } from '@/components/library/rate-sheet-history'
 import { RateSheetTable } from '@/components/library/rate-sheet-table'
 import { PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
 
@@ -16,11 +16,12 @@ export const Route = createFileRoute('/_app/library/rate-sheet')({
 
 /** The rate sheet (PRD F8): current rates, fees and terms by product, and the uploads that came before. */
 function RateSheetTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { sheet: sheetId } = Route.useSearch()
   const sheets = useRateSheets()
   // R3: only Managers and Admins upload a new sheet.
-  const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (sheets.isPending) return <RateSheetSkeleton />
   if (sheets.isError || !sheets.data.length) return <p className="text-muted-foreground">{t('rateSheet.loadError')}</p>

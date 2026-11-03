@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { DEMO_ACCOUNTS, getSession } from '@/lib/session'
 import type { IssueStatus } from '@/components/issues/issue-data'
 import type { GroupState } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
@@ -113,13 +112,6 @@ export function useMaterialDetail(id: string) {
 
 /** Roles from PRD section 4. */
 export type Role = 'viewer' | 'submitter' | 'reviewer' | 'manager' | 'admin' | 'affiliate'
-
-/**
- * The signed-in person, read once when the app loads. Sign-in and sign-out reload the page, so this stays current.
- * Without a session (only before the sign-in redirect runs) it falls back to the Reviewer demo account.
- * TODO: read from the session API, through a hook.
- */
-export const demoViewer: { name: string; role: Role; groups: string[] } = getSession() ?? DEMO_ACCOUNTS[2]
 
 /** Fields of any version as plain text. The current version's fields live in detail.fields. */
 export const versionFields = (detail: MaterialDetail, v: VersionSummary) =>

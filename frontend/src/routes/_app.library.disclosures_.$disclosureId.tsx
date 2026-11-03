@@ -6,7 +6,7 @@ import { requiredBy, useDisclosures } from '@/components/library/disclosure-data
 import { useRules } from '@/components/library/rule-data'
 import { useDisclosureList } from '@/components/library/use-disclosure-list'
 import { PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { TrackedText } from '@/components/review/tracked-text'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
@@ -21,13 +21,14 @@ export const Route = createFileRoute('/_app/library/disclosures_/$disclosureId')
  * Version changes use the same track-changes marks as the material page.
  */
 function DisclosurePage() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { disclosureId } = Route.useParams()
   const disclosures = useDisclosures()
   const rules = useRules()
   const { label } = useDisclosureList()
   const d = disclosures.data?.find((x) => x.id === disclosureId)
-  const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (disclosures.isPending) return <PageSkeleton />
   if (!d) {

@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Material } from '@/components/materials/material-data'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -47,6 +47,7 @@ export function RaiseIssueDialog({ material, people, open, onClose }: {
 }
 
 function RaiseIssueForm({ material, people, onClose }: { material: Material; people: string[]; onClose: () => void }) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const raise = useRaiseIssue()
   const navigate = useNavigate()
@@ -59,7 +60,7 @@ function RaiseIssueForm({ material, people, onClose }: { material: Material; peo
   const [dueTouched, setDueTouched] = useState(false)
   const ready = title.trim() && summary.trim() && dueDate
 
-  const owners = [...new Set([material.owner, ...people, demoViewer.name])]
+  const owners = [...new Set([material.owner, ...people, viewer.name])]
 
   return (
     <form

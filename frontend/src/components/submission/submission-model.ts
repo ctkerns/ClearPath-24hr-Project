@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
 import { uuidv7 } from '@/lib/uuid'
-import { demoViewer, versionFields, type MaterialDetail } from '@/components/review/material-detail-data'
+import { versionFields, type MaterialDetail } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { useReviewerGroups, type ReviewerGroup } from '@/components/settings/group-data'
 import { evaluateRouting, formatList, useRouting, type RoutingRule } from '@/components/settings/routing-data'
 import i18n from '@/i18n'
@@ -122,6 +123,7 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
  * TODO: replace with a POST to the API. The server stores files, routes the version, and starts pre-review (F4).
  */
 export function useSubmitMaterial() {
+  const viewer = useViewer()
   const queryClient = useQueryClient()
   const routing = useRoutingPreview()
 
@@ -145,7 +147,7 @@ export function useSubmitMaterial() {
       version: number,
       versionCount: number,
       submittedAt: now,
-      submittedBy: demoViewer.name,
+      submittedBy: viewer.name,
       path: 'full',
       details: {
         targetStates: values.nationwide ? 'Nationwide' : values.states.join(', '),
@@ -162,11 +164,11 @@ export function useSubmitMaterial() {
       comments: prev?.comments ?? [],
       versions: [
         ...(prev?.versions ?? []).map((v) => (v.current ? { ...v, current: false, fields: versionFields(prev!, v) } : v)),
-        { number, submittedAt: now, submittedBy: demoViewer.name, path: 'full', current: true },
+        { number, submittedAt: now, submittedBy: viewer.name, path: 'full', current: true },
       ],
       history: [
         ...(prev?.history ?? []),
-        { at: now, actor: demoViewer.name, type: 'submitted', text: `Submitted version ${number} by manual upload.` },
+        { at: now, actor: viewer.name, type: 'submitted', text: `Submitted version ${number} by manual upload.` },
         { at: now, actor: 'Routing', type: 'routed', text: `Required ${groups.map((g) => `${g.name} (rule "${g.reason}")`).join(', ')}.` },
       ],
       live: prev?.live ?? [],
@@ -174,7 +176,7 @@ export function useSubmitMaterial() {
     }
 
     const summary: Material = {
-      ...(existing?.material ?? { liveStatus: 'not_live', owner: demoViewer.name }),
+      ...(existing?.material ?? { liveStatus: 'not_live', owner: viewer.name }),
       id,
       title: values.title.trim() || existing?.material.title || '',
       channel,

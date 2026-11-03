@@ -6,7 +6,7 @@ import { RegChangeStatusPill } from '@/components/library/reg-change-meta'
 import { useRules, type Rule } from '@/components/library/rule-data'
 import { useMaterials } from '@/components/materials/material-data'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { TrackedText } from '@/components/review/tracked-text'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,6 +21,7 @@ export const Route = createFileRoute('/_app/library/regulatory-changes_/$changeI
 
 /** One regulatory change, read like a redline: what the agency said, then the edit it implies for each rule. */
 function RegChangePage() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { changeId } = Route.useParams()
   const changes = useRegChanges()
@@ -28,7 +29,7 @@ function RegChangePage() {
   const materials = useMaterials()
   const change = changes.data?.find((c) => c.id === changeId)
   // R3: only Managers and Admins change the library, so only they apply or dismiss a change.
-  const canDecide = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+  const canDecide = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (changes.isPending || rules.isPending) return <RegChangeSkeleton />
   if (!change) {

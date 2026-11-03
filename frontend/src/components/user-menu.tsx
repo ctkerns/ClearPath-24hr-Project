@@ -2,10 +2,9 @@ import { Link } from '@tanstack/react-router'
 import { LogOut, Palette, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
 import { Button } from '@/components/ui/button'
 import { settingsTabsFor } from '@/components/settings/settings-tabs'
-import { signOut } from '@/lib/session'
+import { signOut, useViewer } from '@/lib/session'
 import { useWorkspace } from '@/lib/workspace'
 import {
   DropdownMenu,
@@ -23,7 +22,7 @@ import {
 export function UserMenu() {
   const { t } = useTranslation()
   const workspace = useWorkspace()
-  const viewer = demoViewer
+  const viewer = useViewer()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -58,7 +57,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {/* A full page load, so no data of this user stays in memory for the next one. */}
-        <DropdownMenuItem onSelect={() => { signOut(); window.location.assign('/sign-in') }}>
+        <DropdownMenuItem onSelect={() => { void signOut().then(() => window.location.assign('/sign-in')) }}>
           <LogOut />{t('nav.signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>

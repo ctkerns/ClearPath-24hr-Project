@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { approvedByViewer, groupsForViewer, useDecide } from './decide'
 import type { Decision, MaterialDetail } from './material-detail-data'
+import { useViewer } from '@/lib/session'
 
 /** Which decisions need text before they can be sent. Approve alone takes an optional comment. */
 const textRequired: Record<Decision, boolean> = {
@@ -48,13 +49,14 @@ export function DecisionDialog({ decision, detail, materialId, onClose }: {
 }
 
 function DecisionForm({ decision, detail, materialId, onDone }: { decision: Decision; detail: MaterialDetail; materialId: string; onDone: () => void }) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const decide = useDecide(materialId)
   const [text, setText] = useState('')
   const [group, setGroup] = useState<string>()
   const [override, setOverride] = useState('')
 
-  const mine = decision === 'retract' ? approvedByViewer(detail) : groupsForViewer(detail)
+  const mine = decision === 'retract' ? approvedByViewer(detail, viewer) : groupsForViewer(detail, viewer)
   const openFindings = detail.findings.filter((f) => f.status === 'open').length
   const othersWaiting = detail.groups.filter((g) => g.state !== 'approved' && !mine.includes(g.name)).map((g) => g.name)
   const isApprove = decision === 'approve' || decision === 'approve_conditions'

@@ -7,7 +7,7 @@ import { CopyButton } from '@/components/library/copy-button'
 import { useBlockList } from '@/components/library/use-block-list'
 import { PRODUCTS } from '@/components/materials/material-data'
 import { PersonAvatar } from '@/components/materials/material-meta'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { useLicensedStates } from '@/components/settings/workspace-data'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
@@ -21,6 +21,7 @@ export const Route = createFileRoute('/_app/library/building-blocks_/$blockId')(
 
 /** One building block: the exact approved text first, then where it may be used and what it can replace. */
 function BlockPage() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const { blockId } = Route.useParams()
   const blocks = useBlocks()
@@ -28,7 +29,7 @@ function BlockPage() {
   const licensedStates = useLicensedStates()
   const block = blocks.data?.find((b) => b.id === blockId)
   // R3: only Managers and Admins change the library.
-  const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
+  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (blocks.isPending) return <BlockSkeleton />
   if (!block) {

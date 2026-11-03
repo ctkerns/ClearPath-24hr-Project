@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { Material } from '@/components/materials/material-data'
-import { demoViewer, type MaterialDetail } from '@/components/review/material-detail-data'
+import { type MaterialDetail } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 import { uuidv7 } from '@/lib/uuid'
 import type { Issue, IssueDetail, IssueStatus } from './issue-data'
@@ -12,6 +13,7 @@ import type { Issue, IssueDetail, IssueStatus } from './issue-data'
  * TODO: replace with API calls. The server sends the notice email and records the audit entries.
  */
 export function useIssueUpdate(issueId: string) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const now = () => new Date().toISOString()
@@ -22,7 +24,7 @@ export function useIssueUpdate(issueId: string) {
   }
   const log = (d: IssueDetail, ...events: { text: string; comment?: boolean }[]): IssueDetail => ({
     ...d,
-    activity: [...d.activity, ...events.map((e) => ({ at: now(), actor: demoViewer.name, ...e }))],
+    activity: [...d.activity, ...events.map((e) => ({ at: now(), actor: viewer.name, ...e }))],
   })
 
   return {
@@ -35,7 +37,7 @@ export function useIssueUpdate(issueId: string) {
     completeAction(actionId: string) {
       update((d) => {
         const action = d.actions.find((a) => a.id === actionId)
-        const next = { ...d, actions: d.actions.map((a) => (a.id === actionId ? { ...a, done: true, doneBy: demoViewer.name, doneAt: now() } : a)) }
+        const next = { ...d, actions: d.actions.map((a) => (a.id === actionId ? { ...a, done: true, doneBy: viewer.name, doneAt: now() } : a)) }
         return log(next, { text: t('issue.log.actionDone', { action: action?.label }) })
       })
     },
@@ -44,8 +46,8 @@ export function useIssueUpdate(issueId: string) {
         if (!d.notice) return d
         const next: IssueDetail = {
           ...d,
-          notice: { ...d.notice, subject, body, sentAt: now(), sentBy: demoViewer.name },
-          actions: d.actions.map((a) => (a.kind === 'notice' ? { ...a, done: true, doneBy: demoViewer.name, doneAt: now() } : a)),
+          notice: { ...d.notice, subject, body, sentAt: now(), sentBy: viewer.name },
+          actions: d.actions.map((a) => (a.kind === 'notice' ? { ...a, done: true, doneBy: viewer.name, doneAt: now() } : a)),
         }
         return log(next, { text: t('issue.log.noticeSent', { to: d.notice.to }) })
       })
@@ -63,6 +65,7 @@ export type NewIssue = { title: string; severity: RiskLevel; summary: string; ow
  * TODO: replace with a POST to the API, which also notifies the owner (F13).
  */
 export function useRaiseIssue() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const queryClient = useQueryClient()
 
@@ -80,7 +83,7 @@ export function useRaiseIssue() {
       material: { id: material.id, title: material.title, channel: material.channel },
       affiliate: material.affiliate,
       owner: input.owner,
-      openedBy: demoViewer.name,
+      openedBy: viewer.name,
       dueAt,
       openedAt: now,
     }
@@ -89,7 +92,7 @@ export function useRaiseIssue() {
       id,
       summary: input.summary,
       actions: [],
-      activity: [{ at: now, actor: demoViewer.name, text: opened }],
+      activity: [{ at: now, actor: viewer.name, text: opened }],
     }
 
     queryClient.setQueryData<Issue[]>(['issues'], (list = []) => [issue, ...list])
@@ -99,7 +102,7 @@ export function useRaiseIssue() {
         ? {
             ...d,
             issues: [...d.issues, { id, title: input.title, severity: input.severity, status: 'open', owner: input.owner, dueAt, openedAt: now, source: 'reviewer', actions: [] }],
-            history: [...d.history, { at: now, actor: demoViewer.name, type: 'issue', text: t('issue.log.raisedHistory', { title: input.title, owner: input.owner }) }],
+            history: [...d.history, { at: now, actor: viewer.name, type: 'issue', text: t('issue.log.raisedHistory', { title: input.title, owner: input.owner }) }],
           }
         : d,
     )

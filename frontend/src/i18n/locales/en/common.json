@@ -1000,7 +1000,7 @@
     "error": {
       "missing": "Enter your email and password.",
       "invalid": "The email or password is not correct.",
-      "storage": "Your browser blocks site storage, so you cannot stay signed in. Allow storage for this site and try again."
+      "unavailable": "ClearPath cannot reach the server. Try again in a minute."
     },
     "demo": {
       "heading": "Try the demo",

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Role } from '@/components/review/material-detail-data'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { uuidv7 } from '@/lib/uuid'
 import type { WorkspaceUser } from './user-data'
 import { nameFromEmail, nowIso, usesGroups } from './users-filters'
@@ -13,6 +13,7 @@ export type NewInvite = { emails: string[]; role: Role; groups: string[]; affili
  * ends the sessions of a deactivated user, and records every change in the audit log.
  */
 export function useUserUpdate() {
+  const viewer = useViewer()
   const queryClient = useQueryClient()
   const write = (change: (users: WorkspaceUser[]) => WorkspaceUser[]) =>
     queryClient.setQueryData<WorkspaceUser[]>(['users'], (users) => (users ? change(users) : users))
@@ -27,7 +28,7 @@ export function useUserUpdate() {
       patch(id, (u) => ({ ...u, groups }))
     },
     resendInvite(id: string) {
-      patch(id, (u) => ({ ...u, invitedAt: nowIso(), invitedBy: demoViewer.name }))
+      patch(id, (u) => ({ ...u, invitedAt: nowIso(), invitedBy: viewer.name }))
     },
     /** An invite that nobody accepted leaves no history, so cancelling removes the person. */
     cancelInvite(id: string) {
@@ -48,7 +49,7 @@ export function useUserUpdate() {
         title: '',
         status: 'invited',
         invitedAt: at,
-        invitedBy: demoViewer.name,
+        invitedBy: viewer.name,
         ...(input.role === 'affiliate' ? { affiliate: input.affiliate, affiliateManager: input.affiliateManager } : {}),
       }))
       write((users) => [...users, ...added])

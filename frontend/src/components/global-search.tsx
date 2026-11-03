@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { settingsTabsFor } from '@/components/settings/settings-tabs'
 import {
   CommandDialog,
@@ -49,6 +49,7 @@ type SearchIndex = {
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
 
 export function GlobalSearch() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -90,7 +91,7 @@ export function GlobalSearch() {
     { to: '/issues', label: t('nav.issues'), icon: Flag },
     { to: '/library', label: t('nav.library'), icon: LibraryBig },
     { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
-    ...(settingsTabsFor(demoViewer.role).length ? [{ to: '/settings' as const, label: t('nav.settings'), icon: Settings }] : []),
+    ...(settingsTabsFor(viewer.role).length ? [{ to: '/settings' as const, label: t('nav.settings'), icon: Settings }] : []),
     { to: '/design-system', label: t('nav.designSystem'), icon: Palette },
   ]
 

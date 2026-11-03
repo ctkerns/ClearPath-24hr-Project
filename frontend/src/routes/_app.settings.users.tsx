@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
 import { applyFilters, withoutFilters, type ListSearch } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
-import { demoViewer } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { useUsers } from '@/components/settings/user-data'
 import { UserActionDialog, type UserDialogKind } from '@/components/settings/users-action-dialog'
 import { sortUsers, userActions, userColumns as col, userSearchText, validateUsersSearch } from '@/components/settings/users-filters'
@@ -25,12 +25,13 @@ export const Route = createFileRoute('/_app/settings/users')({
  * The server checks the role on every change; hiding the controls is only for clarity.
  */
 function UsersTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const users = useUsers()
   const list = useUserList()
-  const canEdit = demoViewer.role === 'admin'
+  const canEdit = viewer.role === 'admin'
   const [inviting, setInviting] = useState(false)
   const [dialog, setDialog] = useState<{ kind: UserDialogKind; id: string }>()
 
@@ -84,7 +85,7 @@ function UsersTab() {
         <ul>
           {shown.map((u) => (
             <li key={u.id} className="border-b">
-              <UserRow user={u} actions={userActions(u, demoViewer.name, all)} canEdit={canEdit} onDialog={(kind) => setDialog({ kind, id: u.id })} />
+              <UserRow user={u} actions={userActions(u, viewer.name, all)} canEdit={canEdit} onDialog={(kind) => setDialog({ kind, id: u.id })} />
             </li>
           ))}
         </ul>

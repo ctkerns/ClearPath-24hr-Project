@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Material } from '@/components/materials/material-data'
 import type { MaterialStatus } from '@/components/ui/status-pill'
 import { useApprovalDays } from '@/components/settings/workspace-data'
-import { demoViewer, type Decision, type MaterialDetail } from './material-detail-data'
+import { useViewer, type SessionUser } from '@/lib/session'
+import type { Decision, MaterialDetail } from './material-detail-data'
 
 // Applies a review decision (PRD F5) to the demo data in the query cache.
 // TODO: replace with a POST to the decisions API; the server checks the role, writes the audit log,
@@ -12,12 +13,12 @@ import { demoViewer, type Decision, type MaterialDetail } from './material-detai
 export type DecisionInput = { decision: Decision; text: string; group?: string; override?: string }
 
 /** Required groups that still wait and that the viewer belongs to. A decision counts for all of them. */
-export const groupsForViewer = (detail: MaterialDetail) =>
-  detail.groups.filter((g) => g.state === 'waiting' && demoViewer.groups.includes(g.name)).map((g) => g.name)
+export const groupsForViewer = (detail: MaterialDetail, viewer: SessionUser) =>
+  detail.groups.filter((g) => g.state === 'waiting' && viewer.groups.includes(g.name)).map((g) => g.name)
 
 /** Groups that the viewer approved, so the viewer can retract (PRD F5: only your own approval). */
-export const approvedByViewer = (detail: MaterialDetail) =>
-  detail.groups.filter((g) => g.state === 'approved' && g.by === demoViewer.name).map((g) => g.name)
+export const approvedByViewer = (detail: MaterialDetail, viewer: SessionUser) =>
+  detail.groups.filter((g) => g.state === 'approved' && g.by === viewer.name).map((g) => g.name)
 
 function historyText(decision: Decision, groups: string[], version: number, text: string, group?: string) {
   const on = `on version ${version}`
@@ -32,6 +33,7 @@ function historyText(decision: Decision, groups: string[], version: number, text
 }
 
 export function useDecide(materialId: string) {
+  const viewer = useViewer()
   const queryClient = useQueryClient()
   // The approval length from Settings (Workspace tab), so a change there applies to the next approval.
   const approvalDays = useApprovalDays()
@@ -40,7 +42,7 @@ export function useDecide(materialId: string) {
     const detail = queryClient.getQueryData<MaterialDetail | null>(['material-detail', materialId])
     if (!detail) return
     const now = new Date().toISOString()
-    const mine = groupsForViewer(detail)
+    const mine = groupsForViewer(detail, viewer)
 
     let groups = detail.groups
     let status: MaterialStatus = 'in_review'
@@ -49,7 +51,7 @@ export function useDecide(materialId: string) {
     switch (decision) {
       case 'approve':
       case 'approve_conditions':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'approved', by: demoViewer.name, at: now } : g))
+        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'approved', by: viewer.name, at: now } : g))
         if (groups.every((g) => g.state === 'approved')) {
           status = 'approved'
           // The workspace approval length (PRD F9, F15). TODO: the server also ends it early at a rule,
@@ -64,19 +66,19 @@ export function useDecide(materialId: string) {
         }
         break
       case 'request_changes':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'changes', by: demoViewer.name, at: now } : g))
+        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'changes', by: viewer.name, at: now } : g))
         status = 'changes_requested'
         break
       case 'reject':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'rejected', by: demoViewer.name, at: now } : g))
+        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'rejected', by: viewer.name, at: now } : g))
         status = 'rejected'
         break
       case 'escalate':
-        if (group) groups = [...groups, { name: group, state: 'waiting', reason: text, escalatedBy: demoViewer.name }]
+        if (group) groups = [...groups, { name: group, state: 'waiting', reason: text, escalatedBy: viewer.name }]
         break
       case 'retract': {
         // The groups that the approval covered count as waiting again (PRD section 6).
-        const retracted = approvedByViewer(detail)
+        const retracted = approvedByViewer(detail, viewer)
         groups = groups.map((g) => (retracted.includes(g.name) ? { name: g.name, state: 'waiting', members: g.members, reason: g.reason } : g))
         approval = { approvalId: undefined, expiresAt: undefined }
         break
@@ -85,8 +87,8 @@ export function useDecide(materialId: string) {
 
     const comment = {
       id: `c-${Date.now()}`,
-      author: demoViewer.name,
-      role: demoViewer.groups.join(', '),
+      author: viewer.name,
+      role: viewer.groups.join(', '),
       at: now,
       body: [decision === 'escalate' && group ? `${group}: ${text}` : text, override && `Override: ${override}`].filter(Boolean).join('\n'),
       decision,
@@ -98,7 +100,7 @@ export function useDecide(materialId: string) {
       conditions: decision === 'approve_conditions' ? text : decision === 'retract' ? undefined : detail.conditions,
       comments: [...detail.comments, comment],
       // Demo only: the server writes the audit log, and the text comes from the event type.
-      history: [...detail.history, { at: now, actor: demoViewer.name, type: 'decision', text: historyText(decision, mine, detail.version, text, group) + (override ? ` Override reason: ${override}` : '') }],
+      history: [...detail.history, { at: now, actor: viewer.name, type: 'decision', text: historyText(decision, mine, detail.version, text, group) + (override ? ` Override reason: ${override}` : '') }],
     })
     queryClient.setQueryData<Material[]>(['materials'], (list) =>
       list?.map((m) =>

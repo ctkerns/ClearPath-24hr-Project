@@ -10,7 +10,8 @@ import { DecisionDialog } from '@/components/review/decision-dialog'
 import { HistoryTab } from '@/components/review/history-tab'
 import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
-import { demoViewer, useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { useViewer } from '@/lib/session'
 import { useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
@@ -123,12 +124,13 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
   onDecide: (d: Decision) => void
   onRaiseIssue: () => void
 }) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const label = useOptionLabel()
   // Decision buttons show only to Reviewers in a required group that still waits, while In review (PRD F5).
   // R1: nobody approves a version they submitted.
-  const canDecide = m.status === 'in_review' && !!detail && detail.submittedBy !== demoViewer.name && groupsForViewer(detail).length > 0
-  const canRetract = !!detail && approvedByViewer(detail).length > 0
+  const canDecide = m.status === 'in_review' && !!detail && detail.submittedBy !== viewer.name && groupsForViewer(detail, viewer).length > 0
+  const canRetract = !!detail && approvedByViewer(detail, viewer).length > 0
 
   return (
     <header className="grid gap-2">
@@ -460,6 +462,7 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
 
 /** Comments from people, oldest first, like a pull request conversation. TODO: post and reply. */
 function Conversation({ detail }: { detail: MaterialDetail }) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   return (
     <section className="grid gap-3">
@@ -485,7 +488,7 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
         ))}
       </ol>
       <div className="flex gap-2.5">
-        <PersonAvatar name={demoViewer.name} />
+        <PersonAvatar name={viewer.name} />
         <div className="grid flex-1 justify-items-end gap-2">
           <Textarea placeholder={t('review.commentPlaceholder')} aria-label={t('review.commentPlaceholder')} className="min-h-16" />
           <Button variant="outline" size="sm">{t('review.comment')}</Button>
@@ -514,6 +517,7 @@ const groupStateIcon = {
 
 /** Right side: who must approve, the checklist, and the submission details. */
 function ReviewPanel({ material: m, detail, onFinding }: { material: Material; detail: MaterialDetail; onFinding: (id: string) => void }) {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const failed = detail.checklist.filter((r) => r.result === 'fail').length
 
@@ -524,7 +528,7 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
         <ul className="grid gap-2.5">
           {detail.groups.map((g) => {
             const { icon: Icon, tone } = groupStateIcon[g.state]
-            const mine = demoViewer.groups.includes(g.name)
+            const mine = viewer.groups.includes(g.name)
             return (
               <li key={g.name} className="flex gap-2">
                 <Icon className={cn('mt-0.5 size-4 shrink-0', tone)} strokeWidth={2.25} aria-hidden="true" />
