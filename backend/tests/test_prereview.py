@@ -328,9 +328,12 @@ async def test_submit_runs_code_checks(client):
     rows = {r["ruleId"]: r for r in d["checklist"]}
     assert rows["POL-04"] == {"ruleId": "POL-04", "title": "Banned phrases", "layer": "code", "result": "fail", "finding": pol["id"]}
     assert rows["RATE-01"]["result"] == "pass" and rows["INJ-00"]["result"] == "pass"
-    assert all(r["layer"] == "code" for r in d["checklist"])
+    # The AI rules join the checklist; without an AI key they show as not run (app.ai_review)
+    assert {r["ruleId"]: r["result"] for r in d["checklist"] if r["layer"] == "ai"} == {
+        "UDAAP-03": "not_run", "FCRA-02": "not_run", "FAIR-01": "not_run", "CA-FIN-22161": "not_run",
+    }
     assert "EHL-01" not in rows and "CANSPAM-01" not in rows  # mortgage rule, email rule
-    last = d["history"][-1]
+    last = d["history"][-2]  # then the AI reviewer's entry
     assert (last["actor"], last["type"]) == ("Rule check", "prereview")
     assert last["text"] == "Code checks found 3 problems: POL-04, REGZ-1026.24, NCUA-740."
 
@@ -339,8 +342,8 @@ async def test_clean_submission_passes(client):
     await as_user(client, SUBMITTER)
     d = await submit(client, "Pay off debt faster with ClearPath.", "Federally insured by NCUA.")
     assert d["findings"] == []
-    assert all(r["result"] == "pass" for r in d["checklist"])
-    assert d["history"][-1]["text"] == "Code checks passed."
+    assert all(r["result"] == "pass" for r in d["checklist"] if r["layer"] == "code")
+    assert d["history"][-2]["text"] == "Code checks passed."
 
 
 async def test_jurisdiction_uses_target_states(client):
@@ -385,7 +388,7 @@ async def test_new_version_marks_changed_findings_outdated(client):
     kept = by_text["No credit check"]
     assert kept["status"] == "open" and kept["id"] == first["No credit check"]["id"]  # still there: moves to v2
     assert v2["fields"][0]["segments"][0] == {"text": "No credit check", "finding": kept["id"]}
-    assert v2["history"][-1]["text"] == "Code checks found 1 problem: POL-04. Marked 1 finding outdated."
+    assert v2["history"][-2]["text"] == "Code checks found 1 problem: POL-04. Marked 1 finding outdated."
     # Findings belong to the version: the open one now blocks approval of version 2.
     async with SessionLocal() as db:
         latest = await db.scalar(
@@ -433,7 +436,7 @@ async def test_rerun_after_library_change(client):
     assert res.status_code == 200, res.text
     again = res.json()
     assert [(f["ruleId"], f["text"], f["severity"]) for f in again["findings"]] == [("POL-99", "Sunny savings", "medium")]
-    assert again["history"][-1]["actor"] == "Rule check"
+    assert [e["actor"] for e in again["history"][-2:]] == ["Rule check", "AI reviewer"]
     # Running again changes nothing: the same finding stays.
     third = (await client.post(f"/api/materials/{d['id']}/prereview")).json()
     assert [f["id"] for f in third["findings"]] == [again["findings"][0]["id"]]

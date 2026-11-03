@@ -33,7 +33,8 @@ export type MaterialDetail = {
   details: { targetStates: string; launchDate?: string; endDate?: string; destinationUrl?: string; platformId?: string; targeting?: string }
   fields: { label: string; kind?: 'image'; segments: Segment[] }[]
   findings: Finding[]
-  checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: 'pass' | 'fail'; finding?: string; note?: string }[]
+  /** pending: the AI review is still running. not_run: the AI review did not run (no key, or the call failed); the note says why. */
+  checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: ChecklistResult; finding?: string; note?: string }[]
   groups: {
     name: string
     state: GroupState
@@ -136,10 +137,16 @@ export const fieldText = (segments: Segment[]) => segments.map((s) => (typeof s 
 /** The decisions from PRD F5, plus retracting your own approval. */
 export type Decision = 'approve' | 'approve_conditions' | 'request_changes' | 'reject' | 'escalate' | 'retract'
 
+export type ChecklistResult = 'pass' | 'fail' | 'pending' | 'not_run'
+
+/** How often the page checks again while the AI review runs in the background (PRD F4 layer 2). */
+const AI_PENDING_POLL_MS = 3000
+
 export function useMaterialDetail(id: string) {
   return useQuery({
     queryKey: ['material-detail', id],
     queryFn: () => api<MaterialDetail | null>('GET', `/materials/${id}`),
+    refetchInterval: (query) => (query.state.data?.checklist.some((r) => r.result === 'pending') ? AI_PENDING_POLL_MS : false),
   })
 }
 

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, Clock, CircleAlert, Ellipsis, ImageIcon, Upload, X } from 'lucide-react'
+import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, CircleAlert, CircleSlash, Clock, Ellipsis, ImageIcon, LoaderCircle, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeadlineLabel } from '@/components/dashboard/deadline-label'
@@ -585,6 +585,8 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
   const viewer = useViewer()
   const { t } = useTranslation()
   const failed = detail.checklist.filter((r) => r.result === 'fail').length
+  const passed = detail.checklist.filter((r) => r.result === 'pass').length
+  const open = detail.checklist.length - failed - passed
 
   return (
     <aside className="grid gap-6 lg:sticky lg:top-24">
@@ -628,14 +630,15 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
       )}
 
       <section className="grid gap-2">
-        <SectionHeading>{t('review.checklist', { failed, passed: detail.checklist.length - failed })}</SectionHeading>
+        <SectionHeading>{t('review.checklist', { failed, passed })}{open > 0 && t('review.checklistOpen', { count: open })}</SectionHeading>
         <ul className="grid gap-px overflow-hidden rounded-lg border bg-border">
           {detail.checklist.map((r) => {
             const fail = r.result === 'fail'
             const row = (
               <>
-                {fail
-                  ? <X className="mt-0.5 size-3.5 shrink-0 text-risk-high" strokeWidth={2.5} aria-label={t('review.fail')} />
+                {fail ? <X className="mt-0.5 size-3.5 shrink-0 text-risk-high" strokeWidth={2.5} aria-label={t('review.fail')} />
+                  : r.result === 'pending' ? <LoaderCircle className="mt-0.5 size-3.5 shrink-0 animate-spin text-muted-foreground" strokeWidth={2.5} aria-label={t('review.pending')} />
+                  : r.result === 'not_run' ? <CircleSlash className="mt-0.5 size-3.5 shrink-0 text-risk-medium" strokeWidth={2.5} aria-label={t('review.notRun')} />
                   : <Check className="mt-0.5 size-3.5 shrink-0 text-risk-low" strokeWidth={2.5} aria-label={t('review.pass')} />}
                 <span className="grid min-w-0 flex-1 gap-0.5">
                   <span className="text-xs">{r.title}</span>
@@ -643,6 +646,7 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
                     <code>{r.ruleId}</code>
                     <span>·</span>
                     <span>{t(`review.layer.${r.layer}`)}</span>
+                    {(r.result === 'pending' || r.result === 'not_run') && <><span>·</span><span>{t(r.result === 'pending' ? 'review.pending' : 'review.notRun')}</span></>}
                   </span>
                 </span>
               </>

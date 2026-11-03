@@ -125,7 +125,7 @@ async def test_submit_new_material(client):
     # The server routes it: savings matches only the seeded rule for everything (PRD F6).
     assert [(g["name"], g["reason"]) for g in d["groups"]] == [("Compliance", "Compliance reviews everything")]
     assert d["fields"][0] == {"label": "Subject line", "segments": ["Save more this winter"]}
-    assert [e["type"] for e in d["history"]] == ["submitted", "routed", "prereview"]
+    assert [e["type"] for e in d["history"]] == ["submitted", "routed", "prereview", "prereview"]  # code checks, AI
     row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == d["id"])
     assert (row["status"], row["owner"], row["title"]) == ("in_review", "Priya Shah", "Winter savings email")
 
@@ -220,7 +220,7 @@ async def test_new_version(client):
     # New decisions: Legal approved version 2, but waits again (a nationwide loan needs Legal, PRD F6).
     assert [(g["name"], g["state"]) for g in d["groups"]] == [("Compliance", "waiting"), ("Legal", "waiting")]
     assert d["versions"][1]["fields"][1] == {"label": "Headline", "text": "Personal loans from 8.99% APR"}
-    assert d["history"][-1] == {**d["history"][-1], "actor": "Rule check", "text": "Code checks passed. Marked 2 findings outdated."}
+    assert d["history"][-2] == {**d["history"][-2], "actor": "Rule check", "text": "Code checks passed. Marked 2 findings outdated."}
     assert d["details"]["platformId"] == "23851204417730592"  # kept, for monitoring
     assert d["comments"][0]["author"] == "Maya Ruiz"  # comments stay
 

@@ -1,7 +1,16 @@
 """The golden dataset (PRD F4) as a test: code checks find every violation they are responsible for,
-with no false alarms. The AI-only cases are expected misses until the AI reviewer (layer 2) exists."""
+with no false alarms. The AI-only cases are expected misses for the code checks; the AI reviewer (layer 2)
+is measured with a real key by `python -m tests.eval.run`."""
 
 from tests.eval.run import HERE, evaluate, load
+
+AI_ONLY = {
+    ("ai-implied-approval", "UDAAP-03"),
+    ("ai-fair-lending", "FAIR-01"),
+    ("ai-credit-score", "FCRA-02"),
+    ("ai-california-lowest-rate", "CA-FIN-22161"),
+    ("ai-subtle-injection", "INJ-00"),
+}
 
 
 def test_code_checks_on_the_evaluation_set():
@@ -14,13 +23,7 @@ def test_code_checks_on_the_evaluation_set():
 
 def test_ai_only_cases_are_expected_misses():
     r = evaluate()
-    assert {(case, e["ruleId"]) for case, e in r.ai_only} == {
-        ("ai-implied-approval", "UDAAP-03"),
-        ("ai-fair-lending", "FAIR-01"),
-        ("ai-credit-score", "FCRA-02"),
-        ("ai-california-lowest-rate", "CA-FIN-22161"),
-        ("ai-subtle-injection", "INJ-00"),
-    }
+    assert {(case, e["ruleId"]) for case, e in r.ai_only} == AI_ONLY
 
 
 def test_key_quotes_text_that_exists():
@@ -33,3 +36,22 @@ def test_key_quotes_text_that_exists():
         for e in key[c["id"]]:
             assert e["layer"] in ("code", "ai")
             assert e["text"] == "" or any(e["text"] in f["text"] for f in c["fields"]), (c["id"], e)
+
+
+async def test_ai_part_runs_with_a_fake_client():
+    """The AI part of the evaluation, with a fake model that finds nothing: it runs on every case and makes
+    no call to the real API. With a key, `python -m tests.eval.run` reports the real numbers."""
+    from types import SimpleNamespace
+
+    from tests.eval.run import evaluate_ai
+
+    calls = []
+
+    async def create(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text='{"findings": []}')])
+
+    r = await evaluate_ai(SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(create=create))))
+    assert len(calls) == len(load(HERE / "materials.json")["cases"]) and r.not_run == []
+    assert (r.ai_findings, r.ai_recall) == (0, 0.0)
+    assert {(c, e["ruleId"]) for c, e in r.missed} == {(c, rule) for c, rule in AI_ONLY}

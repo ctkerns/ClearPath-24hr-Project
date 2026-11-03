@@ -1,20 +1,27 @@
 """Evaluation of pre-review against the golden dataset (PRD F4).
 
 Run from backend/: `uv run python -m tests.eval.run`. It needs no database: the checks run on the seeded
-demo library (src/app/seed/data). It reports precision and recall for code checks alone. The AI reviewer
-(layer 2) does not exist yet, so the cases that need judgment are listed as expected misses.
+demo library (src/app/seed/data). It reports precision and recall for code checks alone, and, when
+ANTHROPIC_API_KEY is set, for code checks plus the AI reviewer (layer 2, app.ai_review) side by side.
+Without a key the AI part is skipped and the cases that need judgment are listed as expected misses.
+The AI part calls the real API once per material (35 calls). Targets (PRD F4): recall >= 90%, precision >= 80%.
 
 A finding matches an answer-key entry when the rule ID is the same and the texts overlap (one contains
 the other). An entry with empty text (something missing) matches a finding with empty text.
 """
 
+import asyncio
 import json
+import sys
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
 import app
-from app.prereview import DisclosureSpec, Hit, Library, RateRange, RuleSpec, check_content, target_states
+from app import ai_review
+from app.ai_review import AIHit, Client, review_content
+from app.config import settings
+from app.prereview import DisclosureSpec, Hit, Library, RateRange, RuleSpec, check_content, in_scope, target_states
 
 HERE = Path(__file__).parent
 SEED = Path(app.__file__).parent / "seed" / "data"
@@ -131,6 +138,99 @@ def evaluate() -> Report:
     return report
 
 
+@dataclass
+class AIReport:
+    """Code checks plus the AI reviewer, on every entry. An AI finding counts as correct when it matches an
+    entry (same rule ID, overlapping text) that the code checks did not already match (PRD F4)."""
+
+    true_positives: int = 0  # all findings, code and AI, that match an entry
+    findings: int = 0  # all findings, code and AI
+    entries: int = 0
+    matched: int = 0  # entries that a finding matches
+    ai_true_positives: int = 0
+    ai_findings: int = 0
+    ai_entries: int = 0  # entries for layer "ai"
+    ai_entries_matched: int = 0
+    false_positives: list[tuple[str, AIHit]] = field(default_factory=list)  # AI findings with no entry
+    missed: list[tuple[str, dict]] = field(default_factory=list)  # entries nothing matched
+    not_run: list[tuple[str, str]] = field(default_factory=list)  # (case, reason)
+    rejected: int = 0  # AI findings dropped by the guardrails
+
+    @property
+    def precision(self) -> float:
+        return self.true_positives / self.findings if self.findings else 1.0
+
+    @property
+    def recall(self) -> float:
+        return self.matched / self.entries if self.entries else 1.0
+
+    @property
+    def ai_precision(self) -> float:
+        return self.ai_true_positives / self.ai_findings if self.ai_findings else 1.0
+
+    @property
+    def ai_recall(self) -> float:
+        """Recall on the entries that only the AI is responsible for."""
+        return self.ai_entries_matched / self.ai_entries if self.ai_entries else 1.0
+
+
+def match(entries: list[dict], matched: set[int], rule_id: str, text: str) -> int | None:
+    """The first entry not yet matched with the same rule and overlapping text."""
+    return next(
+        (i for i, e in enumerate(entries) if i not in matched and e["ruleId"] == rule_id and overlaps(e["text"], text)),
+        None,
+    )
+
+
+async def evaluate_ai(client: Client, concurrency: int = 5) -> AIReport:
+    """Runs the code checks and the AI review on every case, as app.ai_review does on a submitted version."""
+    lib = seed_library()
+    ai_rules = [r for r in lib.rules if r.layer == "ai"]
+    key = load(HERE / "answer-key.json")["cases"]
+    cases = load(HERE / "materials.json")["cases"]
+    gate = asyncio.Semaphore(concurrency)
+
+    async def one(case: dict):
+        states = target_states({"targetStates": case["targetStates"]}, lib.licensed_states)
+        fields = [(f["label"], f["text"]) for f in case["fields"]]
+        hits = [h for r in check_content(lib, case["product"], case["channel"], states, fields) for h in r.hits]
+        checklist = [r for r in ai_rules if in_scope(r, case["product"], case["channel"], states)]
+        metadata = {"Product": case["product"], "Channel": case["channel"], "Target states": case["targetStates"]}
+        async with gate:
+            outcome = await review_content(
+                client, ai_rules, checklist, fields, metadata, [(h.rule_id, h.field, h.start, h.end) for h in hits]
+            )
+        return case, hits, outcome
+
+    report = AIReport()
+    for case, hits, outcome in await asyncio.gather(*(one(c) for c in cases)):
+        entries = key[case["id"]]
+        report.entries += len(entries)
+        report.ai_entries += sum(1 for e in entries if e["layer"] == "ai")
+        if not outcome.ran:
+            report.not_run.append((case["id"], outcome.reason or ""))
+        report.rejected += outcome.rejected
+        matched: set[int] = set()
+        for h in hits:
+            report.findings += 1
+            if (i := match(entries, matched, h.rule_id, h.flagged_text)) is not None:
+                matched.add(i)
+                report.true_positives += 1
+        for a in outcome.hits:
+            report.findings += 1
+            report.ai_findings += 1
+            if (i := match(entries, matched, a.rule_id, a.flagged_text)) is not None:
+                matched.add(i)
+                report.true_positives += 1
+                report.ai_true_positives += 1
+                report.ai_entries_matched += entries[i]["layer"] == "ai"
+            else:
+                report.false_positives.append((case["id"], a))
+        report.matched += len(matched)
+        report.missed += [(case["id"], e) for i, e in enumerate(entries) if i not in matched]
+    return report
+
+
 def main() -> None:
     cases = load(HERE / "materials.json")["cases"]
     r = evaluate()
@@ -140,15 +240,37 @@ def main() -> None:
     print(f"{'':28}{'precision':>10}{'recall':>10}")
     print(f"{'Code checks (their cases)':28}{r.precision:>10.0%}{r.recall:>10.0%}")
     print(f"{'Code checks (all cases)':28}{r.precision:>10.0%}{r.recall_all:>10.0%}")
-    print(f"{'Code checks + AI':28}not built yet (F4 layer 2)")
+    client = ai_review.get_client()
+    ai = asyncio.run(evaluate_ai(client)) if client is not None else None
+    if ai is not None:
+        print(f"{'Code checks + AI (all)':28}{ai.precision:>10.0%}{ai.recall:>10.0%}")
+        print(f"{'AI reviewer alone':28}{ai.ai_precision:>10.0%}{ai.ai_recall:>10.0%}   (its findings; recall on AI-only cases)")
+    else:
+        print(f"{'Code checks + AI':28}skipped: set ANTHROPIC_API_KEY to run the AI reviewer")
     for name, rows in (("False alarms", r.false_positives), ("Missed by code checks", r.missed)):
         if rows:
             print(f"\n{name}:")
             for case_id, x in rows:
                 print(f"  {case_id}: {x}")
-    print("\nExpected misses (AI-only, layer 2):")
-    for case_id, e in r.ai_only:
-        print(f"  {case_id}: {e['ruleId']} {e['text']!r}")
+    if ai is None:
+        print("\nExpected misses (AI-only, layer 2):")
+        for case_id, e in r.ai_only:
+            print(f"  {case_id}: {e['ruleId']} {e['text']!r}")
+        return
+    print(f"\nAI model {settings.ai_review_model}; findings dropped by the guardrails: {ai.rejected}")
+    for name, rows in (
+        ("AI did not run", ai.not_run),
+        ("AI false alarms", [(c, f"{h.rule_id} {h.flagged_text!r}") for c, h in ai.false_positives]),
+        ("Missed by code checks + AI", [(c, f"{e['ruleId']} {e['text']!r}") for c, e in ai.missed]),
+    ):
+        if rows:
+            print(f"\n{name}:")
+            for case_id, x in rows:
+                print(f"  {case_id}: {x}")
+    passed = ai.recall >= 0.9 and ai.precision >= 0.8 and not ai.not_run
+    print(f"\nTargets (recall >= 90%, precision >= 80%): {'met' if passed else 'NOT met'}")
+    if not passed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
