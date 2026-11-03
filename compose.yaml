@@ -1,7 +1,42 @@
 # All ClearPath services. Start: `docker compose up --build`. Stop: `docker compose down`.
+# Settings come from .env (copy .env.example). The defaults below are for local use only.
+name: clearpath # fixed project name: container and volume names stay the same in every directory
 services:
   frontend:
     build: ./frontend
     ports:
       - "8080:80" # open http://localhost:8080
+    depends_on:
+      - backend
     restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-clearpath}:${POSTGRES_PASSWORD:-clearpath}@postgres:5432/${POSTGRES_DB:-clearpath}
+    ports:
+      - "127.0.0.1:8000:8000" # for `npm run dev` and http://localhost:8000/api/docs
+    depends_on:
+      postgres:
+        condition: service_healthy # wait until Postgres accepts connections
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-clearpath}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clearpath}
+      POSTGRES_DB: ${POSTGRES_DB:-clearpath}
+    volumes:
+      - pgdata:/var/lib/postgresql # data stays after `docker compose down`; `down -v` deletes it
+    ports:
+      - "127.0.0.1:5432:5432" # for database tools on this computer only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
+volumes:
+  pgdata:

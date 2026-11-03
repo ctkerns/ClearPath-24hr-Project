@@ -1,0 +1,17 @@
+FROM python:3.14-slim
+
+# uv installs the exact package versions in uv.lock
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+WORKDIR /app
+
+# Install dependencies first, so Docker reuses this layer until the lock file changes
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
+
+COPY . .
+RUN uv sync --locked --no-dev
+
+ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
+CMD ["fastapi", "run", "src/app/main.py", "--host", "0.0.0.0", "--port", "8000"]

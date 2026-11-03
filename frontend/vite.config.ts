@@ -15,4 +15,8 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  // `npm run dev`: send /api/* to the backend container, the same as Caddy does in Docker
+  server: {
+    proxy: { '/api': 'http://localhost:8000' },
+  },
 })
