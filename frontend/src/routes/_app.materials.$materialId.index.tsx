@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, Clock, CircleAlert, Ellipsis, ImageIcon, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { RaiseIssueDialog } from '@/components/issues/raise-issue-dialog'
 import { FindingCard } from '@/components/review/finding-card'
 import { FlaggedText } from '@/components/review/flagged-text'
 import { approvedByViewer, groupsForViewer } from '@/components/review/decide'
@@ -52,6 +53,7 @@ function MaterialPage() {
   // TODO: the detail API should return the summary fields too, so the page needs one request.
   const material = list.data?.find((m) => m.id === materialId)
   const [decision, setDecision] = useState<Decision | null>(null)
+  const [raising, setRaising] = useState(false)
 
   if (list.isPending || detail.isPending) return <PageSkeleton />
   if (!material) {
@@ -65,7 +67,13 @@ function MaterialPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
-      <Header material={material} detail={detail.data ?? null} onDecide={setDecision} />
+      <Header material={material} detail={detail.data ?? null} onDecide={setDecision} onRaiseIssue={() => setRaising(true)} />
+      <RaiseIssueDialog
+        material={material}
+        people={[...new Set((list.data ?? []).map((x) => x.owner))].sort()}
+        open={raising}
+        onClose={() => setRaising(false)}
+      />
       {detail.data && (
         <DecisionDialog decision={decision} detail={detail.data} materialId={material.id} onClose={() => setDecision(null)} />
       )}
@@ -109,7 +117,12 @@ function BackLink() {
 }
 
 /** Title, statuses, one line of facts, and the actions that the viewer's role allows. */
-function Header({ material: m, detail, onDecide }: { material: Material; detail: MaterialDetail | null; onDecide: (d: Decision) => void }) {
+function Header({ material: m, detail, onDecide, onRaiseIssue }: {
+  material: Material
+  detail: MaterialDetail | null
+  onDecide: (d: Decision) => void
+  onRaiseIssue: () => void
+}) {
   const { t } = useTranslation()
   const label = useOptionLabel()
   // Decision buttons show only to Reviewers in a required group that still waits, while In review (PRD F5).
@@ -149,7 +162,7 @@ function Header({ material: m, detail, onDecide }: { material: Material; detail:
             <DropdownMenuContent align="end">
               {canDecide && <DropdownMenuItem onSelect={() => onDecide('escalate')}>{t('review.decision.escalate')}</DropdownMenuItem>}
               {canRetract && <DropdownMenuItem onSelect={() => onDecide('retract')}>{t('review.decision.retract')}</DropdownMenuItem>}
-              <DropdownMenuItem>{t('review.raiseIssue')}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onRaiseIssue}>{t('review.raiseIssue')}</DropdownMenuItem>
               {canDecide && (
                 <>
                   <DropdownMenuSeparator />

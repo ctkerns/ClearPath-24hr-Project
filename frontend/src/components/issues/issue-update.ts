@@ -1,6 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { demoViewer } from '@/components/review/material-detail-data'
+import type { Material } from '@/components/materials/material-data'
+import { demoViewer, type MaterialDetail } from '@/components/review/material-detail-data'
+import type { RiskLevel } from '@/components/ui/risk-tag'
+import { uuidv7 } from '@/lib/uuid'
 import type { Issue, IssueDetail, IssueStatus } from './issue-data'
 
 /**
@@ -50,5 +53,56 @@ export function useIssueUpdate(issueId: string) {
     comment(text: string) {
       update((d) => log(d, { text, comment: true }))
     },
+  }
+}
+
+export type NewIssue = { title: string; severity: RiskLevel; summary: string; owner: string; dueDate: string }
+
+/**
+ * Opens an issue on a material (PRD F12: any Reviewer or higher, at any time). Returns the new issue ID.
+ * TODO: replace with a POST to the API, which also notifies the owner (F13).
+ */
+export function useRaiseIssue() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  return (material: Material, input: NewIssue) => {
+    const now = new Date().toISOString()
+    const id = uuidv7()
+    // The due date is a day; the issue is due at the end of it.
+    const dueAt = new Date(`${input.dueDate}T23:59:00`).toISOString()
+    const issue: Issue = {
+      id,
+      title: input.title,
+      severity: input.severity,
+      status: 'open',
+      source: 'reviewer',
+      material: { id: material.id, title: material.title, channel: material.channel },
+      affiliate: material.affiliate,
+      owner: input.owner,
+      openedBy: demoViewer.name,
+      dueAt,
+      openedAt: now,
+    }
+    const opened = t('issue.log.raised', { owner: input.owner })
+    const detail: IssueDetail = {
+      id,
+      summary: input.summary,
+      actions: [],
+      activity: [{ at: now, actor: demoViewer.name, text: opened }],
+    }
+
+    queryClient.setQueryData<Issue[]>(['issues'], (list = []) => [issue, ...list])
+    queryClient.setQueryData(['issue-detail', id], detail)
+    queryClient.setQueryData<MaterialDetail | null>(['material-detail', material.id], (d) =>
+      d
+        ? {
+            ...d,
+            issues: [...d.issues, { id, title: input.title, severity: input.severity, status: 'open', owner: input.owner, dueAt, openedAt: now, source: 'reviewer', actions: [] }],
+            history: [...d.history, { at: now, actor: demoViewer.name, type: 'issue', text: t('issue.log.raisedHistory', { title: input.title, owner: input.owner }) }],
+          }
+        : d,
+    )
+    return id
   }
 }

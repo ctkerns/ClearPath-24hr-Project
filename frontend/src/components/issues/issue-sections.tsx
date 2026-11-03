@@ -97,6 +97,8 @@ export function LiveContent({ detail }: { detail: IssueDetail }) {
 /** The remediation steps (PRD F12), each with the one button that does it. */
 export function ActionList({ issue, detail }: { issue: Issue; detail: IssueDetail }) {
   const { t } = useTranslation()
+  // A raised issue starts with no suggested steps; the owner fixes it and resolves it.
+  if (detail.actions.length === 0) return null
   const done = detail.actions.filter((a) => a.done).length
 
   return (

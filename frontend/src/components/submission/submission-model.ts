@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
+import { uuidv7 } from '@/lib/uuid'
 import { demoViewer, versionFields, type MaterialDetail } from '@/components/review/material-detail-data'
 
 // Shared model for the submit form (PRD F3), used by /materials/new and /materials/$id/new-version.
@@ -96,16 +97,6 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
   return errors
 }
 
-/** A UUIDv7 (time first, then random), the ID format the engineering lead chose. The server makes the real ones. */
-function uuidv7() {
-  const bytes = crypto.getRandomValues(new Uint8Array(16))
-  let ms = Date.now()
-  for (let i = 5; i >= 0; i--) { bytes[i] = ms % 256; ms = Math.floor(ms / 256) }
-  bytes[6] = (bytes[6] & 0x0f) | 0x70
-  bytes[8] = (bytes[8] & 0x3f) | 0x80
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
-}
 
 /**
  * Saves a submission into the demo cache and returns the material ID.

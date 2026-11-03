@@ -539,7 +539,19 @@
     "log": {
       "status": "Changed the status to {{status}}.",
       "actionDone": "Marked done: {{action}}.",
-      "noticeSent": "Sent the correction notice to {{to}}."
+      "noticeSent": "Sent the correction notice to {{to}}.",
+      "raised": "Raised this issue and assigned it to {{owner}}.",
+      "raisedHistory": "Raised the issue \"{{title}}\" and assigned it to {{owner}}."
+    },
+    "raise": {
+      "title": "Raise an issue",
+      "description": "Open an issue on {{material}}. The owner gets a notification.",
+      "titleLabel": "Title",
+      "titlePlaceholder": "For example: Live page shows an old rate",
+      "summaryLabel": "What is wrong?",
+      "summaryPlaceholder": "Say what you saw, where, and which rule or approval it breaks.",
+      "materialOwner": "material owner",
+      "submit": "Raise issue"
     }
   },
   "dashboard": {
