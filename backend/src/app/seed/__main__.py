@@ -11,7 +11,7 @@ async def main() -> None:
     parser.add_argument("--reset", action="store_true", help="delete the demo workspace and create it again")
     args = parser.parse_args()
     try:
-        print(await seed(args.reset))
+        print(await seed(args.reset, history=True))
     finally:
         await engine.dispose()
 

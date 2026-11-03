@@ -127,7 +127,7 @@ function ActionRow({ action: a, issue, detail }: { action: IssueAction; issue: I
   let control: React.ReactNode = null
   // Only the owner or a Manager runs a step (PRD F12); the server checks it too.
   if (!a.done && !resolved && canManageIssue(viewer, issue)) {
-    if (a.kind === 'new_version') {
+    if (a.kind === 'new_version' && issue.material) {
       control = (
         <Button asChild variant="outline" size="sm">
           <Link to="/materials/$materialId/new-version" params={{ materialId: issue.material.id }}><Upload />{t('issue.actions.upload')}</Link>
@@ -322,14 +322,14 @@ export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue:
 
       <section className="grid gap-2">
         <SectionHeading>{t('issue.panel.material')}</SectionHeading>
-        <Link
+        {i.material ? <Link
           to="/materials/$materialId"
           params={{ materialId: i.material.id }}
           search={{ tab: 'live' }}
           className="grid gap-2 rounded-lg border p-3 transition-colors hover:bg-muted/60"
         >
           <span className="flex items-start gap-2 font-medium">
-            <ChannelIcon channel={i.material.channel} className="mt-0.5 size-4 shrink-0" />
+            <ChannelIcon channel={i.channel} className="mt-0.5 size-4 shrink-0" />
             {i.material.title}
           </span>
           {material && (
@@ -339,7 +339,12 @@ export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue:
             </span>
           )}
           {material?.approvalId && <code className="text-xs text-muted-foreground">{material.approvalId}</code>}
-        </Link>
+        </Link> : (
+          <p className="flex items-start gap-2 rounded-lg border p-3 text-muted-foreground">
+            <ChannelIcon channel={i.channel} className="mt-0.5 size-4 shrink-0" />
+            {t('issue.panel.noMaterial')}
+          </p>
+        )}
       </section>
 
       {detail?.rule && (

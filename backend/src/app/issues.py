@@ -1,6 +1,7 @@
 """Issues on materials, and their remediation (PRD F12).
 
 Everyone reads the issues of the materials they may see (affiliates: only their own company's, R4).
+An issue with no material (unapproved content found live, F10) is for internal users only.
 Any Reviewer or higher opens an issue on any material. The issue owner, or a Manager and higher,
 changes its status and runs its actions. Submitters and higher, and affiliates, comment.
 """
@@ -16,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
-from app.material_access import Db, Reviewer, Submitter, can_submit, now, visible
+from app.material_access import Db, Reviewer, Submitter, can_submit, issue_visible, now, visible
 from app.models import Affiliate, Role, User, UserStatus
 from app.models.materials import (
     ActionKind,
@@ -24,10 +25,13 @@ from app.models.materials import (
     EventType,
     Issue,
     IssueEvent,
+    IssueKind,
     IssueSource,
     IssueStatus,
     Material,
     MaterialEvent,
+    MaterialVersion,
+    Outcome,
     Severity,
 )
 from app.users import load_user
@@ -51,7 +55,9 @@ class IssueOut(APIModel):
     severity: Severity
     status: IssueStatus
     source: IssueSource
-    material: IssueMaterial
+    kind: IssueKind | None = None
+    material: IssueMaterial | None = None  # none for unapproved content that matches no material (PRD F10)
+    channel: Channel | None = None  # the material's, or where monitoring found the content
     affiliate: str | None = None
     affiliate_manager: str | None = None  # takes over affiliate issues after the due date (PRD section 4)
     opened_by: str | None = None
@@ -63,14 +69,17 @@ class IssueOut(APIModel):
 
     @classmethod
     def of(cls, i: Issue) -> IssueOut:
-        company = i.material.affiliate
+        m = i.material
+        company = m.affiliate if m else None
         return cls(
             id=i.id,
             title=i.title,
             severity=i.severity,
             status=i.status,
             source=i.source,
-            material=IssueMaterial(id=i.material.id, title=i.material.title, channel=i.material.channel),
+            kind=i.kind,
+            material=IssueMaterial(id=m.id, title=m.title, channel=m.channel) if m else None,
+            channel=m.channel if m else i.channel,
             affiliate=company.name if company else None,
             affiliate_manager=company.manager.name if company and company.manager else None,
             opened_by=i.opened_by.name if i.opened_by else None,
@@ -144,8 +153,7 @@ ISSUE_LOAD = (
 async def load_issue(db: AsyncSession, viewer: User, issue_id: uuid.UUID) -> Issue:
     issue = await db.scalar(
         select(Issue)
-        .join(Material, Material.id == Issue.material_id)
-        .where(Issue.id == issue_id, Issue.workspace_id == viewer.workspace_id, *visible(viewer))
+        .where(Issue.id == issue_id, *issue_visible(viewer))
         .options(*ISSUE_LOAD)
         .execution_options(populate_existing=True)
     )
@@ -158,8 +166,7 @@ async def load_issue(db: AsyncSession, viewer: User, issue_id: uuid.UUID) -> Iss
 async def list_issues(viewer: SignedIn, db: Db) -> list[IssueOut]:
     rows = await db.scalars(
         select(Issue)
-        .join(Material, Material.id == Issue.material_id)
-        .where(Issue.workspace_id == viewer.workspace_id, *visible(viewer))
+        .where(*issue_visible(viewer))
         .options(*ISSUE_LOAD)
         .order_by(Issue.opened_at.desc())
     )
@@ -178,6 +185,10 @@ class NewIssue(APIModel):
     severity: Severity
     owner_id: uuid.UUID
     due_at: datetime
+    # A live problem (PRD F10), when the reviewer found one
+    kind: IssueKind | None = None
+    # The problem was already in the approved version, for example when the reviewer disagrees with an approval (F5)
+    present_at_approval: bool = False
 
 
 def log(issue: Issue, actor: User, text: str, comment: bool = False) -> None:
@@ -206,6 +217,15 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
     # An affiliate can own only an issue on their own company's content (PRD R4).
     if owner.role is Role.AFFILIATE and owner.affiliate_id != material.affiliate_id:
         raise bad_request("This affiliate cannot own an issue on this material")
+    # The approved version that the issue is about (PRD section 2: post-approval violation rate)
+    approved = await db.scalar(
+        select(MaterialVersion.id)
+        .where(MaterialVersion.material_id == material.id, MaterialVersion.outcome == Outcome.APPROVED)
+        .order_by(MaterialVersion.number.desc())
+        .limit(1)
+    )
+    if body.present_at_approval and approved is None:
+        raise bad_request("This material has no approved version")
 
     issue = Issue(
         workspace_id=viewer.workspace_id,
@@ -215,6 +235,9 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
         severity=body.severity,
         status=IssueStatus.OPEN,
         source=IssueSource.REVIEWER,
+        kind=body.kind,
+        approved_version_id=approved,
+        present_at_approval=body.present_at_approval,
         owner_id=owner.id,
         opened_by_id=viewer.id,
         opened_at=now(),

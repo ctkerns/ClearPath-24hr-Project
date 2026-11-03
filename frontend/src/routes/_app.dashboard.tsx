@@ -165,8 +165,8 @@ function IssueRow({ issue: i, raisedByMe }: { issue: Issue; raisedByMe: boolean 
         </span>
         <span className="w-24 shrink-0 max-sm:hidden"><IssueStatusPill status={i.status} /></span>
         <span className="flex w-56 shrink-0 items-center gap-2 text-xs text-muted-foreground max-xl:hidden">
-          <ChannelIcon channel={i.material.channel} className="size-3.5 shrink-0" />
-          <span className="truncate">{i.material.title}</span>
+          <ChannelIcon channel={i.channel} className="size-3.5 shrink-0" />
+          <span className="truncate">{i.material?.title ?? t('issues.noMaterial')}</span>
         </span>
         <span className={cn('w-28 shrink-0 text-right text-xs tabular-nums', overdue ? 'font-medium text-risk-high' : 'text-muted-foreground')}>
           {overdue ? t('issues.overdueShort', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) }) : t('issues.dueOn', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) })}

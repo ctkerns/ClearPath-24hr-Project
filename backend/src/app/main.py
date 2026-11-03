@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import audit_log, auth, groups, integrations, invites, library, materials, routing, users, workspace
+from app import metrics
 from app.db import engine, get_db
 
 
@@ -50,6 +51,7 @@ ROUTERS = [
     routing.router,
     integrations.router,
     materials.router,
+    metrics.router,
     audit_log.router,
 ]
 for router in ROUTERS:

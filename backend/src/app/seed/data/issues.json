@@ -1,5 +1,5 @@
 {
-  "_note": "Demo issues (PRD F12). owner and openedBy are user names. material.id links to materials.json; the other material fields and affiliate come from the material.",
+  "_note": "Demo issues (PRD F12). owner and openedBy are user names. kind is what monitoring found (PRD F10), when it is a live problem. material.id links to materials.json; the other material fields and affiliate come from the material.",
   "issues": [
     {
       "id": "01a1993a-f3e0-7668-886f-7df89511ac54",
@@ -7,6 +7,7 @@
       "severity": "high",
       "status": "open",
       "source": "monitoring",
+      "kind": "changed",
       "material": {
         "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
         "title": "Personal loan search ad, debt payoff",
@@ -22,6 +23,7 @@
       "severity": "high",
       "status": "open",
       "source": "monitoring",
+      "kind": "condition_broken",
       "material": {
         "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
         "title": "Cash back card, affiliate post",
@@ -39,6 +41,7 @@
       "severity": "high",
       "status": "in_progress",
       "source": "monitoring",
+      "kind": "unapproved",
       "material": {
         "id": "01a1252b-5800-7984-ae0e-64145a3d5342",
         "title": "Unknown ad: \"Loans approved in 5 minutes\"",
@@ -54,6 +57,7 @@
       "severity": "medium",
       "status": "in_progress",
       "source": "monitoring",
+      "kind": "expired_approval",
       "material": {
         "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29",
         "title": "Debt consolidation, Google search ad",
@@ -69,6 +73,7 @@
       "severity": "high",
       "status": "open",
       "source": "monitoring",
+      "kind": "condition_broken",
       "material": {
         "id": "01a0cd1b-6600-73a9-8f0b-78172f5af13f",
         "title": "Rewards card comparison, CardCompass",
@@ -86,6 +91,7 @@
       "severity": "medium",
       "status": "open",
       "source": "reviewer",
+      "kind": "changed",
       "material": {
         "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
         "title": "Mortgage prequal landing page",
@@ -118,6 +124,7 @@
       "severity": "low",
       "status": "in_progress",
       "source": "monitoring",
+      "kind": "changed",
       "material": {
         "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
         "title": "Mortgage prequal landing page",
@@ -150,6 +157,7 @@
       "severity": "low",
       "status": "resolved",
       "source": "monitoring",
+      "kind": "condition_broken",
       "material": {
         "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
         "title": "Cash back card, affiliate post",
@@ -168,6 +176,7 @@
       "severity": "medium",
       "status": "resolved",
       "source": "monitoring",
+      "kind": "unapproved",
       "material": {
         "id": "01a08795-8c00-7cb9-93fd-75d440fc0a38",
         "title": "Spring savings promo email",

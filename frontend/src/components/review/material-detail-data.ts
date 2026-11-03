@@ -36,7 +36,7 @@ export type MaterialDetail = {
   groups: { name: string; state: GroupState; members?: string[]; by?: string; at?: string; reason: string; escalatedBy?: string }[]
   /** Set by "Approve with conditions" (PRD F5). */
   conditions?: string
-  comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision }[]
+  comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision; anchor?: CommentAnchor }[]
   versions: VersionSummary[]
   /** Append-only audit log (PRD F2). The server writes the text. TODO: structured events, and the page writes the text. */
   history: HistoryEvent[]
@@ -45,6 +45,9 @@ export type MaterialDetail = {
   /** Files uploaded with the current version: content, the ad image, or claim proofs (PRD F3). */
   files: MaterialFile[]
 }
+
+/** The selected text that a comment is about (PRD F5), in one field of the version it was made on. */
+export type CommentAnchor = { field: string; text: string }
 
 export type MaterialFile = { id: string; name: string; contentType: string; size: number }
 

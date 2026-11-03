@@ -425,7 +425,8 @@
           "author": "Dana Ortiz",
           "role": "Marketing",
           "at": "2026-11-02T16:05:00Z",
-          "body": "Can we keep the $199/month if we add the D-7 disclosure under the image instead of in the primary text?"
+          "body": "Can we keep the $199/month if we add the D-7 disclosure under the image instead of in the primary text?",
+          "anchor": { "field": "Primary text", "text": "for as low as $199/month" }
         }
       ],
       "versions": [
