@@ -18,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app import issues
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
+from app.audit import record
 from app.config import settings
 from app.material_access import (
     Db,
@@ -55,6 +56,7 @@ from app.models.materials import (
     Severity,
 )
 from app.notify import NotificationType, notify_comment, notify_decision, notify_groups
+from app.routing_eval import route
 from app.workspace import US_STATES
 
 items = APIRouter(prefix="/api/materials", tags=["materials"])
@@ -464,11 +466,6 @@ class FieldInput(APIModel):
     text: str = Field(max_length=20_000)
 
 
-class RoutedGroup(APIModel):
-    name: str = Field(min_length=1, max_length=100)
-    reason: str = Field(default="", max_length=500)
-
-
 class Submission(APIModel):
     """A new material, or a new version of one. A new version keeps the title and channel."""
 
@@ -483,9 +480,8 @@ class Submission(APIModel):
     launch_date: date | None = None
     end_date: date | None = None
     destination_url: str = Field(default="", max_length=2000)
-    # The groups that the Routing tab's rules require. TODO (F6): the server evaluates the routing rules
-    # when they are stored in the database (another area); until then it only checks that the groups exist.
-    groups: list[RoutedGroup] = Field(default=[], max_length=20)
+    # No `groups` field: the server alone decides the required groups (PRD R2, F6; app/routing_eval.py).
+    # A body that still sends `groups` has them ignored, like any unknown field.
 
     @field_validator("states")
     @classmethod
@@ -507,25 +503,6 @@ class Submission(APIModel):
         return self
 
 
-async def routed_groups(db: AsyncSession, viewer: User, wanted: list[RoutedGroup]) -> list[tuple[ReviewerGroup, str]]:
-    """The required groups. With none, the default group (PRD F6: no item is left without a reviewer)."""
-    groups = list(await db.scalars(select(ReviewerGroup).where(ReviewerGroup.workspace_id == viewer.workspace_id)))
-    by_name = {g.name.lower(): g for g in groups}
-    result: list[tuple[ReviewerGroup, str]] = []
-    for w in wanted:
-        group = by_name.get(w.name.strip().lower())
-        if group is None:
-            raise bad_request(f"Unknown reviewer group: {w.name}")
-        if all(g.id != group.id for g, _ in result):
-            result.append((group, w.reason.strip()))
-    if not result:
-        default = next((g for g in groups if g.is_default), None)
-        if default is None:
-            raise bad_request("The workspace has no default reviewer group")
-        result.append((default, "Default group"))
-    return result
-
-
 async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submission, number: int) -> None:
     """Adds the version, routes it, and moves the material to In review (PRD section 6)."""
     licensed = set((await workspace_of(db, viewer)).licensed_states)
@@ -543,7 +520,20 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     )
     if len(files) != len(set(body.file_ids)):
         raise bad_request("Unknown file")
-    groups = await routed_groups(db, viewer, body.groups)
+    # PRD F6, R2: the server evaluates the routing rules on its own data. Product and states are the
+    # version's content (checked above); the channel and the affiliate are the material's.
+    routing = await route(
+        db,
+        viewer,
+        product=body.product,
+        channel=m.channel,
+        affiliate_id=m.affiliate_id,
+        nationwide=body.nationwide,
+        states=body.states,
+        at=now(),
+        changes=None,  # TODO (F6): the no-material-change code checks against the last approved version
+    )
+    groups = [(g.group, g.reason) for g in routing.groups]
 
     details: dict[str, Any] = {"targetStates": "Nationwide" if body.nationwide else ", ".join(body.states)}
     for key, value in (
@@ -562,7 +552,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
         number=number,
         submitted_at=now(),
         submitted_by_id=viewer.id,
-        path=ReviewPath.FULL,  # TODO (F6): the lighter path for a version with no material change
+        path=routing.result.path,
         details=details,
         fields=[
             {"label": f.label, "segments": [f.text.strip()], **({"kind": f.kind} if f.kind else {})} for f in body.fields
@@ -595,8 +585,8 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     m.submitted_at = version.submitted_at
     m.updated_at = version.submitted_at
     db.add(event(m, viewer, EventType.SUBMITTED, f"Submitted version {number} by manual upload."))
-    routed = ", ".join(f'{g.name} (rule "{reason}")' if reason else g.name for g, reason in groups)
-    db.add(event(m, None, EventType.ROUTED, f"Required {routed}.", actor_name="Routing"))
+    db.add(event(m, None, EventType.ROUTED, routing.history_text(), actor_name="Routing"))
+    record(db, viewer, "material", m.id, "routed", {"version": number, **routing.audit()})  # PRD F6
     await notify_groups(db, viewer, NotificationType.ASSIGNMENT, m, [g for g, _ in groups])  # PRD F13
 
 

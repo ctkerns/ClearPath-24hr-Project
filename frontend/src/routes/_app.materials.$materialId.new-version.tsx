@@ -39,6 +39,7 @@ function NewVersionPage() {
       </header>
       <SubmissionForm
         mode="version"
+        materialId={materialId}
         versionNumber={next}
         initial={valuesFromMaterial(material, detail.data ?? null)}
         ready

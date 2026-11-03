@@ -2,3 +2,4 @@
 local-planning/
 .worktrees/
 .env
+/backend/tests/test_routing_eval.py

@@ -20,8 +20,11 @@ from app.api import APIModel, InternalUser, Manager, bad_request, not_found
 from app.audit import record
 from app.db import get_db
 from app.groups import GroupOut, load_group
-from app.models import ReviewerGroup, User
+from app.material_access import Submitter, now, visible
+from app.models import ReviewerGroup, Role, User
+from app.models.materials import Channel, Material, Product, ReviewPath
 from app.models.routing import NoMaterialChangeType, RoutingRule, RoutingRuleGroup, RoutingSettings, RuleSource
+from app.routing_eval import route
 from app.workspace import US_STATES
 
 router = APIRouter(prefix="/api/routing", tags=["routing"])
@@ -350,3 +353,58 @@ async def set_default_group(body: DefaultGroupInput, viewer: Manager, db: Db) ->
     await db.execute(update(ReviewerGroup).where(ReviewerGroup.id == group.id).values(is_default=True))
     await db.commit()
     return GroupOut.of(await load_group(db, viewer, group.id))
+
+
+# The preview (PRD F3, F6): the submit form shows who will review, from the same code that decides on submit,
+# so the preview and the decision cannot differ. Affiliates may call it too, for their own materials.
+
+
+class PreviewInput(APIModel):
+    """What the form has so far. For a new version, `materialId` gives the channel and the affiliate."""
+
+    material_id: uuid.UUID | None = None
+    channel: Channel
+    product: Product
+    nationwide: bool = False
+    states: list[str] = Field(default_factory=list, max_length=51)
+
+    @field_validator("states")
+    @classmethod
+    def known_states(cls, v: list[str]) -> list[str]:
+        return RuleConditions.known(v, US_STATES, "states")
+
+
+class PreviewGroup(APIModel):
+    name: str
+    reason: str  # the same text the material shows after submit
+    rules: list[str]  # the names of the rules that require it; empty for the default group or the lighter path
+
+
+class PreviewOut(APIModel):
+    path: ReviewPath
+    groups: list[PreviewGroup]
+
+
+@router.post("/preview")
+async def preview_routing(body: PreviewInput, viewer: Submitter, db: Db) -> PreviewOut:
+    """Changes nothing. The submit evaluates again, so a rule change in between still counts."""
+    channel, affiliate_id = body.channel, viewer.affiliate_id if viewer.role is Role.AFFILIATE else None
+    if body.material_id:
+        m = await db.scalar(select(Material).where(Material.id == body.material_id, *visible(viewer)))
+        if m is None:
+            raise not_found("Material not found")
+        channel, affiliate_id = m.channel, m.affiliate_id
+    r = await route(
+        db,
+        viewer,
+        product=body.product,
+        channel=channel,
+        affiliate_id=affiliate_id,
+        nationwide=body.nationwide,
+        states=body.states,
+        at=now(),
+    )
+    return PreviewOut(
+        path=r.result.path,
+        groups=[PreviewGroup(name=g.group.name, reason=g.reason, rules=g.rule_names) for g in r.groups],
+    )

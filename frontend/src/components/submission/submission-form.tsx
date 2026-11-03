@@ -30,9 +30,11 @@ import {
  * a new version starts from the current content, and its title and channel are locked,
  * because a version belongs to one material on one channel.
  */
-export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, onCancel }: {
+export function SubmissionForm({ initial, mode, materialId, versionNumber, ready, onSubmit, onCancel }: {
   initial: SubmissionValues
   mode: 'new' | 'version'
+  /** The material that gets a new version, so the routing preview uses its channel and affiliate. */
+  materialId?: string
   /** The number the new version gets, for the submit button. */
   versionNumber?: number
   /** False until the data that the submit needs has loaded. */
@@ -52,14 +54,14 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
   const set = <K extends keyof SubmissionValues>(key: K, value: SubmissionValues[K]) => setValues((v) => ({ ...v, [key]: value }))
   // Licensed states and routing come from Settings (Workspace and Routing tabs), so a change there shows here at once.
   const licensedStates = useLicensedStates()
-  const routingPreview = useRoutingPreview()
   const save = useSave(() => {})
-  const routing = values.product && values.channel && (values.nationwide || values.states.length) ? routingPreview.preview(values) : []
+  // A preview from the server; the server decides again on submit (PRD R2, F6).
+  const routing = useRoutingPreview(values, materialId)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     setTried(true)
-    if (Object.keys(errors).length === 0 && ready && routingPreview.ready && !save.pending) void save.run(() => onSubmit(values))
+    if (Object.keys(errors).length === 0 && ready && !save.pending) void save.run(() => onSubmit(values))
   }
 
   return (
@@ -226,7 +228,7 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
         )}
         <SaveError error={save.error} />
         <Button type="button" variant="outline" onClick={onCancel}>{t('submit.cancel')}</Button>
-        <Button type="submit" disabled={!ready || !routingPreview.ready || save.pending}>
+        <Button type="submit" disabled={!ready || save.pending}>
           {isVersion ? t('submit.submitVersion', { version: versionNumber }) : t('submit.submit')}
         </Button>
       </div>

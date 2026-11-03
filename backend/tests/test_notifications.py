@@ -24,7 +24,6 @@ def submission(**change):
         "product": "savings",
         "fields": [{"label": "Body", "text": "Rates from 4.00% APY."}],
         "nationwide": True,
-        "groups": [{"name": "Compliance", "reason": "Every material"}],
     }
     return body | change
 
@@ -138,8 +137,9 @@ async def test_assignment_goes_to_the_groups_reviewers(client):
 
 async def test_assignment_once_per_person_and_not_the_submitter(client):
     await as_user(client, MANAGER)  # Alex is in Compliance himself
-    groups = [{"name": "Compliance"}, {"name": "Mortgage"}]  # Grace Liu is in both
-    assert (await client.post(f"/api/materials/{SUMMER}/versions", json=submission(channel="meta", groups=groups))).status_code == 201
+    # A mortgage item in CA needs Compliance and Mortgage (seeded rules). Grace Liu is in both.
+    body = submission(channel="meta", product="mortgage", nationwide=False, states=["CA"])
+    assert (await client.post(f"/api/materials/{SUMMER}/versions", json=body)).status_code == 201
     assert await sent("assignment") == sorted(COMPLIANCE_REVIEWERS - {"Alex Chen"})
 
 
@@ -225,7 +225,7 @@ async def test_failed_writes_notify_nobody(client):
     past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
     assert (await client.post("/api/issues", json=new_issue(SUMMER, await user_id(client, SAM), dueAt=past))).status_code == 400
     await as_user(client, SUBMITTER)
-    assert (await client.post("/api/materials", json=submission(groups=[{"name": "Nobody"}]))).status_code == 400
+    assert (await client.post("/api/materials", json=submission(nationwide=False, states=["WY"]))).status_code == 400
     assert await sent() == []
 
 

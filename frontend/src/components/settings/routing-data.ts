@@ -6,9 +6,10 @@ import { hasRole } from './user-data'
 import type { Role } from '@/components/review/material-detail-data'
 
 // Review routing (PRD F6, screen 9): routing rules, the lighter path, and the no-material-change types.
-// GET /api/routing: every internal role reads it, because the submit form previews routing. Managers and higher change it.
+// GET /api/routing: every internal role reads it. Managers and higher change it. The submit form previews with POST /api/routing/preview.
 // The default group is a flag on the reviewer group itself (ReviewerGroup.isDefault); PUT /api/routing/default-group moves it.
-// TODO: the server evaluates the rules on every new version.
+// The server evaluates the rules on every submit and new version (backend app/routing_eval.py, PRD R2).
+// evaluateRouting below is the same logic, for the Routing tab's "Test routing" only; it decides nothing.
 
 export type RuleSource = 'internal' | 'affiliate'
 
@@ -107,7 +108,7 @@ export type RoutingInput = {
   states: string[]
 }
 
-/** Why a rule did not match: the first condition the item fails. */
+/** Why a rule did not match: the first condition the item fails. Same as miss_of in app/routing_eval.py. */
 export type Miss =
   | { field: 'product'; value: Product }
   | { field: 'channel'; value: Channel }
@@ -140,7 +141,7 @@ function missOf(c: RuleConditions, v: RoutingInput): Miss | undefined {
 /**
  * Which groups must review an item (PRD F6): all groups from all enabled rules that match it,
  * or the default group when none match, so no item is ever left without a reviewer.
- * TODO: the server runs this on every new version and stores matchedRuleIds on the version.
+ * A preview only: the server decides on submit (app/routing_eval.py). Keep the two the same.
  */
 export function evaluateRouting(rules: RoutingRule[], defaultGroupId: string | undefined, v: RoutingInput): RoutingResult {
   const results: RuleResult[] = rules.map((rule) => {
