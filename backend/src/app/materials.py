@@ -54,6 +54,7 @@ from app.models.materials import (
     ReviewPath,
     Severity,
 )
+from app.notify import NotificationType, notify_comment, notify_decision, notify_groups
 from app.workspace import US_STATES
 
 items = APIRouter(prefix="/api/materials", tags=["materials"])
@@ -580,6 +581,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     db.add(event(m, viewer, EventType.SUBMITTED, f"Submitted version {number} by manual upload."))
     routed = ", ".join(f'{g.name} (rule "{reason}")' if reason else g.name for g, reason in groups)
     db.add(event(m, None, EventType.ROUTED, f"Required {routed}.", actor_name="Routing"))
+    await notify_groups(db, viewer, NotificationType.ASSIGNMENT, m, [g for g, _ in groups])  # PRD F13
 
 
 @items.post("", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
@@ -703,6 +705,7 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
         )
         history = f"Escalated: added {group.name} as a required group. {text}"
         comment_body = f"{group.name}: {text}"
+        await notify_groups(db, viewer, NotificationType.ESCALATION, m, [group])  # PRD F13
 
     else:
         if m.status is not MaterialStatus.IN_REVIEW:
@@ -773,6 +776,7 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
         )
     )
     db.add(event(m, viewer, EventType.DECISION, history))
+    await notify_decision(db, viewer, m, version, d)  # PRD F13
     return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]
 
 
@@ -805,6 +809,7 @@ async def add_comment(material_id: uuid.UUID, body: CommentInput, viewer: Submit
     )
     db.add(event(m, viewer, EventType.COMMENT, f"Commented on version {number}." if number else "Commented."))
     m.updated_at = now()
+    await notify_comment(db, viewer, m)  # PRD F13
     return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]
 
 

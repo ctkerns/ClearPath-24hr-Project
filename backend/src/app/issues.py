@@ -30,6 +30,7 @@ from app.models.materials import (
     MaterialEvent,
     Severity,
 )
+from app.notify import notify_new_issue
 from app.users import load_user
 
 router = APIRouter(prefix="/api/issues", tags=["issues"])
@@ -189,7 +190,7 @@ def log(issue: Issue, actor: User, text: str, comment: bool = False) -> None:
 @router.post("", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
     """PRD F5, F12: any Reviewer or higher, on any material, at any time.
-    TODO (F13): notify the owner and the Managers, and the affiliate manager for affiliate content."""
+    Notifies the owner and the Managers, and the affiliate manager for affiliate content (F13)."""
     material = await db.scalar(select(Material).where(Material.id == body.material_id, *visible(viewer)))
     if material is None:
         raise not_found("Material not found")
@@ -236,6 +237,7 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
         )
     )
     await db.flush()
+    await notify_new_issue(db, viewer, issue, material)  # PRD F13
     issue_id = issue.id
     await db.commit()
     return IssueOut.of(await load_issue(db, viewer, issue_id))

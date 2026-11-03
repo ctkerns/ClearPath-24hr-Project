@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 
 // In-app notifications (PRD F13): assignment, decision, comment, escalation, new issue.
-// TODO: replace NOTIFICATIONS_URL with the API endpoint, and send "mark as read" to the server.
-// Until then the list loads seeded demo data, and "read" changes last only until the page reloads.
-const NOTIFICATIONS_URL = '/demo/notifications.json'
+// GET /api/notifications returns only the viewer's own, newest first (up to 50); the page counts the unread ones.
+// TODO (F13): Slack and email delivery. Later maybe pushes instead of polling.
 
 export type NotificationType =
   | 'assignment'
@@ -32,26 +32,18 @@ const key = ['notifications'] as const
 export function useNotifications() {
   return useQuery({
     queryKey: key,
-    queryFn: async (): Promise<AppNotification[]> => {
-      const res = await fetch(NOTIFICATIONS_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    // Seeded data has no server state, so never refetch: a refetch would undo "mark as read".
-    // Later: refetch on an interval or receive pushes from the API.
-    staleTime: Infinity,
+    queryFn: () => api<AppNotification[]>('GET', '/notifications'),
+    // No pushes yet: check every minute, and when the window gets focus again.
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
 
-/** Marks the given notifications as read; with no ids, marks all. */
+/** Marks the given notifications as read; with no ids, marks all of the viewer's. */
 export function useMarkNotificationsRead() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (ids?: string[]) => ids, // TODO: POST to the API
-    onSuccess: (ids) => {
-      queryClient.setQueryData<AppNotification[]>(key, (list) =>
-        list?.map((n) => (!ids || ids.includes(n.id) ? { ...n, read: true } : n)),
-      )
-    },
+    mutationFn: (ids?: string[]) => api('POST', '/notifications/read', ids ? { ids } : {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
   })
 }
