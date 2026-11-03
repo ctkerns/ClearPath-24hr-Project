@@ -885,10 +885,16 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     ids = list(per_rule)
     # Each rule once, with its count when it has more than one finding, so the list adds up to the number.
     listed = ", ".join(rule_id if n == 1 else f"{rule_id} ×{n}" for rule_id, n in per_rule.items())
-    text = f"Code checks found {len(problems)} problem{'s' if len(problems) != 1 else ''}: {listed}." if problems else "Code checks passed."
+    checked = len(results)
+    if problems:
+        text = f"Code checks found {len(problems)} problem{'s' if len(problems) != 1 else ''}: {listed}."
+    elif checked:
+        text = f"Code checks passed: {checked} rule{'s' if checked != 1 else ''}."
+    else:  # nothing was checked, so this is not a pass
+        text = "No code rules apply to this material, so nothing was checked."
     if outdated:
         text += f" Marked {len(outdated)} finding{'s' if len(outdated) != 1 else ''} outdated."
-    data = {"version": version.number, "problems": len(problems), "rules": ids, "outdated": len(outdated), "text": text}
+    data = {"version": version.number, "problems": len(problems), "rules": ids, "checked": checked, "outdated": len(outdated), "text": text}
     record(db, OtherActor(m.workspace_id, AUTHOR), "material", m.id, "prereviewed", data)  # PRD F2, F4
 
     from app import ai_review  # here, because ai_review imports this module

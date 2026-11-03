@@ -259,6 +259,7 @@ HISTORY_TYPE: dict[str, HistoryType] = {
     "prereviewed": "prereview",
     "ai_reviewed": "prereview",  # app.ai_review (PRD F4 layer 2)
     "ai_review_unavailable": "prereview",  # no key, or the AI call failed: code checks only
+    "ai_review_skipped": "prereview",  # no AI rule applies to the material, so the model was not called
     "routed": "routed",
     "approved": "decision",
     "approved_with_conditions": "decision",
