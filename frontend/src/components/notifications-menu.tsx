@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { InlineSaveError } from '@/components/save-error'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -75,6 +77,8 @@ export function NotificationsMenu() {
             {t('notifications.markAllRead')}
           </Button>
         </div>
+        {/* Marking as read fails rarely and changes nothing else, so one quiet line is enough. */}
+        <InlineSaveError error={markRead.isError ? t('app.saveFailed') : undefined} className="border-b px-3 py-1.5" />
 
         {notifications.isPending ? (
           <div className="grid gap-3 p-3">
@@ -83,7 +87,7 @@ export function NotificationsMenu() {
             <Skeleton className="h-4 w-1/2" />
           </div>
         ) : notifications.isError ? (
-          <p className="p-3 text-muted-foreground">{t('notifications.loadError')}</p>
+          <LoadError error={notifications.error} what={t('notifications.what')} onRetry={() => notifications.refetch()} className="px-3 py-3" />
         ) : list.length === 0 ? (
           <p className="p-6 text-center text-muted-foreground">{t('notifications.empty')}</p>
         ) : (

@@ -5,7 +5,7 @@ import { ISSUE_FILTER_KEYS, validateIssuesSearch } from '@/components/issues/iss
 import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { useIssueList } from '@/components/issues/use-issue-list'
 import { ListFrame, ListHeader, ListPager } from '@/components/list/list-frame'
-import { listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
 import { SeverityLabel } from '@/components/ui/risk-tag'
@@ -44,10 +44,12 @@ function IssuesPage() {
       <ListToolbar facets={issues.data?.facets} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('issues.searchPlaceholder')} />
 
       <ListFrame
-        status={issues.status}
+        query={issues}
+        filtered={isFiltered(search)}
+        what={t('issues.what')}
+        firstRun={{ text: t('issues.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('issues.empty')}
-        errorText={t('issues.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

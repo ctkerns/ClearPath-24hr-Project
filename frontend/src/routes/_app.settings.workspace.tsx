@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Check, Lock, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useViewer } from '@/lib/session'
 import { hasRole } from '@/components/settings/user-data'
 import {
@@ -63,7 +64,7 @@ function WorkspaceTab() {
       {settings.isPending ? (
         <Skeleton className="h-80 w-full" />
       ) : settings.isError ? (
-        <p className="text-muted-foreground">{t('settingsWorkspace.loadError')}</p>
+        <LoadError error={settings.error} what={t('settingsWorkspace.what')} onRetry={() => settings.refetch()} />
       ) : (
         // Keyed by the saved values, so the form starts over after a save or a reset.
         <SettingsForm key={JSON.stringify(settings.data)} settings={settings.data} canEdit={canEdit} />

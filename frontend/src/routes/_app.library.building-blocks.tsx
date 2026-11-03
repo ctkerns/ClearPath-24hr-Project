@@ -5,7 +5,7 @@ import { blockSearchText, sortBlocks, validateBlocksSearch } from '@/components/
 import { BlockExpiry, BlockKindLabel } from '@/components/library/block-meta'
 import { useBlockList } from '@/components/library/use-block-list'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { applyFilters, listRowClass, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { cn } from '@/lib/utils'
 
@@ -33,10 +33,12 @@ function BuildingBlocksTab() {
       <ListToolbar items={all} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('blocks.searchPlaceholder')} />
 
       <ListFrame
-        status={blocks.status}
+        query={blocks}
+        filtered={isFiltered(search)}
+        what={t('blocks.what')}
+        firstRun={{ text: t('blocks.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('blocks.empty')}
-        errorText={t('blocks.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

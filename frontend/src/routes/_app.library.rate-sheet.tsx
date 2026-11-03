@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Lock, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { changedCount, useRateSheets, validateRateSheetSearch, type RateSheet } from '@/components/library/rate-sheet-data'
 import { RateSheetHistory } from '@/components/library/rate-sheet-history'
 import { RateSheetTable } from '@/components/library/rate-sheet-table'
@@ -27,7 +28,7 @@ function RateSheetTab() {
   const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (sheets.isPending) return <RateSheetSkeleton />
-  if (sheets.isError) return <p className="text-muted-foreground">{t('rateSheet.loadError')}</p>
+  if (sheets.isError) return <LoadError error={sheets.error} what={t('rateSheet.what')} onRetry={() => sheets.refetch()} />
   if (!sheets.data.length) {
     return (
       <div className="grid justify-items-start gap-3">

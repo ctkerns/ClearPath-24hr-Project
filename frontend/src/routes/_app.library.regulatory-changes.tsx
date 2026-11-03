@@ -6,7 +6,7 @@ import { useRegChangeList } from '@/components/library/reg-change-list'
 import { RegChangeStatusPill } from '@/components/library/reg-change-meta'
 import { useRules, type Rule } from '@/components/library/rule-data'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { applyFilters, listRowClass, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { formatDate } from '@/i18n/format'
 import { cn } from '@/lib/utils'
@@ -31,7 +31,8 @@ function RegulatoryChangesTab() {
 
   const shown = sortRegChanges(applyFilters(all, search, list.fields, regChangeSearchText), search)
   // The product filter and the rule titles need the rules too, so the list waits for both.
-  const status = changes.status === 'success' ? rules.status : changes.status
+  // The frame shows the first failure, or waits on the rules once the changes are in.
+  const query = changes.status === 'success' ? rules : changes
 
   return (
     <div className="grid gap-4">
@@ -39,10 +40,12 @@ function RegulatoryChangesTab() {
       <ListToolbar items={all} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('regChanges.searchPlaceholder')} />
 
       <ListFrame
-        status={status}
+        query={query}
+        filtered={isFiltered(search)}
+        what={t('regChanges.what')}
+        firstRun={{ text: t('regChanges.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('regChanges.empty')}
-        errorText={t('regChanges.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

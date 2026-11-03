@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Info, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useViewer } from '@/lib/session'
 import { INTEGRATION_GROUPS, ownerCandidates, providerInfo, useIntegrations } from '@/components/settings/integration-data'
 import { IntegrationListHeader, IntegrationRow } from '@/components/settings/integration-row'
@@ -25,7 +26,7 @@ function IntegrationsTab() {
   const canEdit = hasRole(viewer.role, 'admin')
 
   if (integrations.isPending) return <IntegrationsSkeleton />
-  if (integrations.isError) return <p className="text-muted-foreground">{t('settingsIntegrations.loadError')}</p>
+  if (integrations.isError) return <LoadError error={integrations.error} what={t('settingsIntegrations.what')} onRetry={() => integrations.refetch()} />
 
   const all = integrations.data
   const owners = ownerCandidates(users.data ?? [])

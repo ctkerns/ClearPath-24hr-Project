@@ -8,7 +8,7 @@ import { canEditLibrary } from '@/components/library/rule-data'
 import { disclosureSearchText, sortDisclosures, validateDisclosuresSearch } from '@/components/library/disclosure-filters'
 import { useDisclosureList } from '@/components/library/use-disclosure-list'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { applyFilters, listRowClass, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/i18n/format'
@@ -60,10 +60,12 @@ function DisclosuresTab() {
       />
 
       <ListFrame
-        status={disclosures.status}
+        query={disclosures}
+        filtered={isFiltered(search)}
+        what={t('disclosures.what')}
+        firstRun={{ text: t(canEditLibrary(viewer.role) ? 'disclosures.firstRunEditor' : 'disclosures.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('disclosures.empty')}
-        errorText={t('disclosures.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

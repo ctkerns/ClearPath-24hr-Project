@@ -6,11 +6,14 @@ import { Switch } from '@/components/ui/switch'
 import type { ReviewerGroup } from './group-data'
 import { matchesEverything, NO_MATERIAL_CHANGE_TYPES, useRoutingUpdate, type RoutingSettings } from './routing-data'
 import { SectionHeading } from './routing-fields'
+import { useInlineSave } from '@/lib/use-save'
+import { InlineSaveError } from '@/components/save-error'
 
 /** The default group (PRD F6, required): an item that matches no rule goes here. */
 export function DefaultGroupSection({ settings, groups, canEdit }: { settings: RoutingSettings; groups: ReviewerGroup[]; canEdit: boolean }) {
   const { t } = useTranslation()
   const update = useRoutingUpdate()
+  const save = useInlineSave()
   const current = groups.find((g) => g.isDefault)
   // A rule with no conditions matches everything, so the default group only acts as a safety net.
   const catchAll = settings.rules.find((r) => r.enabled && matchesEverything(r.conditions))
@@ -19,12 +22,13 @@ export function DefaultGroupSection({ settings, groups, canEdit }: { settings: R
     <section className="grid gap-3" aria-labelledby="routing-default">
       <SectionHeading id="routing-default">{t('settingsRouting.default.heading')}</SectionHeading>
       <div className="grid gap-x-6 gap-y-2 sm:grid-cols-[14rem_minmax(0,1fr)] sm:items-start">
-        <Select value={current?.id ?? ''} onValueChange={(id) => void update.setDefaultGroup(id).catch(console.error)} disabled={!canEdit}>
+        <Select value={current?.id ?? ''} onValueChange={(id) => save.run(() => update.setDefaultGroup(id))} disabled={!canEdit || save.pending}>
           <SelectTrigger className="w-full" aria-label={t('settingsRouting.default.heading')}><SelectValue placeholder={t('settingsRouting.choose')} /></SelectTrigger>
           <SelectContent>{groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
         </Select>
         <div className="grid gap-1 text-sm">
           <p>{t('settingsRouting.default.help')}</p>
+          <InlineSaveError error={save.error} />
           {catchAll && (
             <p className="text-xs text-muted-foreground">
               {t('settingsRouting.default.catchAll', { n: settings.rules.indexOf(catchAll) + 1, name: catchAll.name })}
@@ -40,6 +44,7 @@ export function DefaultGroupSection({ settings, groups, canEdit }: { settings: R
 export function LighterPathSection({ settings, groups, canEdit }: { settings: RoutingSettings; groups: ReviewerGroup[]; canEdit: boolean }) {
   const { t } = useTranslation()
   const update = useRoutingUpdate()
+  const save = useInlineSave()
   const defaultGroup = groups.find((g) => g.isDefault)
   const DEFAULT = 'default'
 
@@ -49,8 +54,8 @@ export function LighterPathSection({ settings, groups, canEdit }: { settings: Ro
       <div className="grid gap-x-6 gap-y-2 sm:grid-cols-[14rem_minmax(0,1fr)] sm:items-start">
         <Select
           value={settings.lighterPathGroupId ?? DEFAULT}
-          onValueChange={(v) => void update.setLighterPathGroup(v === DEFAULT ? null : v).catch(console.error)}
-          disabled={!canEdit}
+          onValueChange={(v) => save.run(() => update.setLighterPathGroup(v === DEFAULT ? null : v))}
+          disabled={!canEdit || save.pending}
         >
           <SelectTrigger className="w-full" aria-label={t('settingsRouting.lighter.group')}><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -63,6 +68,7 @@ export function LighterPathSection({ settings, groups, canEdit }: { settings: Ro
           <li>{t('settingsRouting.lighter.rule2')}</li>
           <li>{t('settingsRouting.lighter.rule3')}</li>
         </ul>
+        <InlineSaveError error={save.error} className="sm:col-start-1" />
       </div>
     </section>
   )
@@ -72,6 +78,7 @@ export function LighterPathSection({ settings, groups, canEdit }: { settings: Ro
 export function ChangeTypesSection({ settings, canEdit }: { settings: RoutingSettings; canEdit: boolean }) {
   const { t } = useTranslation()
   const update = useRoutingUpdate()
+  const save = useInlineSave()
   const onCount = NO_MATERIAL_CHANGE_TYPES.filter((type) => settings.noMaterialChangeTypes[type]).length
 
   return (
@@ -79,6 +86,7 @@ export function ChangeTypesSection({ settings, canEdit }: { settings: RoutingSet
       <div className="grid gap-1">
         <SectionHeading id="routing-types">{t('settingsRouting.types.heading')}</SectionHeading>
         <p className="text-xs text-muted-foreground">{t('settingsRouting.types.help', { on: onCount, total: NO_MATERIAL_CHANGE_TYPES.length })}</p>
+        <InlineSaveError error={save.error} />
       </div>
       <ul className="overflow-hidden rounded-lg border">
         {NO_MATERIAL_CHANGE_TYPES.map((type) => {
@@ -95,7 +103,7 @@ export function ChangeTypesSection({ settings, canEdit }: { settings: RoutingSet
               </div>
               <span className="flex items-center gap-2 self-start pt-0.5">
                 <span className="w-6 text-right text-xs text-muted-foreground">{on ? t('settingsRouting.on') : t('settingsRouting.off')}</span>
-                <Switch id={id} checked={on} disabled={!canEdit} onCheckedChange={(v) => void update.setChangeType(type, v).catch(console.error)} />
+                <Switch id={id} checked={on} disabled={!canEdit || save.pending} onCheckedChange={(v) => save.run(() => update.setChangeType(type, v))} />
               </span>
             </li>
           )

@@ -2,7 +2,8 @@
   "app": {
     "name": "ClearPath",
     "product": "Review",
-    "saveFailed": "ClearPath could not save this. Try again in a minute."
+    "saveFailed": "ClearPath could not save this. Try again in a minute.",
+    "notSaved": "Not saved: {{message}}"
   },
   "nav": {
     "main": "Main",
@@ -88,7 +89,6 @@
     "openUnread": "Notifications, {{count}} unread",
     "markAllRead": "Mark all as read",
     "empty": "No notifications yet.",
-    "loadError": "Notifications did not load. Reload the page to try again.",
     "unread": "Unread",
     "type": {
       "assignment": "<0>{{material}}</0> is waiting for your review.",
@@ -98,7 +98,8 @@
       "decision_approved": "<0>{{actor}}</0> approved <0>{{material}}</0>.",
       "decision_changes_requested": "<0>{{actor}}</0> requested changes on <0>{{material}}</0>.",
       "decision_rejected": "<0>{{actor}}</0> rejected <0>{{material}}</0>."
-    }
+    },
+    "what": "notifications"
   },
   "search": {
     "open": "Search",
@@ -148,7 +149,6 @@
       "affiliate": "Affiliate"
     },
     "empty": "No materials match these filters.",
-    "loadError": "Materials did not load. Reload the page to try again.",
     "expiresShort": "Exp. {{date}}",
     "expiresOn": "Approval expires {{date}}",
     "expired": "Expired",
@@ -216,10 +216,11 @@
       "submit": "Download ZIP",
       "running": "Preparing…",
       "badRange": "The end date is before the start date."
-    }
+    },
+    "what": "materials",
+    "firstRun": "No materials yet. A material shows here when someone submits it, or when a connected channel syncs a draft."
   },
   "review": {
-    "notFound": "This material does not exist, or you do not have access to it.",
     "versionOf": "Version {{version}} of {{count}}",
     "moreActions": "More actions",
     "raiseIssue": "Raise an issue",
@@ -266,8 +267,6 @@
       "lighter": "Lighter path"
     },
     "submittedBy": "{{name}}, {{time}}",
-    "noSeed": "This demo material has no seeded content yet.",
-    "noSeedLink": "Open \"Summer personal loan, Meta feed ad\" to see a full review",
     "conditions": "Approval conditions",
     "escalatedBy": "Escalated by {{name}}: {{reason}}",
     "groupBy": {
@@ -383,7 +382,11 @@
     },
     "commentOn": "On “{{text}}”",
     "commentSelectHint": "Select text in the content to comment on it.",
-    "clearSelection": "Comment on the whole material"
+    "clearSelection": "Comment on the whole material",
+    "what": "material",
+    "noVersion": "This material has no version yet",
+    "noVersionHelp": "Its content shows here after the first version is uploaded or synced.",
+    "uploadFirst": "Upload the first version"
   },
   "submit": {
     "intro": "Add the content and the facts about where it runs. Pre-review starts as soon as you submit.",
@@ -516,13 +519,11 @@
     "resolvedOn": "Resolved {{date}}",
     "resolvedShort": "Done {{date}}",
     "empty": "No issues match these filters.",
-    "loadError": "Issues did not load. Reload the page to try again.",
-    "noMaterial": "Found live, no material"
+    "noMaterial": "Found live, no material",
+    "what": "issues",
+    "firstRun": "No issues yet. An issue opens when monitoring finds a problem in live content, or when a reviewer raises one."
   },
   "issue": {
-    "notFound": "This issue does not exist, or you do not have access to it.",
-    "noSeed": "This demo issue has no seeded details yet.",
-    "noSeedLink": "Open the LendWise disclosure issue, which has full details",
     "startWork": "Start work",
     "reopen": "Reopen",
     "resolve": {
@@ -594,7 +595,8 @@
       "kindLabel": "Live problem",
       "kindNone": "None",
       "presentAtApproval": "The problem was already in the approved version"
-    }
+    },
+    "what": "issue"
   },
   "dashboard": {
     "viewAll": "View all",
@@ -630,7 +632,8 @@
       "highIssues": "Open high-severity issues",
       "expiring": "Approvals expiring in 30 days",
       "noneExpiring": "No approvals expire in the next 30 days."
-    }
+    },
+    "what": "Dashboard"
   },
   "roles": {
     "viewer": "Viewer",
@@ -688,8 +691,6 @@
       "source": "Source"
     },
     "empty": "No rules match these filters.",
-    "loadError": "Rules did not load. Reload the page to try again.",
-    "notFound": "This rule does not exist.",
     "versionShort": "v{{version}}",
     "readOnly": "Only Managers can change rules. You can read them and use them in reviews.",
     "citation": "Citation",
@@ -772,7 +773,11 @@
       "cancel": "Cancel",
       "create": "Add rule",
       "save": "Save version {{version}}"
-    }
+    },
+    "what": "rules",
+    "firstRun": "No rules yet. A Manager adds the rules that every review checks.",
+    "firstRunEditor": "No rules yet. Add the first rule that reviews check with \"New rule\" above.",
+    "whatOne": "rule"
   },
   "regChanges": {
     "preset": {
@@ -806,8 +811,6 @@
       "effective": "Effective"
     },
     "empty": "No regulatory changes match these filters.",
-    "loadError": "Regulatory changes did not load. Reload the page to try again.",
-    "notFound": "This regulatory change does not exist.",
     "published": "Published {{date}}",
     "effectiveOn": "Effective {{date}}",
     "summary": "Summary",
@@ -860,7 +863,10 @@
       "published": "Published",
       "effective": "Effective",
       "source": "Source"
-    }
+    },
+    "what": "regulatory changes",
+    "firstRun": "No regulatory changes yet. Changes come in from the regulatory feed after an Admin connects it in Settings, Integrations.",
+    "whatOne": "regulatory change"
   },
   "rateSheet": {
     "meta": "Effective <date>{{date}}</date> · uploaded by <avatar/><person>{{name}}</person> from <file>{{file}}</file>",
@@ -879,7 +885,6 @@
       "cancel": "Cancel",
       "submit": "Upload"
     },
-    "loadError": "The rate sheet could not be loaded. Refresh the page to try again.",
     "footnote": "Effective and Source show when each offer last changed, and which upload set it. Rates and fees are inclusive of all ranges a member can be offered.",
     "column": {
       "offer": "Offer and term",
@@ -913,7 +918,8 @@
       "first": "First sheet uploaded",
       "changed_one": "{{count}} offer changed",
       "changed_other": "{{count}} offers changed"
-    }
+    },
+    "what": "rate sheet"
   },
   "blocks": {
     "preset": {
@@ -965,8 +971,6 @@
     "expiresOn": "Approval expires {{date}}",
     "expiredOn": "Expired {{date}}",
     "empty": "No building blocks match these filters.",
-    "loadError": "Building blocks did not load. Reload the page to try again.",
-    "notFound": "This building block does not exist.",
     "readOnly": "Only Managers can change building blocks. You can read them, copy them, and use them in materials.",
     "approvedLine": "Approved {{date}} by {{name}}",
     "expiringWarning": "This approval expires on {{date}}. After that, materials that use this text need a full review.",
@@ -999,7 +1003,10 @@
       "deleteTitle": "Delete this building block?",
       "deleteDescription": "The block leaves the library. Materials that already contain this text keep it as it is, but it is no longer a pre-approved block.",
       "deleteConfirm": "Delete block"
-    }
+    },
+    "what": "building blocks",
+    "firstRun": "No building blocks yet. Approved blocks show here, so submitters can reuse text that is already approved.",
+    "whatOne": "building block"
   },
   "disclosures": {
     "preset": {
@@ -1025,8 +1032,6 @@
       "effective": "Effective"
     },
     "empty": "No disclosures match these filters.",
-    "loadError": "Disclosures did not load. Reload the page to try again.",
-    "notFound": "This disclosure does not exist.",
     "effectiveOn": "Effective {{date}}",
     "readOnly": "Only Managers can change disclosures. Copy the text exactly; do not retype it.",
     "approvedText": "Approved text",
@@ -1060,10 +1065,13 @@
       "heading_one": "{{count}} approved material uses it",
       "heading_other": "{{count}} approved materials use it",
       "note": "When this disclosure changes, these materials are flagged for re-review."
-    }
+    },
+    "what": "disclosures",
+    "firstRun": "No disclosures yet. A Manager adds the approved disclosure text here.",
+    "firstRunEditor": "No disclosures yet. Add the approved disclosure text with \"New disclosure\" above.",
+    "whatOne": "disclosure"
   },
   "metrics": {
-    "loadError": "The metrics did not load. Refresh the page to try again.",
     "empty": "Nothing to show for these filters.",
     "view": "View",
     "chart": "Chart",
@@ -1147,7 +1155,10 @@
     "aiMissDef": "Reviewer comments on selected text that no AI finding covered. A rough signal of AI recall.",
     "evalNote": "AI precision and recall on the evaluation set are in the test report, not here.",
     "queueTarget_one": "The {{group}} review target is {{count}} business day.",
-    "queueTarget_other": "The {{group}} review target is {{count}} business days."
+    "queueTarget_other": "The {{group}} review target is {{count}} business days.",
+    "what": "metrics",
+    "firstRun": "No decisions yet",
+    "firstRunHelp": "Metrics start when reviewers make their first decisions on submitted materials."
   },
   "signIn": {
     "heading": "Sign in to ClearPath Review",
@@ -1202,9 +1213,6 @@
     "intro": "Each item goes to one or more reviewer groups. Only members approve for their group.",
     "create": "New group",
     "readOnly": "Only Managers change reviewer groups. You can read them.",
-    "empty": "No reviewer groups yet. Create one to start routing reviews.",
-    "loadError": "Could not load reviewer groups. Reload the page to try again.",
-    "notFound": "This reviewer group does not exist.",
     "column": {
       "group": "Group",
       "reviews": "What it reviews",
@@ -1272,13 +1280,16 @@
       "noMatch": "No one matches.",
       "submit_one": "Add {{count}} person",
       "submit_other": "Add {{count}} people"
-    }
+    },
+    "what": "reviewer groups",
+    "firstRun": "No reviewer groups yet. A Manager creates them. Reviewers approve only for the groups they belong to.",
+    "firstRunEditor": "No reviewer groups yet. Create one with \"New group\". Reviewers approve only for the groups they belong to.",
+    "whatOne": "reviewer group"
   },
   "settingsUsers": {
     "searchPlaceholder": "Search people",
     "readOnly": "Only Admins can invite people or change roles. You can see who has access.",
     "empty": "No people match these filters.",
-    "loadError": "We could not load the people in this workspace.",
     "you": "You",
     "noGroups": "No groups",
     "never": "Never signed in",
@@ -1385,11 +1396,12 @@
       "title": "Cancel the invite for {{name}}?",
       "description": "The link sent to {{email}} stops working, and they leave this list.",
       "submit": "Cancel invite"
-    }
+    },
+    "what": "people",
+    "firstRun": "Nobody else is in this workspace yet."
   },
   "settingsRouting": {
     "readOnly": "Only Managers can change routing. You can read it and test it.",
-    "loadError": "Could not load routing. Try again.",
     "nationwide": "Nationwide",
     "unknownGroup": "Unknown group",
     "optional": "(optional)",
@@ -1527,7 +1539,8 @@
       "source": "source is {{value}}",
       "history": "no recent affiliate problems",
       "states": "targets other states"
-    }
+    },
+    "what": "routing settings"
   },
   "settingsIntegrations": {
     "summary": "{{connected}} of {{total}} connectors connected",
@@ -1535,7 +1548,6 @@
     "summaryErrors_other": "{{count}} need attention",
     "demoNote": "The demo workspace has no real integrations. These connectors and accounts are seeded examples. Nothing signs in to a platform and nothing really syncs: Connect, Sync now and Disconnect change only this demo.",
     "readOnly": "Only Admins can connect, sync or change connectors.",
-    "loadError": "Could not load the integrations. Reload the page to try again.",
     "column": {
       "connector": "Connector",
       "status": "Status",
@@ -1742,10 +1754,10 @@
           "alerts": "New issues, review requests and expiry warnings by email."
         }
       }
-    }
+    },
+    "what": "integrations"
   },
   "settingsIssues": {
-    "loadError": "Could not load the issue settings. Reload the page to try again.",
     "save": "Save changes",
     "discard": "Discard",
     "dueDays": {
@@ -1755,11 +1767,11 @@
       "invalid": "Enter a whole number from 1 to {{max}} for each severity.",
       "override": "The person who raises an issue can pick another due date.",
       "newOnly": "A change applies to new issues only. Open issues keep their due date."
-    }
+    },
+    "what": "issue settings"
   },
   "settingsWorkspace": {
     "readOnly": "Only Admins can change workspace settings.",
-    "loadError": "Could not load the workspace settings. Reload the page to try again.",
     "cancel": "Cancel",
     "save": "Save changes",
     "discard": "Discard",
@@ -1860,7 +1872,8 @@
       "stays": "You stay signed in. The real ClearPath workspace is not affected.",
       "confirm": "Reset demo data",
       "done": "Demo data reset at {{time}}."
-    }
+    },
+    "what": "workspace settings"
   },
   "flags": {
     "heading_one": "Flagged for re-review",
@@ -1893,5 +1906,25 @@
       "note": "The server checks each approved version: its checklist, product, channel, target states and content.",
       "error": "The materials this change flags could not be loaded. Saving still flags them."
     }
+  },
+  "loadError": {
+    "not_found": "We cannot find this {{what}}",
+    "not_foundHelp": "It may have been deleted, or the link is wrong.",
+    "forbidden": "Your role cannot open this {{what}}",
+    "forbiddenHelp": "Ask an Admin if you need access.",
+    "offline": "You seem to be offline",
+    "offlineHelp": "ClearPath cannot reach the server. Check your connection, then try again.",
+    "server": "The {{what}} did not load",
+    "serverHelp": "ClearPath had a problem on its side. Try again in a minute. If it keeps happening, tell your Admin.",
+    "retry": "Try again",
+    "toDashboard": "Go to the Dashboard",
+    "stale": "ClearPath could not refresh this. What you see may be out of date."
+  },
+  "pageFallback": {
+    "crash": "This page stopped working",
+    "crashHelp": "Something went wrong while it opened. Reload the page. If it happens again, tell your Admin what you clicked.",
+    "reload": "Reload the page",
+    "notFound": "There is no page at this address",
+    "notFoundHelp": "Check the link, or start again from the Dashboard."
   }
 }

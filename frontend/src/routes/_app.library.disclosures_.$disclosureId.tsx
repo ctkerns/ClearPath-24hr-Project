@@ -2,6 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, Lock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 import { CopyButton } from '@/components/library/copy-button'
 import { requiredBy, useDisclosures } from '@/components/library/disclosure-data'
 import { DisclosureFormDialog } from '@/components/library/disclosure-form-dialog'
@@ -40,11 +42,12 @@ function DisclosurePage() {
   const [editing, setEditing] = useState(false)
 
   if (disclosures.isPending) return <PageSkeleton />
-  if (!d) {
+  const failed = disclosures.error ?? (d ? null : notFoundError)
+  if (failed || !d) {
     return (
       <div className="grid justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('disclosures.notFound')}</p>
+        <LoadError error={failed} what={t('disclosures.whatOne')} onRetry={() => disclosures.refetch()} />
       </div>
     )
   }

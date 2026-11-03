@@ -8,13 +8,21 @@ import '@fontsource/ibm-plex-sans/500.css'
 import '@fontsource/ibm-plex-sans/600.css'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/500.css'
+import { PageCrash, PageNotFound } from './components/page-fallbacks'
+import { retryQuery } from './lib/load-error'
 import './i18n'
 import './index.css'
 
-// One cache for all API data in the app
-const queryClient = new QueryClient()
+// One cache for all API data in the app. No retries for a 4xx (missing, forbidden, invalid): see retryQuery.
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: retryQuery } } })
 
-const router = createRouter({ routeTree, context: { queryClient } })
+// A crash while a page renders shows PageCrash inside the app shell; an unknown URL shows PageNotFound.
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  defaultErrorComponent: PageCrash,
+  defaultNotFoundComponent: PageNotFound,
+})
 
 // Registers the router type so links and params are type-checked everywhere
 declare module '@tanstack/react-router' {

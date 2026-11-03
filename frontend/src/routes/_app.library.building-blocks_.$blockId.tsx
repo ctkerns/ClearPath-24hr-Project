@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, ChevronLeft, ArrowLeftRight, Lock, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 import { blockStates, expiryState, useBlocks, type Block } from '@/components/library/block-data'
 import { BlockDeleteDialog, BlockScopeDialog } from '@/components/library/block-dialogs'
 import { canEditLibrary } from '@/components/library/rule-data'
@@ -38,11 +40,12 @@ function BlockPage() {
   const [dialog, setDialog] = useState<'scope' | 'delete'>()
 
   if (blocks.isPending) return <BlockSkeleton />
-  if (!block) {
+  const failed = blocks.error ?? (block ? null : notFoundError)
+  if (failed || !block) {
     return (
       <div className="grid justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('blocks.notFound')}</p>
+        <LoadError error={failed} what={t('blocks.whatOne')} onRetry={() => blocks.refetch()} />
       </div>
     )
   }

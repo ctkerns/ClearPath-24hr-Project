@@ -3,6 +3,8 @@ import { ChevronLeft, Lock, Pencil, TriangleAlert, UserPlus, X } from 'lucide-re
 import type * as React from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 import { useMaterials } from '@/components/materials/material-data'
 import { ChannelIcon, GroupApprovals, PersonAvatar } from '@/components/materials/material-meta'
 import { canManageGroups, membersOf, queueOf, useGroupUpdate, useReviewerGroups } from '@/components/settings/group-data'
@@ -16,6 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate } from '@/i18n/format'
 import { useViewer } from '@/lib/session'
+import { useInlineSave } from '@/lib/use-save'
+import { InlineSaveError } from '@/components/save-error'
 
 // Not nested under the groups list route (the trailing _), so the list needs no Outlet.
 // It still sits inside the Settings layout, so the tabs stay visible and Reviewer groups stays active.
@@ -32,17 +36,19 @@ function GroupPage() {
   const users = useUsers()
   const materials = useMaterials()
   const update = useGroupUpdate()
+  const removal = useInlineSave()
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const canEdit = canManageGroups(viewer.role)
   const group = groups.data?.find((g) => g.id === groupId)
 
   if (groups.isPending) return <GroupSkeleton />
-  if (!group) {
+  const failed = groups.error ?? (group ? null : notFoundError)
+  if (failed || !group) {
     return (
       <div className="grid justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('settingsGroups.notFound')}</p>
+        <LoadError error={failed} what={t('settingsGroups.whatOne')} onRetry={() => groups.refetch()} />
       </div>
     )
   }
@@ -107,7 +113,8 @@ function GroupPage() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => void update.removeMember(group.name, m.id).catch(console.error)}
+                        disabled={removal.pending}
+                        onClick={() => removal.run(() => update.removeMember(group.name, m.id))}
                         aria-label={t('settingsGroups.members.remove', { name: m.name })}
                         title={t('settingsGroups.members.remove', { name: m.name })}
                       >
@@ -118,6 +125,7 @@ function GroupPage() {
                 ))}
               </ul>
             )}
+            <InlineSaveError error={removal.error} />
           </section>
 
           <section className="grid gap-3">

@@ -13,9 +13,11 @@ import { HistoryTab } from '@/components/review/history-tab'
 import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
 import { fileUrl, useMaterialDetail, versionFields, type CommentAnchor, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { LoadError } from '@/components/load-error'
 import { SaveError } from '@/components/save-error'
 import { hasRole } from '@/components/settings/user-data'
 import { api } from '@/lib/api'
+import { notFoundError } from '@/lib/load-error'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
 import { useQueryClient } from '@tanstack/react-query'
@@ -64,14 +66,18 @@ function MaterialPage() {
   const [raising, setRaising] = useState(false)
 
   if (list.isPending || detail.isPending) return <PageSkeleton />
-  if (!material) {
+  // The detail call answers 404 for a missing material and 403 for one this role cannot open.
+  // TODO: the detail API should return the summary fields too; then the list call and its error go away.
+  const failed = detail.error ?? list.error ?? (material ? null : notFoundError)
+  if (failed) {
     return (
       <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('review.notFound')}</p>
+        <LoadError error={failed} what={t('review.what')} onRetry={() => Promise.all([list.refetch(), detail.refetch()])} />
       </div>
     )
   }
+  if (!material) return null
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
@@ -106,10 +112,10 @@ function MaterialPage() {
               version={detail.data.versions.some((x) => x.number === v) ? v! : detail.data.version}
               onVersion={(n) => navigate({ search: { v: n === detail.data?.version ? undefined : n }, replace: true })}
             />
-          ) : <NoSeededContent />}
+          ) : <NoVersionYet material={material} />}
         </TabsContent>
-        <TabsContent value="history" className="pt-4">{detail.data ? <HistoryTab detail={detail.data} /> : <NoSeededContent />}</TabsContent>
-        <TabsContent value="live" className="pt-4">{detail.data ? <LiveTab material={material} detail={detail.data} /> : <NoSeededContent />}</TabsContent>
+        <TabsContent value="history" className="pt-4">{detail.data ? <HistoryTab detail={detail.data} /> : <NoVersionYet material={material} />}</TabsContent>
+        <TabsContent value="live" className="pt-4">{detail.data ? <LiveTab material={material} detail={detail.data} /> : <NoVersionYet material={material} />}</TabsContent>
       </Tabs>
     </div>
   )
@@ -696,18 +702,23 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   )
 }
 
-function NoSeededContent() {
+/**
+ * A material with no version yet: the detail API answers null. This happens when a connector made the
+ * material before its first draft synced. The owner can upload the first version.
+ */
+function NoVersionYet({ material }: { material: Material }) {
   const { t } = useTranslation()
+  const viewer = useViewer()
+  const canUpload = material.owner === viewer.name || hasRole(viewer.role, 'reviewer')
   return (
     <div className="grid justify-items-start gap-2 rounded-lg border border-dashed p-6">
-      <p className="font-medium">{t('review.noSeed')}</p>
-      <Link
-        to="/materials/$materialId"
-        params={{ materialId: '01a112a1-4000-7d42-94be-d09364e3b51d' }}
-        className="text-primary hover:underline"
-      >
-        {t('review.noSeedLink')}
-      </Link>
+      <p className="font-medium">{t('review.noVersion')}</p>
+      <p className="text-sm text-muted-foreground">{t('review.noVersionHelp')}</p>
+      {canUpload && viewer.role !== 'viewer' && (
+        <Button asChild size="sm" variant="outline" className="mt-1">
+          <Link to="/materials/$materialId/new-version" params={{ materialId: material.id }}><Upload />{t('review.uploadFirst')}</Link>
+        </Button>
+      )}
     </div>
   )
 }

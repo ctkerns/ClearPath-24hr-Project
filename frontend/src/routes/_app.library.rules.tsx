@@ -8,7 +8,7 @@ import { ruleSearchText, sortRules, validateRulesSearch } from '@/components/lib
 import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { applyFilters, listRowClass, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
@@ -61,10 +61,12 @@ function RulesTab() {
       />
 
       <ListFrame
-        status={rules.status}
+        query={rules}
+        filtered={isFiltered(search)}
+        what={t('rules.what')}
+        firstRun={{ text: t(canEditLibrary(viewer.role) ? 'rules.firstRunEditor' : 'rules.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('rules.empty')}
-        errorText={t('rules.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

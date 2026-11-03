@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useMaterials } from '@/components/materials/material-data'
 import { useMaterialDetail } from '@/components/review/material-detail-data'
 import { SubmissionForm } from '@/components/submission/submission-form'
 import { useSubmitMaterial, valuesFromMaterial } from '@/components/submission/submission-model'
 import { Skeleton } from '@/components/ui/skeleton'
+import { notFoundError } from '@/lib/load-error'
 
 export const Route = createFileRoute('/_app/materials/$materialId/new-version')({
   component: NewVersionPage,
@@ -22,7 +24,19 @@ function NewVersionPage() {
   const material = materials.data?.find((m) => m.id === materialId)
 
   if (materials.isPending || detail.isPending) return <Skeleton className="mx-auto h-64 w-full max-w-7xl" />
-  if (!material) return <p className="mx-auto max-w-7xl font-medium">{t('review.notFound')}</p>
+  // A failed load must not open an empty form: submitting it would replace the content with nothing.
+  const failed = detail.error ?? materials.error ?? (material ? null : notFoundError)
+  if (failed || !material) {
+    return (
+      <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
+        <Link to="/materials" className="inline-flex w-fit items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="size-3.5" />
+          {t('nav.materials')}
+        </Link>
+        <LoadError error={failed} what={t('review.what')} onRetry={() => Promise.all([materials.refetch(), detail.refetch()])} />
+      </div>
+    )
+  }
 
   const next = (detail.data?.version ?? 0) + 1
   const back = () => navigate({ to: '/materials/$materialId', params: { materialId } })

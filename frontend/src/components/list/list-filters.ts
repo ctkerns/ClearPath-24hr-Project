@@ -151,3 +151,7 @@ export const withoutFilters = (search: ListSearch): ListSearch => ({ q: search.q
 /** Classes for one list row link, shared so every list has the same height, hover and focus. */
 export const listRowClass =
   'flex h-11 items-center gap-3 px-3 transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring'
+
+/** True when a filter or the text search is on, so an empty list is a filter result and not an empty workspace. */
+export const isFiltered = (search: ListSearch) =>
+  Object.entries(search).some(([key, value]) => key !== 'sort' && key !== 'offset' && value !== undefined && String(value).trim() !== '')

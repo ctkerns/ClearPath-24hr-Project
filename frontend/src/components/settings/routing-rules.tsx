@@ -9,6 +9,8 @@ import { useRoutingUpdate, type RoutingRule } from './routing-data'
 import { SectionHeading } from './routing-fields'
 import { RuleDialog } from './routing-rule-dialog'
 import { RuleSentence } from './routing-rule-sentence'
+import { useInlineSave } from '@/lib/use-save'
+import { InlineSaveError } from '@/components/save-error'
 
 /**
  * The routing rules as a numbered policy: one clause per rule, each read as a sentence.
@@ -17,6 +19,7 @@ import { RuleSentence } from './routing-rule-sentence'
 export function RoutingRules({ rules, groups, canEdit }: { rules: RoutingRule[]; groups: ReviewerGroup[]; canEdit: boolean }) {
   const { t } = useTranslation()
   const update = useRoutingUpdate()
+  const save = useInlineSave()
   // undefined = closed, null = new rule, a rule = edit it.
   const [editing, setEditing] = useState<RoutingRule | null | undefined>(undefined)
 
@@ -26,6 +29,7 @@ export function RoutingRules({ rules, groups, canEdit }: { rules: RoutingRule[];
         <div className="grid gap-1">
           <SectionHeading id="routing-rules">{t('settingsRouting.rules.heading')}</SectionHeading>
           <p className="text-xs text-muted-foreground">{t('settingsRouting.rules.help')}</p>
+          <InlineSaveError error={save.error} />
         </div>
         {canEdit && (
           <Button size="sm" variant="outline" onClick={() => setEditing(null)}>
@@ -53,16 +57,16 @@ export function RoutingRules({ rules, groups, canEdit }: { rules: RoutingRule[];
                 <Switch
                   className="mt-1 mr-1"
                   checked={r.enabled}
-                  disabled={!canEdit}
-                  onCheckedChange={(on) => void update.setEnabled(r.id, on).catch(console.error)}
+                  disabled={!canEdit || save.pending}
+                  onCheckedChange={(on) => save.run(() => update.setEnabled(r.id, on))}
                   aria-label={t('settingsRouting.rules.toggle', { name: r.name })}
                 />
                 {canEdit && (
                   <>
-                    <Button size="icon-xs" variant="ghost" disabled={i === 0} onClick={() => void update.move(r.id, -1).catch(console.error)} aria-label={t('settingsRouting.rules.moveUp', { name: r.name })}>
+                    <Button size="icon-xs" variant="ghost" disabled={i === 0 || save.pending} onClick={() => save.run(() => update.move(r.id, -1))} aria-label={t('settingsRouting.rules.moveUp', { name: r.name })}>
                       <ChevronUp />
                     </Button>
-                    <Button size="icon-xs" variant="ghost" disabled={i === rules.length - 1} onClick={() => void update.move(r.id, 1).catch(console.error)} aria-label={t('settingsRouting.rules.moveDown', { name: r.name })}>
+                    <Button size="icon-xs" variant="ghost" disabled={i === rules.length - 1 || save.pending} onClick={() => save.run(() => update.move(r.id, 1))} aria-label={t('settingsRouting.rules.moveDown', { name: r.name })}>
                       <ChevronDown />
                     </Button>
                     <Button size="icon-xs" variant="ghost" onClick={() => setEditing(r)} aria-label={t('settingsRouting.rules.edit', { name: r.name })}>

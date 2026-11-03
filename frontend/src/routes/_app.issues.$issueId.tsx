@@ -17,6 +17,8 @@ import { formatRelativeTime } from '@/i18n/format'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
 import { SaveError } from '@/components/save-error'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 
 export const Route = createFileRoute('/_app/issues/$issueId')({
   component: IssuePage,
@@ -38,15 +40,17 @@ function IssuePage() {
   const issue = issues.data?.find((i) => i.id === issueId)
 
   if (issues.isPending || detail.isPending) return <PageSkeleton />
-  if (!issue) {
+  // The detail call answers 404 for a missing issue and 403 for one this role cannot open.
+  const failed = detail.error ?? issues.error ?? (issue && detail.data ? null : notFoundError)
+  if (failed || !issue || !detail.data) {
     return (
       <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('issue.notFound')}</p>
+        <LoadError error={failed} what={t('issue.what')} onRetry={() => Promise.all([issues.refetch(), detail.refetch()])} />
       </div>
     )
   }
-  const d = detail.data ?? null
+  const d = detail.data
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6">
@@ -55,14 +59,10 @@ function IssuePage() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-10">
         <div className="grid min-w-0 content-start gap-8">
-          {d ? (
-            <>
-              {d.summary && <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>}
-              <LiveContent detail={d} />
-              <ActionList issue={issue} detail={d} />
-              <Activity issueId={issue.id} detail={d} />
-            </>
-          ) : <NoSeededContent />}
+          {d.summary && <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>}
+          <LiveContent detail={d} />
+          <ActionList issue={issue} detail={d} />
+          <Activity issueId={issue.id} detail={d} />
         </div>
         <IssuePanel
           issue={issue}
@@ -133,18 +133,6 @@ function Header({ issue: i, onResolve }: { issue: Issue; onResolve: () => void }
         )}
       </div>
     </header>
-  )
-}
-
-function NoSeededContent() {
-  const { t } = useTranslation()
-  return (
-    <div className="grid justify-items-start gap-2 rounded-lg border border-dashed p-6">
-      <p className="font-medium">{t('issue.noSeed')}</p>
-      <Link to="/issues/$issueId" params={{ issueId: '01a19b87-a300-7083-a17b-e83caf805f10' }} className="text-primary hover:underline">
-        {t('issue.noSeedLink')}
-      </Link>
-    </div>
   )
 }
 

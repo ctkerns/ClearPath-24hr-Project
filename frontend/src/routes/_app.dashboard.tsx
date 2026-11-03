@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Plus } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useDashboard, type Dashboard, type QueueItem } from '@/components/dashboard/dashboard-data'
 import { DeadlineLabel } from '@/components/dashboard/deadline-label'
 import { isOverdue, type Issue } from '@/components/issues/issue-data'
@@ -33,7 +34,14 @@ function DashboardPage() {
   const viewer = useViewer()
 
   if (dashboard.isPending) return <DashboardSkeleton />
-  if (!dashboard.data) return null
+  if (dashboard.isError) {
+    return (
+      <div className="mx-auto w-full max-w-7xl">
+        <h1 className="sr-only">{t('page.dashboard')}</h1>
+        <LoadError error={dashboard.error} what={t('dashboard.what')} onRetry={() => dashboard.refetch()} />
+      </div>
+    )
+  }
   const { queue, issues: mine, submissions, workspace } = dashboard.data
   const late = queue?.filter((q) => q.deadline.overdue).length ?? 0
 

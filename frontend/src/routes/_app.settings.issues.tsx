@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { SEVERITIES } from '@/components/issues/issue-data'
 import { ISSUE_DUE_DAYS_MAX, useSaveIssueDueDays, useWorkspaceSettings } from '@/components/settings/workspace-data'
 import { SaveError } from '@/components/save-error'
@@ -23,7 +24,7 @@ function IssuesTab() {
   const settings = useWorkspaceSettings()
 
   if (settings.isPending) return <Skeleton className="h-48 w-full max-w-3xl" />
-  if (settings.isError) return <p className="text-muted-foreground">{t('settingsIssues.loadError')}</p>
+  if (settings.isError) return <LoadError error={settings.error} what={t('settingsIssues.what')} onRetry={() => settings.refetch()} />
   // Keyed by the saved values, so the form starts over after a save.
   return <DueDaysForm key={JSON.stringify(settings.data.issueDueDays)} saved={settings.data.issueDueDays} />
 }

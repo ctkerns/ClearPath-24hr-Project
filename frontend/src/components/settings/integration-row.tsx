@@ -9,6 +9,8 @@ import { providerInfo, useIntegrationUpdate, type Integration } from './integrat
 import { ConnectDialog, DisconnectDialog } from './integration-dialogs'
 import { IntegrationIcon, IntegrationStatusPill, PurposeList, VerifiedLabel } from './integration-meta'
 import type { WorkspaceUser } from './user-data'
+import { useInlineSave } from '@/lib/use-save'
+import { InlineSaveError } from '@/components/save-error'
 
 /** Column widths, shared by the header row and every row so they line up. */
 const col = {
@@ -39,6 +41,8 @@ export function IntegrationListHeader() {
 export function IntegrationRow({ integration: i, owners, canEdit }: { integration: Integration; owners: WorkspaceUser[]; canEdit: boolean }) {
   const { t } = useTranslation()
   const { syncNow, setDefaultOwner } = useIntegrationUpdate()
+  const sync = useInlineSave()
+  const owner = useInlineSave()
   const [open, setOpen] = useState(i.status === 'error')
   const [dialog, setDialog] = useState<'connect' | 'disconnect' | null>(null)
   const info = providerInfo[i.provider]
@@ -80,8 +84,8 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
         </span>
         <span className={col.action}>
           {canEdit && i.status === 'connected' && (
-            <Button size="xs" variant="outline" onClick={() => void syncNow(i.id).catch(console.error)}>
-              <RefreshCw aria-hidden="true" />
+            <Button size="xs" variant="outline" disabled={sync.pending} onClick={() => sync.run(() => syncNow(i.id))}>
+              <RefreshCw className={cn(sync.pending && 'animate-spin')} aria-hidden="true" />
               {t('settingsIntegrations.syncNow')}
             </Button>
           )}
@@ -92,6 +96,7 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
           )}
         </span>
       </div>
+      <InlineSaveError error={sync.error} className="px-3 pb-2 text-right" />
 
       {open && (
         <div id={panelId} className="grid gap-4 border-t bg-muted/30 py-3 pr-3 pl-[3.25rem] text-sm">
@@ -131,7 +136,7 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
                     {info.ownsContent && (
                       <span className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">{t('settingsIntegrations.accounts.defaultOwner')}</span>
-                        <Select value={a.defaultOwnerId ?? ''} onValueChange={(v) => void setDefaultOwner(i.id, a.id, v).catch(console.error)} disabled={!canEdit}>
+                        <Select value={a.defaultOwnerId ?? ''} onValueChange={(v) => owner.run(() => setDefaultOwner(i.id, a.id, v))} disabled={!canEdit || owner.pending}>
                           <SelectTrigger size="sm" className="w-44" aria-label={t('settingsIntegrations.accounts.defaultOwnerFor', { account: a.name })}>
                             <SelectValue placeholder={t('settingsIntegrations.accounts.noOwner')} />
                           </SelectTrigger>
@@ -145,6 +150,7 @@ export function IntegrationRow({ integration: i, owners, canEdit }: { integratio
                 ))}
               </ul>
             )}
+            <InlineSaveError error={owner.error} />
             {info.ownsContent && i.accounts.length > 0 && (
               <p className="text-xs text-muted-foreground">{t('settingsIntegrations.accounts.defaultOwnerHelp')}</p>
             )}

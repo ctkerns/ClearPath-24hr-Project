@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useReviewerGroups } from '@/components/settings/group-data'
 import { canManageRouting, useRouting } from '@/components/settings/routing-data'
 import { ChangeTypesSection, DefaultGroupSection, LighterPathSection } from '@/components/settings/routing-paths'
@@ -33,7 +34,9 @@ function RoutingTab() {
       </div>
     )
   }
-  if (!routing.data || !groups.data) return <p className="text-sm text-destructive">{t('settingsRouting.loadError')}</p>
+  if (!routing.data || !groups.data) {
+    return <LoadError error={routing.error ?? groups.error} what={t('settingsRouting.what')} onRetry={() => Promise.all([routing.refetch(), groups.refetch()])} />
+  }
 
   const settings = routing.data
   const groupList = groups.data

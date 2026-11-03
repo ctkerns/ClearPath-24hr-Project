@@ -10,6 +10,8 @@ import type { UserDialogKind } from './users-action-dialog'
 import { userColumns, type userActions } from './users-filters'
 import { RolePill, UserStatusPill } from './users-meta'
 import { useUserUpdate } from './users-update'
+import { useInlineSave } from '@/lib/use-save'
+import { InlineSaveError } from '@/components/save-error'
 
 const col = userColumns
 
@@ -22,8 +24,10 @@ export function UserRow({ user: u, actions, canEdit, onDialog }: {
 }) {
   const { t } = useTranslation()
   const off = u.status === 'deactivated'
+  const save = useInlineSave()
 
   return (
+    <>
     <div className={cn('flex h-12 items-center gap-3 px-3', off && 'text-muted-foreground')}>
       <span className={col.person}>
         <PersonAvatar name={u.name} className={cn('size-7 text-[11px]', off && 'bg-muted text-muted-foreground')} />
@@ -57,8 +61,10 @@ export function UserRow({ user: u, actions, canEdit, onDialog }: {
       <span className={col.status}><UserStatusPill status={u.status} /></span>
       <span className={cn(col.activity, 'text-xs text-muted-foreground tabular-nums')}><Activity user={u} /></span>
 
-      <span className={col.actions}>{canEdit && <UserMenu user={u} actions={actions} onDialog={onDialog} />}</span>
+      <span className={col.actions}>{canEdit && <UserMenu user={u} actions={actions} onDialog={onDialog} save={save} />}</span>
     </div>
+    <InlineSaveError error={save.error} className="px-3 pb-2 text-right" />
+    </>
   )
 }
 
@@ -75,7 +81,12 @@ function Activity({ user: u }: { user: WorkspaceUser }) {
   return <span title={formatDateTime(u.lastActiveAt)}>{formatRelativeTime(u.lastActiveAt)}</span>
 }
 
-function UserMenu({ user: u, actions: a, onDialog }: { user: WorkspaceUser; actions: ReturnType<typeof userActions>; onDialog: (kind: UserDialogKind) => void }) {
+function UserMenu({ user: u, actions: a, onDialog, save }: {
+  user: WorkspaceUser
+  actions: ReturnType<typeof userActions>
+  onDialog: (kind: UserDialogKind) => void
+  save: ReturnType<typeof useInlineSave>
+}) {
   const { t } = useTranslation()
   const update = useUserUpdate()
   const hasEdits = a.changeRole || a.changeGroups
@@ -93,9 +104,9 @@ function UserMenu({ user: u, actions: a, onDialog }: { user: WorkspaceUser; acti
         {a.changeRole && <DropdownMenuItem onSelect={() => onDialog('role')}>{t('settingsUsers.action.role')}</DropdownMenuItem>}
         {a.changeGroups && <DropdownMenuItem onSelect={() => onDialog('groups')}>{t('settingsUsers.action.groups')}</DropdownMenuItem>}
         {hasEdits && hasStatus && <DropdownMenuSeparator />}
-        {a.resend && <DropdownMenuItem onSelect={() => void update.resendInvite(u.id).catch(console.error)}>{t('settingsUsers.action.resend')}</DropdownMenuItem>}
+        {a.resend && <DropdownMenuItem disabled={save.pending} onSelect={() => save.run(() => update.resendInvite(u.id))}>{t('settingsUsers.action.resend')}</DropdownMenuItem>}
         {a.cancel && <DropdownMenuItem variant="destructive" onSelect={() => onDialog('cancel')}>{t('settingsUsers.action.cancel')}</DropdownMenuItem>}
-        {a.reactivate && <DropdownMenuItem onSelect={() => void update.setActive(u.id, true).catch(console.error)}>{t('settingsUsers.action.reactivate')}</DropdownMenuItem>}
+        {a.reactivate && <DropdownMenuItem disabled={save.pending} onSelect={() => save.run(() => update.setActive(u.id, true))}>{t('settingsUsers.action.reactivate')}</DropdownMenuItem>}
         {a.deactivate && <DropdownMenuItem variant="destructive" onSelect={() => onDialog('deactivate')}>{t('settingsUsers.action.deactivate')}</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>

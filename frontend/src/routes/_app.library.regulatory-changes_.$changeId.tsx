@@ -2,6 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, ExternalLink, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 import { affectedRules, isUndecided, useRegChanges, type RegChange, type RegChangeDecision } from '@/components/library/reg-change-data'
 import { RegChangeDecisionDialog } from '@/components/library/reg-change-decision-dialog'
 import { RegChangeStatusPill } from '@/components/library/reg-change-meta'
@@ -10,6 +12,7 @@ import { AffectedList } from '@/components/library/affected-materials'
 import { useRegChangeImpact } from '@/components/library/impact-data'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
+import { useWorkspace } from '@/lib/workspace'
 import { TrackedText } from '@/components/review/tracked-text'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -27,6 +30,7 @@ function RegChangePage() {
   const { t } = useTranslation()
   const { changeId } = Route.useParams()
   const changes = useRegChanges()
+  const { isDemo } = useWorkspace()
   const rules = useRules()
   // Undecided: what applying flags. Applied: what it flagged (the server's flags, F7).
   const flagged = useRegChangeImpact(changeId)
@@ -35,11 +39,12 @@ function RegChangePage() {
   const canDecide = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (changes.isPending || rules.isPending) return <RegChangeSkeleton />
-  if (!change) {
+  const failed = changes.error ?? rules.error ?? (change ? null : notFoundError)
+  if (failed || !change) {
     return (
       <div className="grid justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('regChanges.notFound')}</p>
+        <LoadError error={failed} what={t('regChanges.whatOne')} onRetry={() => Promise.all([changes.refetch(), rules.refetch()])} />
       </div>
     )
   }
@@ -104,7 +109,7 @@ function RegChangePage() {
             <Detail label={t('regChanges.detail.effective')}>{formatDate(change.effectiveDate)}</Detail>
             <Detail label={t('regChanges.detail.source')}>
               {change.source}
-              <span className="block text-xs text-muted-foreground">{t('regChanges.sourceNote')}</span>
+              {isDemo && <span className="block text-xs text-muted-foreground">{t('regChanges.sourceNote')}</span>}
             </Detail>
           </dl>
 

@@ -51,11 +51,13 @@ function ReviewerGroupsTab() {
       </div>
 
       <ListFrame
-        status={groups.status}
-        // No groups is not a filter result, so the list shows its own empty line instead of "Clear all".
-        isEmpty={false}
+        query={groups}
+        // This list has no filters, so an empty list is always the first-run state.
+        isEmpty={groups.data?.length === 0}
+        filtered={false}
+        what={t('settingsGroups.what')}
         emptyText=""
-        errorText={t('settingsGroups.loadError')}
+        firstRun={{ text: t(canEdit ? 'settingsGroups.firstRunEditor' : 'settingsGroups.firstRun') }}
         onClear={() => {}}
       >
         <ListHeader
@@ -74,7 +76,6 @@ function ReviewerGroupsTab() {
             </li>
           ))}
         </ul>
-        {all.length === 0 && <p className="border-b p-6 text-center text-muted-foreground">{t('settingsGroups.empty')}</p>}
       </ListFrame>
 
       <GroupFormDialog

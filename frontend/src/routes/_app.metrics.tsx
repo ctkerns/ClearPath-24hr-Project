@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
 import { useRules } from '@/components/library/rule-data'
 import { CHANNELS, PRODUCTS, useMaterials, type Channel, type Product } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
@@ -40,7 +41,20 @@ function MetricsPage() {
   const set = (patch: Partial<MetricsSearch>) => void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true })
 
   if (data.isPending || materials.isPending || reviewerGroups.isPending) return <MetricsSkeleton />
-  if (!data.data) return <p className="text-sm text-muted-foreground">{t('metrics.loadError')}</p>
+  // A failed materials or groups load must not show as an empty queue or an empty table.
+  const failed = data.error ?? materials.error ?? reviewerGroups.error
+  if (failed || !data.data) {
+    return <LoadError error={failed} what={t('metrics.what')} onRetry={() => Promise.all([data.refetch(), materials.refetch(), reviewerGroups.refetch()])} />
+  }
+  if (data.data.decisions.length === 0 && data.data.violations.length === 0) {
+    return (
+      <div className="grid justify-items-start gap-2 py-6">
+        <h1 className="sr-only">{t('page.metrics')}</h1>
+        <p className="font-medium">{t('metrics.firstRun')}</p>
+        <p className="max-w-prose text-sm text-muted-foreground">{t('metrics.firstRunHelp')}</p>
+      </div>
+    )
+  }
 
   const s = slice(data.data, search)
   const now = summary(s.decisions)

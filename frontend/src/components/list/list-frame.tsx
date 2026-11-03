@@ -2,29 +2,49 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { LoadError, StaleNotice } from '@/components/load-error'
 import { Skeleton } from '@/components/ui/skeleton'
+
+/** The part of a query result that the frame reads. Any useQuery result fits. */
+type FrameQuery = { status: 'pending' | 'error' | 'success'; error: unknown; isRefetchError: boolean; refetch: () => Promise<unknown> }
 
 /**
  * The bordered box around a list, with its loading, error and empty states.
+ * - Error: says what went wrong (offline, server, no access) and offers Retry. A failed refresh keeps the rows and adds a notice.
+ * - Empty with filters on: "No X match these filters" and Clear filters.
+ * - Empty with no filters: the first-run state, because a new workspace starts empty (PRD A1). It says what the list
+ *   will hold and gives the main action when the role has one.
  * Children are the header row and the rows; -mb-px tucks the last row line under the frame border.
  */
-export function ListFrame({ status, isEmpty, emptyText, errorText, onClear, children }: {
-  status: 'pending' | 'error' | 'success'
+export function ListFrame({ query, isEmpty, filtered, what, emptyText, firstRun, onClear, children }: {
+  query: FrameQuery
   isEmpty: boolean
+  /** True when a filter or a text search is on. */
+  filtered: boolean
+  /** The items in a sentence, translated and plural: "materials". */
+  what: string
   emptyText: string
-  errorText: string
+  firstRun: { text: string; action?: React.ReactNode }
   onClear: () => void
   children: React.ReactNode
 }) {
   const { t } = useTranslation()
+  const { status } = query
   return (
     <div className="overflow-hidden rounded-lg border">
       {status === 'pending' && <LoadingRows />}
-      {status === 'error' && <p className="p-6 text-center text-muted-foreground">{errorText}</p>}
-      {status === 'success' && isEmpty && (
+      {status === 'error' && <LoadError error={query.error} what={what} onRetry={query.refetch} className="px-6" />}
+      {status === 'success' && query.isRefetchError && <StaleNotice onRetry={() => void query.refetch()} />}
+      {status === 'success' && isEmpty && filtered && (
         <div className="grid justify-items-center gap-2 p-10 text-center">
           <p className="font-medium">{emptyText}</p>
-          <Button variant="outline" size="sm" onClick={onClear}>{t('list.clearAll')}</Button>
+          <Button variant="outline" size="sm" onClick={onClear}>{t('list.clearFilters')}</Button>
+        </div>
+      )}
+      {status === 'success' && isEmpty && !filtered && (
+        <div className="grid justify-items-center gap-3 p-10 text-center">
+          <p className="max-w-md text-sm text-muted-foreground">{firstRun.text}</p>
+          {firstRun.action}
         </div>
       )}
       {status === 'success' && !isEmpty && <div className="-mb-px">{children}</div>}

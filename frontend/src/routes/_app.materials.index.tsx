@@ -3,7 +3,7 @@ import { FileArchive, Flag, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ListFrame, ListHeader, ListPager } from '@/components/list/list-frame'
-import { listFilters, listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { listFilters, listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { daysUntil, useMaterialPage, type Material } from '@/components/materials/material-data'
 import { MATERIAL_FILTER_KEYS, validateMaterialsSearch } from '@/components/materials/material-filters'
@@ -79,10 +79,12 @@ function MaterialsPage() {
       )}
 
       <ListFrame
-        status={materials.status}
+        query={materials}
+        filtered={isFiltered(search)}
+        what={t('materials.what')}
+        firstRun={{ text: t('materials.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('materials.empty')}
-        errorText={t('materials.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader

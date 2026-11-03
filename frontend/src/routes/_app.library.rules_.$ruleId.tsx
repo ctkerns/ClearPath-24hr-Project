@@ -2,6 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Bot, ChevronLeft, ExternalLink, Lock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LoadError } from '@/components/load-error'
+import { notFoundError } from '@/lib/load-error'
 import { useDisclosures } from '@/components/library/disclosure-data'
 import { AffectedList } from '@/components/library/affected-materials'
 import { useRuleDependents } from '@/components/library/impact-data'
@@ -37,11 +39,12 @@ function RulePage() {
   const [editing, setEditing] = useState(false)
 
   if (rules.isPending) return <RuleSkeleton />
-  if (!rule) {
+  const failed = rules.error ?? (rule ? null : notFoundError)
+  if (failed || !rule) {
     return (
       <div className="grid justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('rules.notFound')}</p>
+        <LoadError error={failed} what={t('rules.whatOne')} onRetry={() => rules.refetch()} />
       </div>
     )
   }

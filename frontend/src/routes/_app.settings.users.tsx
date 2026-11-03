@@ -3,7 +3,7 @@ import { Lock, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { applyFilters, withoutFilters, type ListSearch, isFiltered } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { useViewer } from '@/lib/session'
 import { useUsers } from '@/components/settings/user-data'
@@ -66,10 +66,12 @@ function UsersTab() {
       )}
 
       <ListFrame
-        status={users.status}
+        query={users}
+        filtered={isFiltered(search)}
+        what={t('settingsUsers.what')}
+        firstRun={{ text: t('settingsUsers.firstRun') }}
         isEmpty={shown.length === 0}
         emptyText={t('settingsUsers.empty')}
-        errorText={t('settingsUsers.loadError')}
         onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
       >
         <ListHeader
