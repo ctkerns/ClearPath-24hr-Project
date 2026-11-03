@@ -113,7 +113,8 @@ function Header({ material: m, detail, onDecide }: { material: Material; detail:
   const { t } = useTranslation()
   const label = useOptionLabel()
   // Decision buttons show only to Reviewers in a required group that still waits, while In review (PRD F5).
-  const canDecide = m.status === 'in_review' && !!detail && groupsForViewer(detail).length > 0
+  // R1: nobody approves a version they submitted.
+  const canDecide = m.status === 'in_review' && !!detail && detail.submittedBy !== demoViewer.name && groupsForViewer(detail).length > 0
   const canRetract = !!detail && approvedByViewer(detail).length > 0
 
   return (

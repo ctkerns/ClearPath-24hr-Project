@@ -367,5 +367,63 @@
       "none": "None",
       "swap": "Swap the two versions"
     }
+  },
+  "submit": {
+    "intro": "Add the content and the facts about where it runs. Pre-review starts as soon as you submit.",
+    "versionIntro": "This form starts with the current content. Change what you need, then submit version {{version}}. The reviewers see what changed.",
+    "content": "Content",
+    "title": "Title",
+    "titlePlaceholder": "For example: Spring auto loan, Meta feed ad",
+    "channel": "Channel",
+    "choose": "Choose",
+    "locked": "Locked for a new version",
+    "sourceLabel": "How to add the content",
+    "source": {
+      "text": "Write text",
+      "file": "Upload files",
+      "url": "From a URL"
+    },
+    "textInImage": "Image, and the text in it",
+    "imageHint": "PNG or JPG",
+    "fileHint": "Images or PDF. Each file becomes part of this version.",
+    "contentUrl": "Page URL",
+    "contentUrlHelp": "ClearPath saves a copy of the page now, so the review uses this exact content.",
+    "chooseChannelFirst": "Choose a channel first. The fields match what the channel shows.",
+    "product": "Product",
+    "states": "Target states",
+    "nationwide": "Nationwide",
+    "statesPick": "Licensed states",
+    "nationwideHelp": "The checklist includes the rules of every state where ClearPath is licensed.",
+    "statesHelp": "Choose each state where this runs. The checklist adds each state’s rules.",
+    "launchDate": "Launch date",
+    "endDate": "End date",
+    "destinationUrl": "Destination URL",
+    "targeting": "Targeting",
+    "targetingPlaceholder": "For example: Ages 25 to 54, interest in home improvement",
+    "proof": "Claim proof files",
+    "proofHint": "Documents that prove claims in the content",
+    "optional": "(optional)",
+    "chooseFile": "Choose files",
+    "orDrop": "or drop them here",
+    "removeFile": "Remove {{name}}",
+    "routing": "Goes to these reviewer groups",
+    "routingEmpty": "Choose a product and states to see who reviews this.",
+    "cancel": "Cancel",
+    "submit": "Submit for review",
+    "submitVersion": "Submit version {{version}}",
+    "fixErrors_one": "Fix {{count}} problem before you submit.",
+    "fixErrors_other": "Fix {{count}} problems before you submit.",
+    "errors": {
+      "title": "Add a title.",
+      "channel": "Choose a channel.",
+      "product": "Choose a product.",
+      "states": "Choose Nationwide or at least one state.",
+      "endDate": "The end date must be after the launch date.",
+      "content": {
+        "text": "Fill in at least one content field.",
+        "file": "Add at least one file.",
+        "url": "Add a full URL that starts with https://."
+      }
+    }
   }
 }
