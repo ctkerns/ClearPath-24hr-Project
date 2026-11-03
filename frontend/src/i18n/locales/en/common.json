@@ -4,6 +4,7 @@
     "product": "Review"
   },
   "nav": {
+    "main": "Main",
     "home": "Home",
     "materials": "Materials",
     "myMaterials": "My materials",
