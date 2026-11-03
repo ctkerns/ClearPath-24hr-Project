@@ -201,7 +201,7 @@ async def test_integration_writes(client):
     _, e = await write(client, me, "PATCH", f"/api/integrations/{META}/accounts/{LENDING}", {"defaultOwnerId": SAM},
                        entity="integration", action="default_owner_changed")
     assert e.data["after"] == SAM
-    await write(client, me, "POST", f"/api/integrations/{KLAVIYO}/connect", {"accountNames": ["ClearPath CU"], "defaultOwnerId": PRIYA},
+    await write(client, me, "POST", f"/api/integrations/{KLAVIYO}/connect", {"accountNames": ["ClearPath Financial"], "defaultOwnerId": PRIYA},
                 entity="integration", action="connected", entity_id=KLAVIYO)
     await write(client, me, "POST", f"/api/integrations/{KLAVIYO}/disconnect", entity="integration", action="disconnected")
     await fails(client, "POST", f"/api/integrations/{KLAVIYO}/sync", code=409)

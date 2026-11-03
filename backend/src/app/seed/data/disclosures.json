@@ -142,7 +142,7 @@
       "id": "D-5",
       "title": "Mortgage lender NMLS ID",
       "version": 1,
-      "text": "ClearPath Credit Union NMLS #401822.",
+      "text": "ClearPath Financial NMLS #401822.",
       "products": [
         "mortgage",
         "heloc"
@@ -157,7 +157,7 @@
           "effectiveDate": "2022-09-01",
           "by": "Maya Ruiz",
           "note": "First version.",
-          "text": "ClearPath Credit Union NMLS #401822."
+          "text": "ClearPath Financial NMLS #401822."
         }
       ]
     },

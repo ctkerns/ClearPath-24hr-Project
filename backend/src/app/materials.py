@@ -581,7 +581,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     """Adds the version, routes it, and moves the material to In review (PRD section 6)."""
     licensed = set((await workspace_of(db, viewer)).licensed_states)
     if not body.nationwide and not set(body.states) <= licensed:
-        raise bad_request("Target only states where the credit union is licensed")
+        raise bad_request("Target only states where ClearPath is licensed")
     files = list(
         await db.scalars(
             select(MaterialFile).where(

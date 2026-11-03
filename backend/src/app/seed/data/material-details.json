@@ -305,7 +305,7 @@
           "label": "Image",
           "kind": "image",
           "segments": [
-            "Your summer, funded. ClearPath Credit Union. Federally insured by NCUA."
+            "Your summer, funded. ClearPath Financial. Federally insured by NCUA."
           ]
         }
       ],
@@ -444,7 +444,7 @@
             },
             {
               "label": "Image",
-              "text": "Your summer, funded. ClearPath Credit Union."
+              "text": "Your summer, funded. ClearPath Financial."
             }
           ]
         },

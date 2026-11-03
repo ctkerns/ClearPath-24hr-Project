@@ -28,7 +28,7 @@ async def test_admin_reads_every_connector(client):
     by_id = {i["id"]: i for i in body}
     meta = by_id[META]
     assert (meta["status"], meta["verified"], meta["lastSyncAt"]) == ("connected", True, "2026-11-02T10:52:00Z")
-    assert [a["name"] for a in meta["accounts"]] == ["ClearPath CU – Lending", "ClearPath CU – Cards"]
+    assert [a["name"] for a in meta["accounts"]] == ["ClearPath Financial – Lending", "ClearPath Financial – Cards"]
     assert meta["accounts"][0]["defaultOwnerId"] == PRIYA
     assert len(meta["available"]) == 3
     assert by_id[GOOGLE]["error"] == {"code": "token_expired", "at": "2026-10-31T22:05:00Z"}
@@ -43,7 +43,7 @@ async def test_only_admin_reads_and_changes_connectors(client, email):
     assert (await client.get("/api/integrations")).status_code == 403
     assert (await client.post(f"/api/integrations/{META}/sync")).status_code == 403
     assert (await client.post(f"/api/integrations/{META}/disconnect")).status_code == 403
-    connect = {"accountNames": ["ClearPath CU – Brand"], "defaultOwnerId": PRIYA}
+    connect = {"accountNames": ["ClearPath Financial – Brand"], "defaultOwnerId": PRIYA}
     assert (await client.post(f"/api/integrations/{META}/connect", json=connect)).status_code == 403
     owner = {"defaultOwnerId": SAM}
     assert (await client.patch(f"/api/integrations/{META}/accounts/{LENDING}", json=owner)).status_code == 403
@@ -66,7 +66,7 @@ async def test_sync_now_records_the_time(client):
 async def test_connect_disconnect_and_reconnect(client):
     await as_user(client, ADMIN)
     res = await client.post(
-        f"/api/integrations/{KLAVIYO}/connect", json={"accountNames": ["ClearPath CU"], "defaultOwnerId": SAM}
+        f"/api/integrations/{KLAVIYO}/connect", json={"accountNames": ["ClearPath Financial"], "defaultOwnerId": SAM}
     )
     assert res.status_code == 200, res.text
     klaviyo = res.json()
@@ -84,8 +84,8 @@ async def test_connect_disconnect_and_reconnect(client):
     assert owners == {"ClearPath Search": SAM, "ClearPath Display": PRIYA}  # the kept account keeps its owner
 
     # Edit accounts: one left out goes away.
-    res = await client.post(f"/api/integrations/{META}/connect", json={"accountNames": ["ClearPath CU – Cards"], "defaultOwnerId": PRIYA})
-    assert [a["name"] for a in res.json()["accounts"]] == ["ClearPath CU – Cards"]
+    res = await client.post(f"/api/integrations/{META}/connect", json={"accountNames": ["ClearPath Financial – Cards"], "defaultOwnerId": PRIYA})
+    assert [a["name"] for a in res.json()["accounts"]] == ["ClearPath Financial – Cards"]
 
     res = await client.post(f"/api/integrations/{META}/disconnect")
     assert (res.json()["status"], res.json()["accounts"]) == ("not_connected", [])
@@ -107,8 +107,8 @@ async def test_alerts_need_no_default_owner(client):
     [
         ({"accountNames": []}, 422),
         ({"accountNames": ["Somebody else's account"], "defaultOwnerId": PRIYA}, 400),
-        ({"accountNames": ["ClearPath CU"]}, 400),  # content needs a default owner
-        ({"accountNames": ["ClearPath CU"], "defaultOwnerId": "01970000-0000-7000-8000-000000000000"}, 404),
+        ({"accountNames": ["ClearPath Financial"]}, 400),  # content needs a default owner
+        ({"accountNames": ["ClearPath Financial"], "defaultOwnerId": "01970000-0000-7000-8000-000000000000"}, 404),
     ],
 )
 async def test_invalid_connect(client, body, code):
@@ -164,7 +164,7 @@ async def test_other_workspace_is_invisible(client):
     # No platform has offered accounts yet (no OAuth), so there is nothing to connect.
     real_meta = next(i for i in real.values() if i["provider"] == "meta")
     assert real_meta["available"] == []
-    res = await client.post(f"/api/integrations/{real_meta['id']}/connect", json={"accountNames": ["ClearPath CU – Lending"], "defaultOwnerId": PRIYA})
+    res = await client.post(f"/api/integrations/{real_meta['id']}/connect", json={"accountNames": ["ClearPath Financial – Lending"], "defaultOwnerId": PRIYA})
     assert res.status_code == 400
 
 

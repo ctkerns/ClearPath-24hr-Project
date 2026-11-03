@@ -20,7 +20,7 @@ async def lifespan(_: FastAPI):
 
 # All routes are under /api, so Caddy can send /api/* here and everything else to the frontend.
 app = FastAPI(
-    title="ClearPath API",
+    title="ClearPath Review API",
     lifespan=lifespan,
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",

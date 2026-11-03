@@ -1167,7 +1167,7 @@
   },
   "signIn": {
     "heading": "Sign in to ClearPath Review",
-    "who": "For ClearPath Credit Union staff and approved affiliates.",
+    "who": "For ClearPath Financial staff and approved affiliates.",
     "email": "Work email",
     "password": "Password",
     "showPassword": "Show password",
@@ -1195,7 +1195,7 @@
         "affiliate": "Submits for LendWise and sees only its own items"
       }
     },
-    "footer": "An internal tool of ClearPath Credit Union. The audit log records every sign-in."
+    "footer": "An internal tool of ClearPath Financial. The audit log records every sign-in."
   },
   "acceptInvite": {
     "heading": "Join {{workspace}}",

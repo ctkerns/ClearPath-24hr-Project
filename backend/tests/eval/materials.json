@@ -43,7 +43,7 @@
         },
         {
           "label": "Footer",
-          "text": "{{unsubscribe}} | ClearPath Credit Union, 100 Main Street, Columbus, OH 43215"
+          "text": "{{unsubscribe}} | ClearPath Financial, 100 Main Street, Columbus, OH 43215"
         }
       ]
     },
@@ -81,7 +81,7 @@
         },
         {
           "label": "Footer",
-          "text": "ClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
+          "text": "ClearPath Financial NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA."
         }
       ]
     },
@@ -166,7 +166,7 @@
         },
         {
           "label": "Footer",
-          "text": "ClearPath Credit Union NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA. {{unsubscribe}} | ClearPath Credit Union, 100 Main Street, Columbus, OH 43215"
+          "text": "ClearPath Financial NMLS #401822. Equal Housing Opportunity. Federally insured by NCUA. {{unsubscribe}} | ClearPath Financial, 100 Main Street, Columbus, OH 43215"
         }
       ]
     },
@@ -374,7 +374,7 @@
         },
         {
           "label": "Footer",
-          "text": "{{unsubscribe}} | ClearPath Credit Union, 100 Main Street, Columbus, OH 43215"
+          "text": "{{unsubscribe}} | ClearPath Financial, 100 Main Street, Columbus, OH 43215"
         }
       ]
     },
@@ -455,7 +455,7 @@
         },
         {
           "label": "Footer",
-          "text": "Federally insured by NCUA. {{unsubscribe}} | ClearPath Credit Union, 100 Main Street, Columbus, OH 43215"
+          "text": "Federally insured by NCUA. {{unsubscribe}} | ClearPath Financial, 100 Main Street, Columbus, OH 43215"
         }
       ]
     },
