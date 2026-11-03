@@ -1,9 +1,7 @@
-import * as React from "react"
-import { cva } from "class-variance-authority"
 import { cn } from "cn"
 import { useTranslation } from "react-i18next"
 
-/** Risk tier (PRD F6) and finding severity share one three-level scale. */
+/** Finding severity (PRD F7): one three-level scale for findings and rules. */
 export type RiskLevel = "low" | "medium" | "high"
 
 /** Each level also has its own shape, so the tag reads without color. */
@@ -14,35 +12,6 @@ function LevelShape({ level, className }: { level: RiskLevel; className?: string
       {level === "medium" && <path d="M5 0.5 9.5 5 5 9.5 0.5 5Z" fill="currentColor" />}
       {level === "low" && <circle cx="5" cy="5" r="4" fill="currentColor" />}
     </svg>
-  )
-}
-
-const riskTagVariants = cva(
-  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm border border-current px-1.5 py-px text-xs font-semibold whitespace-nowrap",
-  {
-    variants: {
-      level: {
-        high: "text-risk-high",
-        medium: "text-risk-medium",
-        low: "text-risk-low",
-      },
-    },
-  }
-)
-
-/** Outlined tag for a material's risk tier. Default text comes from riskTag.<level>. */
-function RiskTag({
-  level,
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"span"> & { level: RiskLevel }) {
-  const { t } = useTranslation()
-  return (
-    <span data-slot="risk-tag" data-level={level} className={cn(riskTagVariants({ level }), className)} {...props}>
-      <LevelShape level={level} />
-      {children ?? t(`riskTag.${level}`)}
-    </span>
   )
 }
 
@@ -66,4 +35,4 @@ function SeverityLabel({ level, className }: { level: RiskLevel; className?: str
   )
 }
 
-export { RiskTag, SeverityLabel, LevelShape, riskTagVariants }
+export { SeverityLabel, LevelShape }

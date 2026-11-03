@@ -27,7 +27,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RiskTag, SeverityLabel } from '@/components/ui/risk-tag'
+import { SeverityLabel } from '@/components/ui/risk-tag'
+import { GroupApprovals, LiveStatusTag } from '@/components/materials/material-meta'
+import { LIVE_STATUSES, type GroupState } from '@/components/materials/material-data'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -51,7 +53,7 @@ const sections = [
   ['type', 'Type'],
   ['buttons', 'Buttons'],
   ['fields', 'Form fields'],
-  ['status', 'Status and risk'],
+  ['status', 'Status'],
   ['review', 'Review parts'],
   ['tabs', 'Tabs'],
   ['table', 'Table'],
@@ -90,7 +92,7 @@ function DesignSystemPage() {
           </p>
         </header>
 
-        <Section id="colors" title="Colors" note="Brand and neutrals set the look. Meaning colors are only for risk, severity and status.">
+        <Section id="colors" title="Colors" note="Brand and neutrals set the look. Meaning colors are only for findings, severity and status.">
           <SwatchGroup title="Brand" names={['--primary', '--primary-strong', '--primary-soft', '--ring']} />
           <SwatchGroup title="Neutrals" names={['--foreground', '--muted-foreground', '--input', '--border', '--muted', '--background']} />
           <SwatchGroup
@@ -181,14 +183,15 @@ function DesignSystemPage() {
           </div>
         </Section>
 
-        <Section id="status" title="Status and risk" note="Status pills show where a material is. Risk tags show its tier. Each level also has a shape, so it reads without color.">
+        <Section id="status" title="Status" note="Status pills show where a material is in review. Live status tags show what monitoring found. Problems get a tinted fill.">
           <Row label="Status">
             {statuses.map((s) => <StatusPill key={s} status={s} />)}
           </Row>
-          <Row label="Risk tier">
-            <RiskTag level="low" />
-            <RiskTag level="medium" />
-            <RiskTag level="high" />
+          <Row label="Live status">
+            {LIVE_STATUSES.map((s) => <LiveStatusTag key={s} status={s} />)}
+          </Row>
+          <Row label="Required groups">
+            <GroupApprovals groups={[{ name: "Compliance", state: "approved" }, { name: "Legal", state: "waiting" }, { name: "Mortgage", state: "changes" }, { name: "Senior compliance", state: "rejected" }]} />
           </Row>
           <Row label="Severity">
             <SeverityLabel level="low" />
@@ -272,7 +275,7 @@ function DesignSystemPage() {
                   <TableHead className="w-8"><Checkbox aria-label="Select all" /></TableHead>
                   <TableHead>Material</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Risk</TableHead>
+                  <TableHead>Required groups</TableHead>
                   <TableHead>Approval ID</TableHead>
                   <TableHead className="text-right">Waiting</TableHead>
                 </TableRow>
@@ -286,7 +289,7 @@ function DesignSystemPage() {
                       <div className="text-xs text-muted-foreground">{r.channel}</div>
                     </TableCell>
                     <TableCell><StatusPill status={r.status} /></TableCell>
-                    <TableCell><RiskTag level={r.risk} /></TableCell>
+                    <TableCell><GroupApprovals groups={r.groups} /></TableCell>
                     <TableCell><code className="text-xs">{r.approvalId ?? '—'}</code></TableCell>
                     <TableCell className="text-right">{r.waiting}</TableCell>
                   </TableRow>
@@ -390,13 +393,13 @@ function DesignSystemPage() {
 }
 
 const sampleRows: {
-  id: string; title: string; channel: string; status: MaterialStatus; risk: 'low' | 'medium' | 'high'
+  id: string; title: string; channel: string; status: MaterialStatus; groups: { name: string; state: GroupState }[]
   approvalId?: string; waiting: string; selected?: boolean
 }[] = [
-  { id: '1', title: 'Summer personal loan', channel: 'Meta ad', status: 'in_review', risk: 'high', waiting: '1d 4h', selected: true },
-  { id: '2', title: 'Balance transfer email', channel: 'Mailchimp', status: 'changes_requested', risk: 'medium', waiting: '3d 1h' },
-  { id: '3', title: 'Mortgage prequal landing page', channel: 'WordPress', status: 'live', risk: 'high', approvalId: 'CP-2026-0118-v2', waiting: '—' },
-  { id: '4', title: 'Cash back card, affiliate post', channel: 'Affiliate · Impact', status: 'approved', risk: 'low', approvalId: 'CP-2026-0131-v1', waiting: '—' },
+  { id: '1', title: 'Summer personal loan', channel: 'Meta ad', status: 'in_review', groups: [{ name: 'Compliance', state: 'approved' }, { name: 'Legal', state: 'waiting' }], waiting: '1d 4h', selected: true },
+  { id: '2', title: 'Balance transfer email', channel: 'Mailchimp', status: 'changes_requested', groups: [{ name: 'Compliance', state: 'changes' }], waiting: '3d 1h' },
+  { id: '3', title: 'Mortgage prequal landing page', channel: 'WordPress', status: 'live', groups: [{ name: 'Compliance', state: 'approved' }, { name: 'Mortgage', state: 'approved' }], approvalId: 'CP-2026-0118-v2', waiting: '—' },
+  { id: '4', title: 'Cash back card, affiliate post', channel: 'Affiliate · Impact', status: 'approved', groups: [{ name: 'Compliance', state: 'approved' }], approvalId: 'CP-2026-0131-v1', waiting: '—' },
 ]
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }) {

@@ -33,11 +33,6 @@
     "medium": "Medium",
     "high": "High"
   },
-  "riskTag": {
-    "low": "Low risk",
-    "medium": "Medium risk",
-    "high": "High risk"
-  },
   "finding": {
     "aiSuggestion": "AI suggestion",
     "outdated": "Outdated",
@@ -121,6 +116,94 @@
       "move": "to move",
       "open": "to open",
       "close": "to close"
+    }
+  },
+  "materials": {
+    "views": "Views",
+    "preset": {
+      "all": "All",
+      "review": "In review",
+      "changes": "Needs changes",
+      "monitoring": "Live problems"
+    },
+    "searchLabel": "Filter materials by text",
+    "searchPlaceholder": "Filter by title, ID, approval ID…",
+    "filter": "Filter",
+    "display": "Display",
+    "groupBy": "Group by",
+    "orderBy": "Order by",
+    "groupByOption": {
+      "status": "Status",
+      "live": "Live status",
+      "channel": "Channel",
+      "product": "Product",
+      "owner": "Owner",
+      "none": "No grouping"
+    },
+    "sort": {
+      "updated": "Last updated",
+      "expires": "Expiry date",
+      "id": "Newest ID",
+      "title": "Title"
+    },
+    "field": {
+      "status": "Status",
+      "live": "Live status",
+      "channel": "Channel",
+      "product": "Product",
+      "group": "Reviewer group",
+      "owner": "Owner",
+      "affiliate": "Affiliate"
+    },
+    "is": "is",
+    "isAnyOf": "is any of",
+    "valuesCount_one": "{{count}} value",
+    "valuesCount_other": "{{count}} values",
+    "removeFilter": "Remove {{field}} filter",
+    "clearFilters": "Clear filters",
+    "clearAll": "Clear filters and search",
+    "countOf": "{{shown}} of {{total}}",
+    "empty": "No materials match these filters.",
+    "loadError": "Materials did not load. Reload the page to try again.",
+    "expiresShort": "Exp. {{date}}",
+    "expiresOn": "Approval expires {{date}}",
+    "expired": "Expired",
+    "updated": "Last updated",
+    "liveStatus": {
+      "not_live": "Not live",
+      "matched": "Matched",
+      "changed": "Changed",
+      "unapproved": "Unapproved",
+      "expired_approval": "Expired approval",
+      "condition_broken": "Condition broken"
+    },
+    "channel": {
+      "meta": "Meta ads",
+      "google": "Google Ads",
+      "mailchimp": "Mailchimp",
+      "wordpress": "WordPress",
+      "affiliate": "Affiliate",
+      "other": "Other"
+    },
+    "product": {
+      "personal_loan": "Personal loan",
+      "credit_card": "Credit card",
+      "mortgage": "Mortgage",
+      "heloc": "HELOC",
+      "auto_loan": "Auto loan",
+      "savings": "Savings"
+    },
+    "groupState": {
+      "waiting": "{{group}}: waiting for review",
+      "approved": "{{group}}: approved",
+      "changes": "{{group}}: changes requested",
+      "rejected": "{{group}}: rejected"
+    },
+    "groupStateShort": {
+      "waiting": "waiting",
+      "approved": "approved",
+      "changes": "changes requested",
+      "rejected": "rejected"
     }
   }
 }
