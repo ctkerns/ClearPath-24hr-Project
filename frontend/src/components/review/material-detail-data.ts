@@ -24,8 +24,9 @@ export type Finding = {
   /**
    * The exact fix, when there is one: replace puts `text` in place of the flagged text ('' removes it);
    * append adds `text` at the end of the content. Without it, a person writes the fix.
+   * `by: 'ai'`: the AI review wrote this new wording for a code finding (the code check gave advice only).
    */
-  edit?: { op: 'replace' | 'append'; text: string }
+  edit?: { op: 'replace' | 'append'; text: string; by?: 'ai' }
 }
 
 export type MaterialDetail = {

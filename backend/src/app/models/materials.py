@@ -202,6 +202,8 @@ class Finding(Base):
     # The exact change that fixes it, when there is one: {"op": "replace", "text": ...} puts the text in place of
     # flagged_text ("" removes it); {"op": "append", "text": ...} adds the text at the end of the content.
     # None when a person must decide the fix (for example which rate to use). The new-version form applies it.
+    # "by": "ai" marks a new wording that the AI review wrote for a code finding (app.ai_review); the code checks
+    # write edits without "by".
     edit: Mapped[dict[str, str] | None] = mapped_column(JSONB)
 
 

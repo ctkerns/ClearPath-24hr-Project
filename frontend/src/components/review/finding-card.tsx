@@ -23,6 +23,8 @@ type FindingCardProps = Omit<React.ComponentProps<"article">, "children"> & {
   flaggedText: string
   explanation: React.ReactNode
   suggestion?: React.ReactNode
+  /** The new wording that the AI wrote for a code finding (its exact fix), shown under the rule check's advice. */
+  aiRewrite?: string
   status?: FindingStatus
   actions?: React.ReactNode
   /** False shows the rule id as plain text, for viewers who cannot open the library (affiliates, R4). */
@@ -39,6 +41,7 @@ function FindingCard({
   flaggedText,
   explanation,
   suggestion,
+  aiRewrite,
   status = "open",
   actions,
   ruleLink = true,
@@ -94,6 +97,14 @@ function FindingCard({
         <p className="flex items-baseline gap-1.5 text-sm text-primary-strong">
           <b className="font-semibold whitespace-nowrap">{t("finding.fix")}</b>
           <span>{suggestion}</span>
+        </p>
+      )}
+      {aiRewrite && !outdated && (
+        <p className="flex flex-wrap items-baseline gap-1.5 text-sm text-primary-strong">
+          <span className="rounded-sm border border-dashed px-1.5 text-[10.5px] whitespace-nowrap text-muted-foreground" title={t("finding.aiRewriteHint")}>
+            {t("finding.aiRewrite")}
+          </span>
+          <q>{aiRewrite}</q>
         </p>
       )}
       {actions && <div className="flex flex-wrap gap-2 pt-1">{actions}</div>}

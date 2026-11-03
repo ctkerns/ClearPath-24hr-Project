@@ -45,7 +45,9 @@
     "aiSuggestion": "AI suggestion",
     "outdated": "Outdated",
     "fix": "Fix:",
-    "ruleCheck": "Rule check"
+    "ruleCheck": "Rule check",
+    "aiRewrite": "AI-suggested rewrite",
+    "aiRewriteHint": "The rule check found this problem. The AI reviewer suggested this new wording. Check it before you apply it."
   },
   "placeholder": {
     "label": "Placeholder",
@@ -1969,6 +1971,8 @@
     "appendTo": "Adds to {{field}}:",
     "present": "Already in the content",
     "stuck": "The text in {{field}} changed. Make this change in the field.",
+    "aiRewrite": "AI-suggested rewrite of a code finding",
+    "aiRewriteHint": "The rule check found this problem. The AI reviewer suggested this new wording. Check it before you apply it.",
     "manual_one": "{{count}} needs your words",
     "manual_other": "{{count}} need your words"
   }

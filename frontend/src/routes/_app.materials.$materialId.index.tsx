@@ -520,6 +520,7 @@ function FindingsColumn({ materialId, findings, checks, numbers, active, onFindi
           flaggedText={f.text}
           explanation={f.explanation}
           suggestion={f.suggestion}
+          aiRewrite={f.source === 'code' && f.edit?.by === 'ai' ? f.edit.text : undefined}
           onClick={() => onFinding(f.id)}
           className={cn('scroll-mt-32 cursor-pointer transition-shadow', active === f.id && 'ring-2 ring-primary')}
         />
