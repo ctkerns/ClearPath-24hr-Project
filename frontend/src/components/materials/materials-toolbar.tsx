@@ -1,3 +1,4 @@
+import type * as React from 'react'
 import { ListFilter, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -74,7 +75,7 @@ function FilterOptionItems({ field, materials, search, setSearch }: { field: Fil
   ))
 }
 
-export function MaterialsToolbar({ materials, search, setSearch }: { materials: Material[]; search: MaterialsSearch; setSearch: SetSearch }) {
+export function MaterialsToolbar({ materials, search, setSearch, action }: { materials: Material[]; search: MaterialsSearch; setSearch: SetSearch; action?: React.ReactNode }) {
   const { t } = useTranslation()
   const preset = activePreset(search)
   const groupBy = search.groupBy ?? 'status'
@@ -169,6 +170,7 @@ export function MaterialsToolbar({ materials, search, setSearch }: { materials: 
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          {action}
         </div>
       </div>
 

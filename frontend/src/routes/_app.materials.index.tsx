@@ -49,19 +49,19 @@ function MaterialsPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
-      <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold">{t('page.materials')}</h1>
-        {materials.data && (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {shown.length === all.length ? all.length : t('materials.countOf', { shown: shown.length, total: all.length })}
-          </span>
-        )}
-        <Button asChild className="ml-auto">
-          <Link to="/materials/new"><Plus />{t('page.newMaterial')}</Link>
-        </Button>
-      </div>
+      {/* No visible heading: the active tab in the top bar already names the page. */}
+      <h1 className="sr-only">{t('page.materials')}</h1>
 
-      <MaterialsToolbar materials={all} search={search} setSearch={setSearch} />
+      <MaterialsToolbar
+        materials={all}
+        search={search}
+        setSearch={setSearch}
+        action={
+          <Button asChild size="sm" className="h-7 gap-1.5 text-xs">
+            <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
+          </Button>
+        }
+      />
 
       <div className="overflow-hidden rounded-lg border">
         {materials.isPending && <LoadingRows />}

@@ -162,7 +162,6 @@
     "removeFilter": "Remove {{field}} filter",
     "clearFilters": "Clear filters",
     "clearAll": "Clear filters and search",
-    "countOf": "{{shown}} of {{total}}",
     "empty": "No materials match these filters.",
     "loadError": "Materials did not load. Reload the page to try again.",
     "expiresShort": "Exp. {{date}}",
