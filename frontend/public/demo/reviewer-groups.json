@@ -1,0 +1,48 @@
+{
+  "groups": [
+    {
+      "id": "01973a10-2c00-7b41-9e0a-3f6d2a1c8b01",
+      "name": "Compliance",
+      "description": "Reviews all marketing for consumer lending and deposit rules: Truth in Lending, Truth in Savings, UDAAP and NCUA advertising rules.",
+      "targetBusinessDays": 2,
+      "isDefault": true,
+      "createdBy": "Maya Ruiz",
+      "createdAt": "2026-03-02T14:00:00Z",
+      "updatedBy": "Alex Chen",
+      "updatedAt": "2026-09-15T16:20:00Z"
+    },
+    {
+      "id": "01973a10-2c00-7c52-8f1b-4a7e3b2d9c02",
+      "name": "Legal",
+      "description": "Reviews contests and sweepstakes, partner terms, testimonials and any claim about a competitor.",
+      "targetBusinessDays": 3,
+      "isDefault": false,
+      "createdBy": "Maya Ruiz",
+      "createdAt": "2026-03-02T14:05:00Z",
+      "updatedBy": "Maya Ruiz",
+      "updatedAt": "2026-03-02T14:05:00Z"
+    },
+    {
+      "id": "01973a10-2c00-7d63-9a2c-5b8f4c3eac03",
+      "name": "Mortgage",
+      "description": "Reviews mortgage and HELOC marketing for Regulation Z, RESPA and fair lending rules, including NMLS IDs and Equal Housing wording.",
+      "targetBusinessDays": 2,
+      "isDefault": false,
+      "createdBy": "Alex Chen",
+      "createdAt": "2026-04-10T09:30:00Z",
+      "updatedBy": "Alex Chen",
+      "updatedAt": "2026-08-04T11:00:00Z"
+    },
+    {
+      "id": "01973a10-2c00-7e74-8b3d-6c9a5d4fbd04",
+      "name": "Senior compliance",
+      "description": "Reviews affiliate content and escalated items. A second look when a reviewer is unsure or the risk is high.",
+      "targetBusinessDays": 1,
+      "isDefault": false,
+      "createdBy": "Maya Ruiz",
+      "createdAt": "2026-03-02T14:10:00Z",
+      "updatedBy": "Alex Chen",
+      "updatedAt": "2026-10-01T13:45:00Z"
+    }
+  ]
+}

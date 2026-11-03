@@ -8,6 +8,7 @@ import { useBlockList } from '@/components/library/use-block-list'
 import { PRODUCTS } from '@/components/materials/material-data'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { demoViewer } from '@/components/review/material-detail-data'
+import { useLicensedStates } from '@/components/settings/workspace-data'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ function BlockPage() {
   const { blockId } = Route.useParams()
   const blocks = useBlocks()
   const { label } = useBlockList()
+  const licensedStates = useLicensedStates()
   const block = blocks.data?.find((b) => b.id === blockId)
   // R3: only Managers and Admins change the library.
   const canEdit = demoViewer.role === 'manager' || demoViewer.role === 'admin'
@@ -38,7 +40,7 @@ function BlockPage() {
     )
   }
   const expiry = expiryState(block.expiresAt)
-  const swaps = swapCandidates(block, blocks.data ?? [])
+  const swaps = swapCandidates(block, blocks.data ?? [], licensedStates)
   const kindLower = t(`blocks.kindLower.${block.kind}`)
 
   return (
@@ -139,7 +141,7 @@ function BlockPage() {
  * Other current blocks of the same kind that are approved for at least this block's products and states.
  * Swapping in one of them is a "building block swap", so the new version takes the lighter path (F6).
  */
-function swapCandidates(block: Block, all: Block[]) {
+function swapCandidates(block: Block, all: Block[], licensedStates: readonly string[]) {
   const products = (b: Block) => (b.products.length ? b.products : [...PRODUCTS])
   const covers = (outer: string[], inner: string[]) => inner.every((x) => outer.includes(x))
   return all.filter(
@@ -148,7 +150,7 @@ function swapCandidates(block: Block, all: Block[]) {
       b.kind === block.kind &&
       expiryState(b.expiresAt) !== 'expired' &&
       covers(products(b), products(block)) &&
-      covers(blockStates(b), blockStates(block)),
+      covers(blockStates(b, licensedStates), blockStates(block, licensedStates)),
   )
 }
 

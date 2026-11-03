@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { CHANNELS, PRODUCTS, type Channel, type Product } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
+import { useLicensedStates } from '@/components/settings/workspace-data'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -13,8 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
   channelFields,
-  LICENSED_STATES,
-  previewRouting,
+  useRoutingPreview,
   validate,
   type ContentSource,
   type SubmissionValues,
@@ -44,12 +44,15 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
   const errors = validate(values, isVersion)
   const shown = tried ? errors : {}
   const set = <K extends keyof SubmissionValues>(key: K, value: SubmissionValues[K]) => setValues((v) => ({ ...v, [key]: value }))
-  const routing = values.product && (values.nationwide || values.states.length) ? previewRouting(values) : []
+  // Licensed states and routing come from Settings (Workspace and Routing tabs), so a change there shows here at once.
+  const licensedStates = useLicensedStates()
+  const routingPreview = useRoutingPreview()
+  const routing = values.product && values.channel && (values.nationwide || values.states.length) ? routingPreview.preview(values) : []
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     setTried(true)
-    if (Object.keys(errors).length === 0 && ready) onSubmit(values)
+    if (Object.keys(errors).length === 0 && ready && routingPreview.ready) onSubmit(values)
   }
 
   return (
@@ -152,7 +155,7 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
             </label>
             {!values.nationwide && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('submit.statesPick')}>
-                {LICENSED_STATES.map((s) => {
+                {licensedStates.map((s) => {
                   const on = values.states.includes(s)
                   return (
                     <button
@@ -215,7 +218,7 @@ export function SubmissionForm({ initial, mode, versionNumber, ready, onSubmit, 
           <p className="mr-auto text-xs font-medium text-destructive">{t('submit.fixErrors', { count: Object.keys(errors).length })}</p>
         )}
         <Button type="button" variant="outline" onClick={onCancel}>{t('submit.cancel')}</Button>
-        <Button type="submit" disabled={!ready}>
+        <Button type="submit" disabled={!ready || !routingPreview.ready}>
           {isVersion ? t('submit.submitVersion', { version: versionNumber }) : t('submit.submit')}
         </Button>
       </div>

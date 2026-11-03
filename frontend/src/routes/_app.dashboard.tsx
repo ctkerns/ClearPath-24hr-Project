@@ -9,6 +9,7 @@ import { listRowClass } from '@/components/list/list-filters'
 import { daysUntil, LIVE_PROBLEMS, useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, GroupApprovals, PersonAvatar } from '@/components/materials/material-meta'
 import { demoViewer } from '@/components/review/material-detail-data'
+import { useReviewerGroups } from '@/components/settings/group-data'
 import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -29,12 +30,13 @@ function DashboardPage() {
   const { t } = useTranslation()
   const materials = useMaterials()
   const issues = useIssues()
+  const groups = useReviewerGroups()
   const viewer = demoViewer
 
-  if (materials.isPending || issues.isPending) return <DashboardSkeleton />
+  if (materials.isPending || issues.isPending || groups.isPending) return <DashboardSkeleton />
   const allMaterials = materials.data ?? []
   const allIssues = issues.data ?? []
-  const queue = myQueue(allMaterials, viewer)
+  const queue = myQueue(allMaterials, viewer, groups.data ?? [])
   const late = queue.filter((q) => daysToDeadline(q.deadline) < 0).length
   const mine = myIssues(allIssues, viewer)
   const submissions = mySubmissions(allMaterials, viewer)
@@ -53,7 +55,7 @@ function DashboardPage() {
             empty={t('dashboard.queue.empty')}
             viewAll={<Link to="/materials" search={{ status: 'submitted,in_review', group: viewer.groups.join(',') }}>{t('dashboard.viewAll')}</Link>}
           >
-            {queue.map((q) => <QueueRow key={q.material.id} material={q.material} deadline={q.deadline} />)}
+            {queue.map((q) => <QueueRow key={q.material.id} material={q.material} deadline={q.deadline} targetDays={q.targetDays} />)}
           </Section>
 
           <Section
@@ -118,7 +120,7 @@ function Section({ title, count, note, empty, viewAll, action, children }: {
 }
 
 /** How long a review has left before the group deadline. Late is red; today and tomorrow are amber. */
-function DeadlineLabel({ deadline }: { deadline: Date }) {
+function DeadlineLabel({ deadline, targetDays }: { deadline: Date; targetDays: number }) {
   const { t } = useTranslation()
   const days = daysToDeadline(deadline)
   const tone = days < 0 ? 'font-medium text-risk-high' : days <= 1 ? 'font-medium text-risk-medium' : 'text-muted-foreground'
@@ -127,10 +129,10 @@ function DeadlineLabel({ deadline }: { deadline: Date }) {
       : days === 0 ? t('dashboard.deadline.today')
         : days === 1 ? t('dashboard.deadline.tomorrow')
           : t('dashboard.deadline.on', { date: formatDate(deadline, { month: 'short', day: 'numeric' }) })
-  return <span title={t('dashboard.deadline.title', { date: formatDate(deadline) })} className={tone}>{text}</span>
+  return <span title={t('dashboard.deadline.title', { date: formatDate(deadline), count: targetDays })} className={tone}>{text}</span>
 }
 
-function QueueRow({ material: m, deadline }: { material: Material; deadline: Date }) {
+function QueueRow({ material: m, deadline, targetDays }: { material: Material; deadline: Date; targetDays: number }) {
   const { t } = useTranslation()
   return (
     <li className="border-b last:border-b-0">
@@ -142,7 +144,7 @@ function QueueRow({ material: m, deadline }: { material: Material; deadline: Dat
         </span>
         <span className="w-24 shrink-0 max-sm:hidden"><StatusPill status={m.status} /></span>
         <GroupApprovals groups={m.groups} className="w-52 shrink-0 justify-end overflow-hidden max-xl:hidden" />
-        <span className="w-28 shrink-0 text-right text-xs tabular-nums"><DeadlineLabel deadline={deadline} /></span>
+        <span className="w-28 shrink-0 text-right text-xs tabular-nums"><DeadlineLabel deadline={deadline} targetDays={targetDays} /></span>
         <span title={t('dashboard.owner', { name: m.owner })}><PersonAvatar name={m.owner} className="shrink-0" /></span>
       </Link>
     </li>

@@ -39,12 +39,20 @@ export async function signIn(email: string, password: string): Promise<SessionUs
   await new Promise((resolve) => setTimeout(resolve, 450)) // Stand-in for the network round trip.
   const user = DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === email.trim().toLowerCase())
   if (!user || password !== DEMO_PASSWORD) throw new Error('invalid_credentials')
+  // Role and reviewer groups come from the workspace users list (Settings > Users), not from the account list above.
+  const users: { email: string; role: Role; groups: string[]; status: string }[] = await fetch('/demo/users.json')
+    .then((res) => (res.ok ? res.json() : { users: [] }))
+    .then((json) => json.users)
+    .catch(() => [])
+  const record = users.find((u) => u.email.toLowerCase() === user.email.toLowerCase())
+  if (record?.status === 'deactivated') throw new Error('invalid_credentials')
+  const session = record ? { ...user, role: record.role, groups: record.groups } : user
   try {
-    localStorage.setItem(KEY, JSON.stringify(user))
+    localStorage.setItem(KEY, JSON.stringify(session))
   } catch {
     throw new Error('storage_blocked')
   }
-  return user
+  return session
 }
 
 export function signOut() {

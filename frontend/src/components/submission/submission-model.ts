@@ -2,6 +2,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
 import { uuidv7 } from '@/lib/uuid'
 import { demoViewer, versionFields, type MaterialDetail } from '@/components/review/material-detail-data'
+import { useReviewerGroups, type ReviewerGroup } from '@/components/settings/group-data'
+import { evaluateRouting, formatList, useRouting, type RoutingRule } from '@/components/settings/routing-data'
+import i18n from '@/i18n'
 
 // Shared model for the submit form (PRD F3), used by /materials/new and /materials/$id/new-version.
 
@@ -20,9 +23,6 @@ export const channelFields: Record<Channel, { label: string; multiline?: boolean
   affiliate: [{ label: 'Page text', multiline: true }],
   other: [{ label: 'Body', multiline: true }],
 }
-
-/** States where ClearPath is licensed (an Admin keeps this list, PRD F7). TODO: read from workspace settings. */
-export const LICENSED_STATES = ['AZ', 'CA', 'CO', 'FL', 'GA', 'IL', 'MI', 'NC', 'NY', 'OH', 'PA', 'TX', 'WA']
 
 export type ContentSource = 'text' | 'file' | 'url'
 
@@ -72,15 +72,34 @@ export function valuesFromMaterial(m: Material, detail: MaterialDetail | null): 
 
 /**
  * Which reviewer groups a submission goes to (PRD F6), so the form can show it before you submit.
- * TODO: the server evaluates the Manager's routing rules; these four are the demo workspace's seeded rules.
+ * It runs the Routing tab's rules and default group through evaluateRouting, the same function as "Test routing".
+ * TODO: the server evaluates the rules on every new version; it also knows the affiliate's history.
  */
-export function previewRouting(v: SubmissionValues): { name: string; reason: string }[] {
-  const groups = [{ name: 'Compliance', reason: 'Every material' }]
-  const loan = v.product === 'personal_loan' || v.product === 'auto_loan' || v.product === 'heloc' || v.product === 'mortgage'
-  if (loan && v.nationwide) groups.push({ name: 'Legal', reason: 'Loan, nationwide' })
-  if (v.product === 'mortgage' || v.product === 'heloc') groups.push({ name: 'Mortgage', reason: 'Mortgage or HELOC' })
-  if (v.channel === 'affiliate') groups.push({ name: 'Senior compliance', reason: 'Affiliate content' })
-  return groups
+export function previewRouting(rules: RoutingRule[], groups: ReviewerGroup[], v: SubmissionValues): { name: string; reason: string }[] {
+  if (!v.product || !v.channel) return []
+  const result = evaluateRouting(rules, groups.find((g) => g.isDefault)?.id, {
+    product: v.product,
+    channel: v.channel,
+    // Affiliate pages come from affiliates, as in "Test routing". The demo does not know an affiliate's history.
+    source: v.channel === 'affiliate' ? 'affiliate' : 'internal',
+    affiliateHistory: false,
+    nationwide: v.nationwide,
+    states: v.states,
+  })
+  const ruleName = (id: string) => rules.find((r) => r.id === id)?.name ?? id
+  return result.required.flatMap(({ groupId, ruleIds }) => {
+    const group = groups.find((g) => g.id === groupId)
+    if (!group) return []
+    return [{ name: group.name, reason: ruleIds.length ? formatList(ruleIds.map(ruleName), 'conjunction') : i18n.t('submit.routingDefault') }]
+  })
+}
+
+/** The routing rules and reviewer groups that previewRouting reads, from the Settings data. */
+export function useRoutingPreview() {
+  const routing = useRouting()
+  const groups = useReviewerGroups()
+  const ready = !!routing.data && !!groups.data
+  return { ready, preview: (v: SubmissionValues) => (ready ? previewRouting(routing.data!.rules, groups.data!, v) : []) }
 }
 
 /** What is missing before the form can be sent. Keys are field names, values are i18n keys. */
@@ -104,6 +123,7 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
  */
 export function useSubmitMaterial() {
   const queryClient = useQueryClient()
+  const routing = useRoutingPreview()
 
   return (values: SubmissionValues, existing?: { material: Material; detail: MaterialDetail | null }) => {
     const now = new Date().toISOString()
@@ -115,7 +135,7 @@ export function useSubmitMaterial() {
         : values.source === 'file'
           ? [{ label: 'Files', segments: [values.files.join(', ')] }]
           : [{ label: 'URL', segments: [values.contentUrl] }]
-    const groups = previewRouting(values).map((g) => ({ ...g, state: 'waiting' as const }))
+    const groups = routing.preview(values).map((g) => ({ ...g, state: 'waiting' as const }))
     const prev = existing?.detail
     const number = (prev?.version ?? 0) + 1
     const id = existing?.material.id ?? uuidv7()

@@ -1,27 +1,28 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { LinkTabs } from '@/components/link-tabs'
+import { demoViewer } from '@/components/review/material-detail-data'
+import { settingsTabsFor } from '@/components/settings/settings-tabs'
 
-// PRD screen 9: one screen with one tab per child route.
+// PRD screen 9: one screen with one tab per child route. Each role sees only the tabs it can change.
 export const Route = createFileRoute('/_app/settings')({
+  beforeLoad: ({ location }) => {
+    const tabs = settingsTabsFor(demoViewer.role)
+    // No tab for this role (Viewer, Submitter, Reviewer, Affiliate): Settings is not for them.
+    if (!tabs.length) throw redirect({ to: '/dashboard' })
+    // A link to a tab this role cannot change, or to /settings itself, opens the first allowed tab.
+    if (!tabs.some((tab) => location.pathname.startsWith(tab.to))) throw redirect({ to: tabs[0].to })
+  },
   component: SettingsLayout,
 })
 
 function SettingsLayout() {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto grid max-w-5xl gap-4">
-      <h1 className="text-lg font-semibold">{t('page.settings')}</h1>
-      <LinkTabs
-        label={t('page.settings')}
-        tabs={[
-          { to: '/settings/users', label: t('settingsTabs.users') },
-          { to: '/settings/reviewer-groups', label: t('settingsTabs.reviewerGroups') },
-          { to: '/settings/routing', label: t('settingsTabs.routing') },
-          { to: '/settings/integrations', label: t('settingsTabs.integrations') },
-          { to: '/settings/workspace', label: t('settingsTabs.workspace') },
-        ]}
-      />
+    <div className="mx-auto grid w-full max-w-7xl gap-4">
+      {/* No visible heading: the top bar and the tabs name the page. */}
+      <h1 className="sr-only">{t('page.settings')}</h1>
+      <LinkTabs label={t('page.settings')} tabs={settingsTabsFor(demoViewer.role).map((tab) => ({ to: tab.to, label: t(`settingsTabs.${tab.key}`) }))} />
       <Outlet />
     </div>
   )

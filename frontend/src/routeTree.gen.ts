@@ -39,6 +39,7 @@ import { Route as AppLibraryRegulatoryChangesChangeIdRouteImport } from './route
 import { Route as AppLibraryRulesRuleIdRouteImport } from './routes/_app.library.rules_.$ruleId'
 import { Route as AppMaterialsMaterialIdIndexRouteImport } from './routes/_app.materials.$materialId.index'
 import { Route as AppMaterialsMaterialIdNewVersionRouteImport } from './routes/_app.materials.$materialId.new-version'
+import { Route as AppSettingsReviewerGroupsGroupIdRouteImport } from './routes/_app.settings.reviewer-groups_.$groupId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -197,6 +198,12 @@ const AppMaterialsMaterialIdNewVersionRoute =
     path: '/materials/$materialId/new-version',
     getParentRoute: () => AppRoute,
   } as any)
+const AppSettingsReviewerGroupsGroupIdRoute =
+  AppSettingsReviewerGroupsGroupIdRouteImport.update({
+    id: '/reviewer-groups_/$groupId',
+    path: '/reviewer-groups/$groupId',
+    getParentRoute: () => AppSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/library/regulatory-changes/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/settings/reviewer-groups/$groupId': typeof AppSettingsReviewerGroupsGroupIdRoute
   '/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/library/regulatory-changes/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/settings/reviewer-groups/$groupId': typeof AppSettingsReviewerGroupsGroupIdRoute
   '/materials/$materialId': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRoutesById {
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_app/library/regulatory-changes_/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/_app/library/rules_/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/_app/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
+  '/_app/settings/reviewer-groups_/$groupId': typeof AppSettingsReviewerGroupsGroupIdRoute
   '/_app/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/library/regulatory-changes/$changeId'
     | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
+    | '/settings/reviewer-groups/$groupId'
     | '/materials/$materialId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/library/regulatory-changes/$changeId'
     | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
+    | '/settings/reviewer-groups/$groupId'
     | '/materials/$materialId'
   id:
     | '__root__'
@@ -383,6 +395,7 @@ export interface FileRouteTypes {
     | '/_app/library/regulatory-changes_/$changeId'
     | '/_app/library/rules_/$ruleId'
     | '/_app/materials/$materialId/new-version'
+    | '/_app/settings/reviewer-groups_/$groupId'
     | '/_app/materials/$materialId/'
   fileRoutesById: FileRoutesById
 }
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMaterialsMaterialIdNewVersionRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings/reviewer-groups_/$groupId': {
+      id: '/_app/settings/reviewer-groups_/$groupId'
+      path: '/reviewer-groups/$groupId'
+      fullPath: '/settings/reviewer-groups/$groupId'
+      preLoaderRoute: typeof AppSettingsReviewerGroupsGroupIdRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
   }
 }
 
@@ -646,6 +666,7 @@ interface AppSettingsRouteChildren {
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
   AppSettingsWorkspaceRoute: typeof AppSettingsWorkspaceRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
+  AppSettingsReviewerGroupsGroupIdRoute: typeof AppSettingsReviewerGroupsGroupIdRoute
 }
 
 const AppSettingsRouteChildren: AppSettingsRouteChildren = {
@@ -655,6 +676,7 @@ const AppSettingsRouteChildren: AppSettingsRouteChildren = {
   AppSettingsUsersRoute: AppSettingsUsersRoute,
   AppSettingsWorkspaceRoute: AppSettingsWorkspaceRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
+  AppSettingsReviewerGroupsGroupIdRoute: AppSettingsReviewerGroupsGroupIdRoute,
 }
 
 const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(

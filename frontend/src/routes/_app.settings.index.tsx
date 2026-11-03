@@ -1,8 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
-// /settings opens its first tab.
-export const Route = createFileRoute('/_app/settings/')({
-  beforeLoad: () => {
-    throw redirect({ to: '/settings/users' })
-  },
-})
+// /settings has no page of its own: the Settings layout sends it to the first tab this role can change.
+export const Route = createFileRoute('/_app/settings/')({})

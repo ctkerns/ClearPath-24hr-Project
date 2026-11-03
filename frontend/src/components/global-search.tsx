@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { demoViewer } from '@/components/review/material-detail-data'
+import { settingsTabsFor } from '@/components/settings/settings-tabs'
 import {
   CommandDialog,
   CommandEmpty,
@@ -88,7 +90,7 @@ export function GlobalSearch() {
     { to: '/issues', label: t('nav.issues'), icon: Flag },
     { to: '/library', label: t('nav.library'), icon: LibraryBig },
     { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
-    { to: '/settings', label: t('nav.settings'), icon: Settings },
+    ...(settingsTabsFor(demoViewer.role).length ? [{ to: '/settings' as const, label: t('nav.settings'), icon: Settings }] : []),
     { to: '/design-system', label: t('nav.designSystem'), icon: Palette },
   ]
 

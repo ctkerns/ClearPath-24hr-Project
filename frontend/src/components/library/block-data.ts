@@ -8,10 +8,6 @@ const BLOCKS_URL = '/demo/building-blocks.json'
 export const BLOCK_KINDS = ['headline', 'claim', 'cta', 'disclosure'] as const
 export type BlockKind = (typeof BLOCK_KINDS)[number]
 
-// "all" on a block means every state where the credit union is licensed (one shared list, kept by an Admin).
-import { LICENSED_STATES } from '@/components/submission/submission-model'
-export { LICENSED_STATES }
-
 export const EXPIRY_STATES = ['current', 'expiring', 'expired'] as const
 export type ExpiryState = (typeof EXPIRY_STATES)[number]
 
@@ -50,4 +46,8 @@ export function expiryState(expiresAt: string): ExpiryState {
   return days <= 0 ? 'expired' : days <= 30 ? 'expiring' : 'current'
 }
 
-export const blockStates = (b: Block): string[] => (b.states === 'all' ? [...LICENSED_STATES] : b.states)
+/**
+ * "all" on a block means every state where the credit union is licensed: the Workspace settings list
+ * (useLicensedStates), passed in so this stays a pure function.
+ */
+export const blockStates = (b: Block, licensedStates: readonly string[]): string[] => (b.states === 'all' ? [...licensedStates] : b.states)

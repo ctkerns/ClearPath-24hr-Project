@@ -1,6 +1,7 @@
 import { CircleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useGroupNames } from '@/components/settings/group-data'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { approvedByViewer, groupsForViewer, useDecide } from './decide'
-import { demoGroups, type Decision, type MaterialDetail } from './material-detail-data'
+import type { Decision, MaterialDetail } from './material-detail-data'
 
 /** Which decisions need text before they can be sent. Approve alone takes an optional comment. */
 const textRequired: Record<Decision, boolean> = {
@@ -60,7 +61,8 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
   // An open High finding blocks approval unless the Reviewer writes an override reason (PRD F6).
   const highOpen = detail.findings.filter((f) => f.status === 'open' && f.severity === 'high').length
   const needsOverride = isApprove && highOpen > 0
-  const escalateOptions = demoGroups.filter((name) => !detail.groups.some((g) => g.name === name))
+  // Escalate to any reviewer group from Settings that is not already required.
+  const escalateOptions = useGroupNames().filter((name) => !detail.groups.some((g) => g.name === name))
   const ready = (!textRequired[decision] || text.trim().length > 0) && (decision !== 'escalate' || group) && (!needsOverride || override.trim().length > 0)
 
   const submit = (e: React.FormEvent) => {

@@ -96,9 +96,6 @@ export const fieldText = (segments: Segment[]) => segments.map((s) => (typeof s 
 /** The decisions from PRD F5, plus retracting your own approval. */
 export type Decision = 'approve' | 'approve_conditions' | 'request_changes' | 'reject' | 'escalate' | 'retract'
 
-/** All reviewer groups in the workspace. TODO: read from the API (Settings, Reviewer groups). */
-export const demoGroups = ['Compliance', 'Legal', 'Mortgage', 'Senior compliance']
-
 export function useMaterialDetail(id: string) {
   return useQuery({
     queryKey: ['material-detail', id],

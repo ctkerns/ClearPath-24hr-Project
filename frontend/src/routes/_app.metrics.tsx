@@ -7,9 +7,10 @@ import { CHANNELS, PRODUCTS, useMaterials, type Channel, type Product } from '@/
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { BarList, ChartSection, Sparkline, TrendChart } from '@/components/metrics/charts'
 import {
-  AGE_BUCKETS, buckets, byBucket, PERIODS, queueNow, REVIEWER_GROUPS, slice, summary, topRules, turnaroundByGroup,
+  AGE_BUCKETS, bucketPastTarget, buckets, byBucket, PERIODS, queueNow, queueTarget, slice, summary, topRules, turnaroundByGroup,
   validateMetricsSearch, violationsByChannel, percentile, useMetricsData, type MetricsSearch, type Period,
 } from '@/components/metrics/metrics-data'
+import { useReviewerGroups } from '@/components/settings/group-data'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatNumber, formatPercent } from '@/i18n/format'
@@ -33,11 +34,12 @@ function MetricsPage() {
   const data = useMetricsData()
   const materials = useMaterials()
   const rules = useRules()
+  const reviewerGroups = useReviewerGroups()
   const period = search.period ?? '90d'
 
   const set = (patch: Partial<MetricsSearch>) => void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true })
 
-  if (data.isPending || materials.isPending) return <MetricsSkeleton />
+  if (data.isPending || materials.isPending || reviewerGroups.isPending) return <MetricsSkeleton />
   if (!data.data) return <p className="text-sm text-muted-foreground">{t('metrics.loadError')}</p>
 
   const s = slice(data.data, search)
@@ -47,7 +49,10 @@ function MetricsPage() {
   const perBucket = byBucket(s.decisions, (d) => d.decidedAt, list).map(summary)
   const bucketLabels = list.map((b) => formatDate(b.label, period === '12m' ? { month: 'short' } : { month: 'short', day: 'numeric' }))
   const queue = queueNow(materials.data ?? [], search)
-  const groups = turnaroundByGroup(s.decisions)
+  const groupList = reviewerGroups.data ?? []
+  const groupNames = groupList.map((g) => g.name).sort((a, b) => a.localeCompare(b))
+  const groups = turnaroundByGroup(s.decisions, groupNames)
+  const target = queueTarget(groupList, search.group)
   const ruleRows = topRules(s.decisions)
   const ruleById = new Map((rules.data ?? []).map((r) => [r.id, r]))
   const channels = violationsByChannel(s.violations)
@@ -62,7 +67,7 @@ function MetricsPage() {
     <div className="grid gap-8">
       <h1 className="sr-only">{t('page.metrics')}</h1>
 
-      <Filters search={search} period={period} set={set} />
+      <Filters search={search} period={period} set={set} groupNames={groupNames} />
 
       <Part title={t('metrics.throughput')}>
         <FigureStrip>
@@ -99,7 +104,7 @@ function MetricsPage() {
               />
             }
           />
-          <QueueNow queue={queue} search={search} />
+          <QueueNow queue={queue} search={search} target={target} />
         </div>
 
         <ChartSection
@@ -212,7 +217,7 @@ function MetricsPage() {
 }
 
 /** One row of filters above everything. All of them live in the URL, so a filtered report can be shared. */
-function Filters({ search, period, set }: { search: MetricsSearch; period: Period; set: (patch: Partial<MetricsSearch>) => void }) {
+function Filters({ search, period, set, groupNames }: { search: MetricsSearch; period: Period; set: (patch: Partial<MetricsSearch>) => void; groupNames: string[] }) {
   const { t } = useTranslation()
   const filtered = search.channel || search.product || search.group
   return (
@@ -252,7 +257,7 @@ function Filters({ search, period, set }: { search: MetricsSearch; period: Perio
         label={t('metrics.group')}
         value={search.group}
         all={t('metrics.allGroups')}
-        options={REVIEWER_GROUPS.map((g) => [g, g])}
+        options={groupNames.map((g) => [g, g])}
         onChange={(v) => set({ group: v })}
       />
       {filtered && (
@@ -372,7 +377,7 @@ function QualityFigure({ label, definition, value, before, trend, better, compar
 }
 
 /** The open queue now, by status and business days waiting. Each total opens the filtered Materials list. */
-function QueueNow({ queue, search }: { queue: ReturnType<typeof queueNow>; search: MetricsSearch }) {
+function QueueNow({ queue, search, target }: { queue: ReturnType<typeof queueNow>; search: MetricsSearch; target: ReturnType<typeof queueTarget> }) {
   const { t } = useTranslation()
   const listSearch = { channel: search.channel, product: search.product, group: search.group }
   return (
@@ -394,8 +399,8 @@ function QueueNow({ queue, search }: { queue: ReturnType<typeof queueNow>; searc
             <tr key={r.status} className="border-b">
               <td className="py-2 pr-2">{t(`status.${r.status}`)}</td>
               {r.cells.map((n, i) => (
-                // The oldest bucket is past the 2-business-day target, so a count there is in bold.
-                <td key={i} className={cn('px-1.5 py-2 text-right tabular-nums', n === 0 ? 'text-muted-foreground/60' : i >= 2 && 'font-semibold')}>{n || '·'}</td>
+                // A bucket whose items have all waited past the review target (from Settings) shows its count in bold.
+                <td key={i} className={cn('px-1.5 py-2 text-right tabular-nums', n === 0 ? 'text-muted-foreground/60' : target && bucketPastTarget(i, target.days) && 'font-semibold')}>{n || '·'}</td>
               ))}
               <td className="py-2 pl-2 text-right tabular-nums">
                 {r.total ? <Link to="/materials" search={{ ...listSearch, status: r.status }} className="font-medium text-primary hover:underline">{r.total}</Link> : <span className="text-muted-foreground/60">·</span>}
@@ -409,7 +414,10 @@ function QueueNow({ queue, search }: { queue: ReturnType<typeof queueNow>; searc
           </tr>
         </tbody>
       </table>
-      <p className="text-xs text-muted-foreground">{t('metrics.queueAge')}</p>
+      <p className="text-xs text-muted-foreground">
+        {t('metrics.queueAge')}
+        {target && <> {t('metrics.queueTarget', { group: target.name, count: target.days })}</>}
+      </p>
     </section>
   )
 }

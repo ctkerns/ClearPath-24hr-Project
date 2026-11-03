@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CHANNELS, PRODUCTS, type Channel, type Material, type Product } from '@/components/materials/material-data'
+import type { ReviewerGroup } from '@/components/settings/group-data'
 
 // Metrics dashboard data (PRD F14, the metrics in PRD section 2).
 // TODO: replace METRICS_URL with the real API. The server should send the numbers already counted for the filters.
@@ -56,7 +57,6 @@ export function useMetricsData() {
 
 export const PERIODS = ['30d', '90d', '12m'] as const
 export type Period = (typeof PERIODS)[number]
-export const REVIEWER_GROUPS = ['Compliance', 'Legal', 'Mortgage', 'Senior compliance'] as const
 
 export type MetricsSearch = { period?: Period; channel?: Channel; product?: Product; group?: string }
 
@@ -66,7 +66,8 @@ export function validateMetricsSearch(raw: Record<string, unknown>): MetricsSear
     period: one(raw.period, PERIODS),
     channel: one(raw.channel, CHANNELS),
     product: one(raw.product, PRODUCTS),
-    group: one(raw.group, REVIEWER_GROUPS),
+    // Any group name: the list lives in Settings (Reviewer groups), and an unknown name just matches nothing.
+    group: typeof raw.group === 'string' && raw.group ? raw.group : undefined,
   }
 }
 
@@ -168,9 +169,9 @@ export function byBucket<T>(items: T[], at: (item: T) => string, list: Bucket[])
   return groups
 }
 
-/** Turnaround by reviewer group and path. A decision counts once for every group it needed. */
-export function turnaroundByGroup(decisions: Decision[]) {
-  return REVIEWER_GROUPS.map((group) => {
+/** Turnaround by reviewer group (names from Settings) and path. A decision counts once for every group it needed. */
+export function turnaroundByGroup(decisions: Decision[], groupNames: string[]) {
+  return groupNames.map((group) => {
     const mine = decisions.filter((d) => d.groups.includes(group))
     const full = mine.filter((d) => d.path === 'full').map((d) => d.turnaroundDays)
     const short = mine.filter((d) => d.path === 'no_change').map((d) => d.turnaroundDays)
@@ -201,6 +202,20 @@ export function violationsByChannel(violations: Violation[]) {
 
 export const QUEUE_STATUSES = ['submitted', 'in_review', 'changes_requested'] as const
 export const AGE_BUCKETS = ['0-1', '2-3', '4-5', '6+'] as const
+/** The fewest business days an item in each age bucket has waited. */
+const AGE_BUCKET_MIN = [0, 2, 4, 6]
+
+/**
+ * The review target the queue table compares with: the filtered group's, or the default group's when no group is
+ * picked (every unmatched submission goes there). From Settings, so a changed target shows here at once.
+ */
+export function queueTarget(groups: ReviewerGroup[], groupName?: string) {
+  const group = (groupName && groups.find((g) => g.name === groupName)) || groups.find((g) => g.isDefault)
+  return group && { name: group.name, days: group.targetBusinessDays }
+}
+
+/** True when every item in the age bucket has waited longer than the target. */
+export const bucketPastTarget = (bucketIndex: number, targetDays: number) => AGE_BUCKET_MIN[bucketIndex] > targetDays
 
 /** Whole business days between two times. */
 export function businessDaysBetween(from: number, to: number) {

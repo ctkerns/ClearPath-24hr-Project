@@ -396,7 +396,7 @@
     "orDrop": "or drop them here",
     "removeFile": "Remove {{name}}",
     "routing": "Goes to these reviewer groups",
-    "routingEmpty": "Choose a product and states to see who reviews this.",
+    "routingEmpty": "Choose a channel, product and states to see who reviews this.",
     "cancel": "Cancel",
     "submit": "Submit for review",
     "submitVersion": "Submit version {{version}}",
@@ -413,7 +413,8 @@
         "file": "Add at least one file.",
         "url": "Add a full URL that starts with https://."
       }
-    }
+    },
+    "routingDefault": "Default group, no routing rule matched"
   },
   "list": {
     "views": "Views",
@@ -578,7 +579,8 @@
       "today": "Due today",
       "tomorrow": "Due tomorrow",
       "on": "Due {{date}}",
-      "title": "Review deadline: {{date}} (2 business days after submission)"
+      "title_one": "Review deadline: {{date}} ({{count}} business day after submission)",
+      "title_other": "Review deadline: {{date}} ({{count}} business days after submission)"
     },
     "workspace": {
       "title": "Workspace",
@@ -947,7 +949,7 @@
     "queueNow": "Queue now",
     "queueNote_one": "{{count}} open item. The oldest has waited {{oldest}} business days.",
     "queueNote_other": "{{count}} open items. The oldest has waited {{oldest}} business days.",
-    "queueAge": "Columns show business days waiting. The review target is 2 business days.",
+    "queueAge": "Columns show business days waiting.",
     "status": "Status",
     "total": "Total",
     "age": {
@@ -982,7 +984,9 @@
     "aiFixDef": "AI findings that became Outdated because the next version changed the flagged text. A rough signal of AI precision.",
     "aiMiss": "AI miss rate",
     "aiMissDef": "Reviewer comments on selected text that no AI finding covered. A rough signal of AI recall.",
-    "evalNote": "AI precision and recall on the evaluation set are in the test report, not here."
+    "evalNote": "AI precision and recall on the evaluation set are in the test report, not here.",
+    "queueTarget_one": "The {{group}} review target is {{count}} business day.",
+    "queueTarget_other": "The {{group}} review target is {{count}} business days."
   },
   "signIn": {
     "heading": "Sign in to ClearPath Review",
@@ -1014,5 +1018,656 @@
       }
     },
     "footer": "An internal tool of ClearPath Credit Union. The audit log records every sign-in."
+  },
+  "settingsGroups": {
+    "intro": "Each item goes to one or more reviewer groups. Only members approve for their group.",
+    "create": "New group",
+    "readOnly": "Only Managers change reviewer groups. You can read them.",
+    "empty": "No reviewer groups yet. Create one to start routing reviews.",
+    "loadError": "Could not load reviewer groups. Reload the page to try again.",
+    "notFound": "This reviewer group does not exist.",
+    "column": {
+      "group": "Group",
+      "reviews": "What it reviews",
+      "members": "Members",
+      "target": "Review target",
+      "queue": "In queue"
+    },
+    "targetDays_one": "{{count}} business day",
+    "targetDays_other": "{{count}} business days",
+    "inQueue_one": "{{count}} item in queue",
+    "inQueue_other": "{{count}} items in queue",
+    "default": "Default",
+    "noMembersShort": "No members",
+    "invited": "Invited",
+    "edit": "Edit group",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
+    "members": {
+      "heading_one": "{{count}} member",
+      "heading_other": "{{count}} members",
+      "add": "Add members",
+      "note": "Members approve for this group. Only Reviewers, Managers and Admins can be members.",
+      "empty_one": "This group has no members, so no one can approve its {{count}} waiting item.",
+      "empty_other": "This group has no members, so no one can approve its {{count}} waiting items.",
+      "empty_zero": "This group has no members, so no one can approve for it.",
+      "remove": "Remove {{name}} from this group"
+    },
+    "queue": {
+      "heading_one": "{{count}} item waiting",
+      "heading_other": "{{count}} items waiting",
+      "empty": "Nothing is waiting on this group."
+    },
+    "field": {
+      "target": "Review target",
+      "default": "Default group",
+      "defaultLink": "Set in Routing",
+      "members": "Members",
+      "queue": "In queue",
+      "created": "Created",
+      "updated": "Last changed"
+    },
+    "form": {
+      "createTitle": "New reviewer group",
+      "createDescription": "Name the group and say what it reviews. Add members after you create it.",
+      "editTitle": "Edit reviewer group",
+      "editDescription": "Change the name, what it reviews, or the review target.",
+      "name": "Name",
+      "namePlaceholder": "For example, Deposits",
+      "nameTaken": "Another group already has this name.",
+      "renameNote": "Members, routing rules and open reviews keep this group under its new name.",
+      "description": "What it reviews",
+      "descriptionPlaceholder": "For example, savings and certificate marketing for Truth in Savings rules",
+      "target": "Review target",
+      "targetUnit": "business days",
+      "targetHint": "How long a review should take, from 1 to 30 business days. Weekends do not count.",
+      "create": "Create group",
+      "save": "Save changes"
+    },
+    "add": {
+      "title": "Add members to {{group}}",
+      "description": "Pick the people who approve for this group. To add someone with a lower role, change their role in Users first.",
+      "search": "Filter by name or email…",
+      "none": "Everyone who can review is already in this group.",
+      "noMatch": "No one matches.",
+      "submit_one": "Add {{count}} person",
+      "submit_other": "Add {{count}} people"
+    }
+  },
+  "settingsUsers": {
+    "searchPlaceholder": "Search people",
+    "readOnly": "Only Admins can invite people or change roles. You can see who has access.",
+    "empty": "No people match these filters.",
+    "loadError": "We could not load the people in this workspace.",
+    "you": "You",
+    "noGroups": "No groups",
+    "never": "Never signed in",
+    "managedBy": "Manager: {{name}}",
+    "affiliateLine": "{{company}} · affiliate manager {{manager}}",
+    "affiliateManager": "Affiliate manager",
+    "invitedOn": "Invited {{date}}",
+    "invitedBy": "Invited by {{name}} on {{date}}",
+    "actionsFor": "Actions for {{name}}",
+    "cancel": "Cancel",
+    "keep": "Keep",
+    "groupsHint": "Reviewers approve only for the groups they belong to.",
+    "column": {
+      "person": "Person",
+      "role": "Role",
+      "groups": "Groups",
+      "status": "Status",
+      "activity": "Last active"
+    },
+    "field": {
+      "role": "Role",
+      "group": "Reviewer groups",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "deactivated": "Deactivated"
+    },
+    "preset": {
+      "all": "Everyone",
+      "active": "Active",
+      "invited": "Invited",
+      "deactivated": "Deactivated"
+    },
+    "sort": {
+      "name": "Name",
+      "role": "Role",
+      "lastActive": "Last active"
+    },
+    "action": {
+      "role": "Change role…",
+      "groups": "Change groups…",
+      "resend": "Resend invite",
+      "cancel": "Cancel invite…",
+      "deactivate": "Deactivate…",
+      "reactivate": "Reactivate"
+    },
+    "roleAdds": {
+      "viewer": "Reads every material, its history and the metrics. Runs regulator exports.",
+      "submitter": "Creates materials, uploads versions, runs the AI self-check, replies to comments, and fixes their own issues.",
+      "reviewer": "Reviews, comments, requests changes, rejects, escalates, and approves for their reviewer groups.",
+      "manager": "Owns compliance policy: rules, disclosures, rate sheet, building blocks, reviewer groups and routing.",
+      "admin": "Manages users and roles, integrations, licensed states and other workspace settings.",
+      "affiliate": "An outside partner. Submits for their own company and sees only their own items and issues."
+    },
+    "guide": {
+      "title": "How roles work",
+      "intro": "Each person has one role. Each role keeps every right of the roles above it in this list and adds its own.",
+      "outside": "Outside the hierarchy",
+      "guest": "Guest",
+      "people_one": "{{count}} person",
+      "people_other": "{{count}} people",
+      "groups": "What a Reviewer can approve depends on their reviewer groups, not their role.",
+      "groupsLink": "Manage reviewer groups",
+      "ownApproval": "Anyone who can submit can also review, but no one can approve a version they submitted."
+    },
+    "invite": {
+      "open": "Invite people",
+      "title": "Invite people",
+      "description": "We email each person a link to set a password and sign in.",
+      "emailsLabel": "Email addresses",
+      "emailsPlaceholder": "name@clearpathcu.org, another@clearpathcu.org",
+      "emailsHint": "Separate addresses with commas or new lines.",
+      "count_one": "{{count}} person will get an invite.",
+      "count_other": "{{count}} people will get an invite.",
+      "invalid": "Check these addresses: {{emails}}",
+      "existing": "Already in the workspace, so skipped: {{emails}}",
+      "company": "Affiliate company",
+      "companyPlaceholder": "For example, LendWise",
+      "affiliateHint": "The affiliate manager gets a copy of this partner’s notifications and takes over overdue issues.",
+      "submit_one": "Send invite",
+      "submit_other": "Send {{count}} invites"
+    },
+    "roleDialog": {
+      "title": "Change role for {{name}}",
+      "description": "Each person has one role. Roles higher in the list include every right below them.",
+      "current": "Current role",
+      "losesGroups": "Groups apply only to Reviewers and higher. This removes {{name}} from {{groups}}.",
+      "needsGroups": "Add them to a reviewer group next, so they can approve.",
+      "submit": "Change role"
+    },
+    "groupsDialog": {
+      "title": "Reviewer groups for {{name}}",
+      "none": "With no groups, {{name}} can comment but cannot approve.",
+      "submit": "Save groups"
+    },
+    "deactivateDialog": {
+      "title": "Deactivate {{name}}?",
+      "description": "{{name}} can no longer sign in. Their materials, decisions and history stay. You can reactivate them later.",
+      "submit": "Deactivate"
+    },
+    "cancelDialog": {
+      "title": "Cancel the invite for {{name}}?",
+      "description": "The link sent to {{email}} stops working, and they leave this list.",
+      "submit": "Cancel invite"
+    }
+  },
+  "settingsRouting": {
+    "readOnly": "Only Managers can change routing. You can read it and test it.",
+    "loadError": "Could not load routing. Try again.",
+    "nationwide": "Nationwide",
+    "unknownGroup": "Unknown group",
+    "optional": "(optional)",
+    "choose": "Choose a group",
+    "cancel": "Cancel",
+    "on": "On",
+    "off": "Off",
+    "source": {
+      "any": "Any",
+      "internal": "Internal",
+      "affiliate": "Affiliate"
+    },
+    "field": {
+      "name": "Rule name",
+      "product": "Product",
+      "channel": "Channel",
+      "source": "Source",
+      "states": "Target states",
+      "note": "Note"
+    },
+    "sentence": {
+      "every": "For every material",
+      "when": "When",
+      "and": "and",
+      "then": "then",
+      "product": "product is",
+      "channel": "channel is",
+      "source": "source is",
+      "history": "the affiliate has",
+      "historyValue": "an open issue or a rejected version in the last 90 days",
+      "states": "it targets",
+      "require": "require",
+      "noGroups": "no group yet"
+    },
+    "rules": {
+      "heading": "Routing rules",
+      "help": "An item needs every group from every rule that matches it. Order is for reading only.",
+      "add": "Add rule",
+      "empty": "No rules yet. Every item goes to the default group.",
+      "number": "{{n}}.",
+      "offLabel": "Off",
+      "toggle": "Turn {{name}} on or off",
+      "moveUp": "Move {{name}} up",
+      "moveDown": "Move {{name}} down",
+      "edit": "Edit {{name}}"
+    },
+    "editor": {
+      "newTitle": "Add a routing rule",
+      "editTitle": "Edit routing rule",
+      "description": "Pick the items this rule applies to and the groups that must approve them.",
+      "namePlaceholder": "For example: Home lending",
+      "nameMissing": "Give the rule a name.",
+      "when": "When",
+      "whenHelp": "Leave a field empty to match any value. The item must meet every field you set.",
+      "historyOnly": "Only when the affiliate has an open issue or a rejected version in the last 90 days",
+      "statesHelp": "Leave empty for any state. Nationwide items also match any state you pick, because they reach every state.",
+      "require": "Require approval from",
+      "groupsMissing": "Pick at least one group.",
+      "notePlaceholder": "Why this rule exists, for the next reader",
+      "readsAs": "This rule reads",
+      "everyWarning": "This rule has no conditions, so it matches every material.",
+      "delete": "Delete rule",
+      "deleteConfirm": "Delete this rule?",
+      "deleteYes": "Delete",
+      "lastChanged": "Last changed by {{name}}, {{date}}",
+      "save": "Save rule",
+      "add": "Add rule"
+    },
+    "default": {
+      "heading": "Default group",
+      "help": "An item that matches no rule goes to this group, so no item is ever left without a reviewer.",
+      "catchAll": "Rule {{n}} ({{name}}) matches every material, so today this group is only a safety net."
+    },
+    "lighter": {
+      "heading": "Lighter path",
+      "group": "Lighter-path group",
+      "useDefault": "Default group ({{group}})",
+      "rule1": "The tool compares a new version with the last approved version, not the previous one.",
+      "rule2": "When every difference is a type that is on below, the version has no material change.",
+      "rule3": "It then needs one approval from this group. Otherwise the full routing rules apply."
+    },
+    "types": {
+      "heading": "No-material-change types",
+      "help": "{{on}} of {{total}} on. The product defines this list, because each type needs an exact code check.",
+      "blocksLink": "See building blocks",
+      "rate_fee": {
+        "name": "Rate or fee update",
+        "check": "Only numbers changed, and the new values match the current rate sheet for the same product."
+      },
+      "offer_date": {
+        "name": "Offer date update",
+        "check": "Only dates changed, and the new end date is not after the approval expires."
+      },
+      "disclosure_refresh": {
+        "name": "Disclosure refresh",
+        "check": "A disclosure was replaced with a newer approved version of the same disclosure."
+      },
+      "block_swap": {
+        "name": "Building block swap",
+        "check": "One approved block was replaced with another approved block of the same type, product and states."
+      },
+      "formatting": {
+        "name": "Formatting only",
+        "check": "The text is the same once spaces and line breaks are ignored."
+      },
+      "tracking_link": {
+        "name": "Tracking link update",
+        "check": "The destination URL changed only in its tracking tags (UTM parameters)."
+      },
+      "targeting": {
+        "name": "Targeting changes always take full routing",
+        "check": "This is fixed and cannot be turned on. For example, removing states can cause a fair lending problem."
+      }
+    },
+    "test": {
+      "heading": "Test routing",
+      "help": "Pick an example item to see who must review it, and why.",
+      "history": "The affiliate has an open issue or a rejected version in the last 90 days",
+      "pickStates": "Pick Nationwide or at least one state.",
+      "required_one": "{{count}} required group",
+      "required_other": "{{count}} required groups",
+      "nobody": "No group would review this item. Set a default group.",
+      "because": "from rule {{rules}}",
+      "becauseDefault": "no rule matched, so the default group",
+      "approval": "One member of each group must approve. One person in two groups covers both.",
+      "byRule": "Rule by rule",
+      "matched": "Matched",
+      "notMatched": "Not matched",
+      "off": "off",
+      "lighter": "A later version with no material change needs one approval from {{group}}."
+    },
+    "miss": {
+      "product": "product is {{value}}",
+      "channel": "channel is {{value}}",
+      "source": "source is {{value}}",
+      "history": "no recent affiliate problems",
+      "states": "targets other states"
+    }
+  },
+  "settingsIntegrations": {
+    "summary": "{{connected}} of {{total}} connectors connected",
+    "summaryErrors_one": "{{count}} needs attention",
+    "summaryErrors_other": "{{count}} need attention",
+    "demoNote": "The demo workspace has no real integrations. These connectors and accounts are seeded examples. Nothing signs in to a platform and nothing really syncs: Connect, Sync now and Disconnect change only this demo.",
+    "readOnly": "Only Admins can connect, sync or change connectors.",
+    "loadError": "Could not load the integrations. Reload the page to try again.",
+    "column": {
+      "connector": "Connector",
+      "status": "Status",
+      "testing": "Testing",
+      "accounts": "Accounts",
+      "lastSync": "Last sync",
+      "action": "Action"
+    },
+    "group": {
+      "channels": "Channels",
+      "affiliates": "Affiliate network",
+      "regulatory": "Regulatory feed",
+      "alerts": "Alerts"
+    },
+    "groupHint": {
+      "channels": "Bring in drafts and watch live content",
+      "affiliates": "Affiliates, tracking links and referral URLs",
+      "regulatory": "Adds items to the regulatory change queue",
+      "alerts": "Send issue and review alerts"
+    },
+    "status": {
+      "connected": "Connected",
+      "not_connected": "Not connected",
+      "error": "Error"
+    },
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "verifiedHint": "Tested against a real account on the platform.",
+    "unverifiedHint": "Built from the platform documentation. Not yet tested against a real account.",
+    "testing": "Testing",
+    "accountCount_one": "{{count}} account",
+    "accountCount_other": "{{count}} accounts",
+    "never": "Never",
+    "syncNow": "Sync now",
+    "reconnect": "Reconnect",
+    "connectAction": "Connect",
+    "editAccounts": "Change accounts",
+    "disconnectAction": "Disconnect",
+    "cancel": "Cancel",
+    "purpose": {
+      "intake": "Intake",
+      "monitoring": "Monitoring",
+      "pause": "Actions",
+      "affiliates": "Provides",
+      "regulatory": "Provides",
+      "alerts": "Sends"
+    },
+    "accounts": {
+      "heading": "Connected accounts",
+      "none": "No accounts connected.",
+      "defaultOwner": "Default owner",
+      "defaultOwnerFor": "Default owner for {{account}}",
+      "defaultOwnerHelp": "The default owner gets synced and found-live content that has no platform author, and handles its issues.",
+      "noOwner": "No owner"
+    },
+    "error": {
+      "fixLabel": "To fix:",
+      "token_expired": {
+        "short": "Sign-in expired. Syncing stopped.",
+        "message": "The sign-in expired on {{date}}. Intake and monitoring stopped.",
+        "fix": "Reconnect with an account that still has access to the ad account. Then run Sync now."
+      },
+      "webhook_silent": {
+        "short": "No page change events since the last check.",
+        "message": "The site has sent no page change events since {{date}}. New page edits may be missed.",
+        "fix": "Check that the ClearPath webhook is still active in the site settings, then reconnect."
+      },
+      "permission_removed": {
+        "short": "Access was removed on the platform.",
+        "message": "Someone removed ClearPath’s access on {{date}}.",
+        "fix": "Ask the account owner on the platform to grant access again, then reconnect."
+      }
+    },
+    "connect": {
+      "title": "Connect {{name}}",
+      "reconnectTitle": "Reconnect {{name}}",
+      "accessIntro": "ClearPath asks {{name}} for access to do the following:",
+      "noSecrets": "You sign in on the {{name}} page. ClearPath never sees your password and stores only an encrypted access token.",
+      "demoNote": "Demo: no {{name}} sign-in page opens. The next step lists seeded example accounts.",
+      "continue": "Continue to {{name}}",
+      "accountsTitle": "Choose {{name}} accounts",
+      "accountsIntro": "Pick the accounts that ClearPath reads. You can change this later.",
+      "demoAccounts": "Demo: these accounts are seeded examples. Connecting them syncs nothing.",
+      "submit_one": "Connect {{count}} account",
+      "submit_other": "Connect {{count}} accounts"
+    },
+    "disconnect": {
+      "title": "Disconnect {{name}}?",
+      "stops": {
+        "channels": "ClearPath stops reading drafts and live content from {{name}}. Live content there is no longer checked.",
+        "affiliates": "ClearPath stops updating affiliates, tracking links and referral URLs from {{name}}.",
+        "regulatory": "ClearPath stops adding regulatory changes from {{name}} to the change queue.",
+        "alerts": "ClearPath stops sending alerts through {{name}}."
+      },
+      "stays": "Materials, versions, issues and the audit log stay. You can connect again later.",
+      "confirm": "Disconnect"
+    },
+    "provider": {
+      "meta": {
+        "name": "Meta ads",
+        "summary": "Facebook and Instagram ad accounts",
+        "does": {
+          "intake": "Reads draft and paused campaigns and creates a material for each ad.",
+          "monitoring": "Reads live ads and matches each one by its ad ID.",
+          "pause": "Pauses an ad when a person chooses it on an issue."
+        }
+      },
+      "google_ads": {
+        "name": "Google Ads",
+        "summary": "Search and display ad accounts",
+        "does": {
+          "intake": "Reads draft and paused campaigns and creates a material for each ad.",
+          "monitoring": "Reads live ads and matches each one by its ad ID.",
+          "pause": "Pauses an ad when a person chooses it on an issue."
+        }
+      },
+      "mailchimp": {
+        "name": "Mailchimp",
+        "summary": "Email campaigns and templates",
+        "does": {
+          "intake": "Reads draft campaigns and templates.",
+          "monitoring": "Reads sent campaigns and compares them with the approved version.",
+          "pause": "Pauses an automated email flow when a person chooses it on an issue."
+        }
+      },
+      "klaviyo": {
+        "name": "Klaviyo",
+        "summary": "Second email option",
+        "does": {
+          "intake": "Reads draft campaigns and templates.",
+          "monitoring": "Reads sent campaigns and compares them with the approved version.",
+          "pause": "Pauses an automated email flow when a person chooses it on an issue."
+        }
+      },
+      "wordpress": {
+        "name": "WordPress",
+        "summary": "Website and landing pages",
+        "does": {
+          "intake": "A page change webhook creates a new version when page content changes.",
+          "monitoring": "Reads published page content and flags text and disclosure changes."
+        }
+      },
+      "webflow": {
+        "name": "Webflow",
+        "summary": "Second website option",
+        "does": {
+          "intake": "A page change webhook creates a new version when page content changes.",
+          "monitoring": "Reads published page content and flags text and disclosure changes."
+        }
+      },
+      "crawler": {
+        "name": "Web crawler",
+        "summary": "Affiliate pages and live landing pages",
+        "does": {
+          "monitoring": "Fetches affiliate referral pages and landing pages without a CMS connector, and matches them by tracking link and content. A person confirms each match."
+        }
+      },
+      "seed_inbox": {
+        "name": "Seed inbox",
+        "summary": "Receives sent emails, including affiliate emails",
+        "does": {
+          "monitoring": "Receives real sent emails at a seed address and matches them by content. A person confirms each match."
+        }
+      },
+      "impact": {
+        "name": "Impact",
+        "summary": "Affiliate network",
+        "does": {
+          "affiliates": "The affiliate list, tracking links and referral URLs that the crawler checks."
+        }
+      },
+      "cj": {
+        "name": "CJ",
+        "summary": "Affiliate network",
+        "does": {
+          "affiliates": "The affiliate list, tracking links and referral URLs that the crawler checks."
+        }
+      },
+      "compliance_ai": {
+        "name": "compliance.ai",
+        "summary": "Regulatory change feed",
+        "does": {
+          "regulatory": "New and changed regulations. Each one goes to the change queue for a Manager to review."
+        }
+      },
+      "wolters_kluwer": {
+        "name": "Wolters Kluwer",
+        "summary": "Regulatory change feed",
+        "does": {
+          "regulatory": "New and changed regulations. Each one goes to the change queue for a Manager to review."
+        }
+      },
+      "slack": {
+        "name": "Slack",
+        "summary": "Alerts in a Slack channel",
+        "does": {
+          "alerts": "New issues, review requests and expiry warnings to the chosen channel."
+        }
+      },
+      "email_alerts": {
+        "name": "Email alerts",
+        "summary": "Alerts by email",
+        "does": {
+          "alerts": "New issues, review requests and expiry warnings by email."
+        }
+      }
+    }
+  },
+  "settingsWorkspace": {
+    "readOnly": "Only Admins can change workspace settings.",
+    "loadError": "Could not load the workspace settings. Reload the page to try again.",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "discard": "Discard",
+    "details": {
+      "heading": "Details",
+      "name": "Name",
+      "type": "Type",
+      "demo": "Demo workspace",
+      "demoHelp": "Seeded data for trying the tool. Only demo accounts can open it. It has no real integrations and can be reset.",
+      "real": "ClearPath workspace",
+      "realHelp": "Real materials and real integrations."
+    },
+    "states": {
+      "heading": "Licensed states",
+      "intro": "States where ClearPath is licensed. Nationwide content, and synced content with no state targeting, gets the rules of every state on this list.",
+      "count_one": "{{count}} state selected",
+      "count_other": "{{count}} states selected",
+      "none": "Choose at least one state.",
+      "removed_one": "Removing {{states}} drops its rules from the checklist of nationwide content.",
+      "removed_other": "Removing {{states}} drops their rules from the checklist of nationwide content."
+    },
+    "stateName": {
+      "AL": "Alabama",
+      "AK": "Alaska",
+      "AZ": "Arizona",
+      "AR": "Arkansas",
+      "CA": "California",
+      "CO": "Colorado",
+      "CT": "Connecticut",
+      "DE": "Delaware",
+      "DC": "District of Columbia",
+      "FL": "Florida",
+      "GA": "Georgia",
+      "HI": "Hawaii",
+      "ID": "Idaho",
+      "IL": "Illinois",
+      "IN": "Indiana",
+      "IA": "Iowa",
+      "KS": "Kansas",
+      "KY": "Kentucky",
+      "LA": "Louisiana",
+      "ME": "Maine",
+      "MD": "Maryland",
+      "MA": "Massachusetts",
+      "MI": "Michigan",
+      "MN": "Minnesota",
+      "MS": "Mississippi",
+      "MO": "Missouri",
+      "MT": "Montana",
+      "NE": "Nebraska",
+      "NV": "Nevada",
+      "NH": "New Hampshire",
+      "NJ": "New Jersey",
+      "NM": "New Mexico",
+      "NY": "New York",
+      "NC": "North Carolina",
+      "ND": "North Dakota",
+      "OH": "Ohio",
+      "OK": "Oklahoma",
+      "OR": "Oregon",
+      "PA": "Pennsylvania",
+      "RI": "Rhode Island",
+      "SC": "South Carolina",
+      "SD": "South Dakota",
+      "TN": "Tennessee",
+      "TX": "Texas",
+      "UT": "Utah",
+      "VT": "Vermont",
+      "VA": "Virginia",
+      "WA": "Washington",
+      "WV": "West Virginia",
+      "WI": "Wisconsin",
+      "WY": "Wyoming"
+    },
+    "expiry": {
+      "heading": "Approval expiry",
+      "label": "Approvals expire after",
+      "unit": "days",
+      "invalid": "Enter a whole number from 15 to 365.",
+      "warning": "Owners get a warning {{days}} days before an approval expires. On the expiry date the material is marked Expired.",
+      "earlier": "An approval expires sooner when a rule, disclosure or rate it depends on changes.",
+      "newOnly": "A change applies to new approvals only. Existing approvals keep their expiry date."
+    },
+    "reset": {
+      "heading": "Demo data",
+      "intro": "Put the demo workspace back to its seeded state. Use this before a demo or after trying things out.",
+      "action": "Reset demo data",
+      "title": "Reset demo data?",
+      "description": "Every change made in the demo workspace is undone, and the seeded data loads again:",
+      "items": {
+        "materials": "Materials, versions, reviews and comments",
+        "issues": "Issues, their actions and notices",
+        "notifications": "Notifications",
+        "library": "Rules, disclosures, rate sheet, building blocks and regulatory changes",
+        "people": "Users, reviewer groups and routing rules",
+        "settings": "Integrations, licensed states and approval expiry"
+      },
+      "stays": "You stay signed in. The real ClearPath workspace is not affected.",
+      "confirm": "Reset demo data",
+      "done": "Demo data reset at {{time}}."
+    }
   }
 }

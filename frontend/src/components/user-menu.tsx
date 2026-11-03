@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { demoViewer } from '@/components/review/material-detail-data'
 import { Button } from '@/components/ui/button'
+import { settingsTabsFor } from '@/components/settings/settings-tabs'
 import { signOut } from '@/lib/session'
 import { useWorkspace } from '@/lib/workspace'
 import {
@@ -18,7 +19,6 @@ import {
 /**
  * Right end of the app bar. Settings lives here, not in the main links.
  * Shows who is signed in: initials on the button, then name, role, reviewer groups and workspace in the menu.
- * Later: show Settings only to roles that can change at least one settings tab.
  */
 export function UserMenu() {
   const { t } = useTranslation()
@@ -47,9 +47,12 @@ export function UserMenu() {
           <span className="truncate font-normal">{workspace.name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/settings"><Settings />{t('nav.settings')}</Link>
-        </DropdownMenuItem>
+        {/* Settings shows only to roles that can change at least one tab (Manager and Admin). */}
+        {settingsTabsFor(viewer.role).length > 0 && (
+          <DropdownMenuItem asChild>
+            <Link to="/settings"><Settings />{t('nav.settings')}</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
           <Link to="/design-system"><Palette />{t('nav.designSystem')}</Link>
         </DropdownMenuItem>

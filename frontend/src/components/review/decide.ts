@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Material } from '@/components/materials/material-data'
 import type { MaterialStatus } from '@/components/ui/status-pill'
+import { useApprovalDays } from '@/components/settings/workspace-data'
 import { demoViewer, type Decision, type MaterialDetail } from './material-detail-data'
 
 // Applies a review decision (PRD F5) to the demo data in the query cache.
@@ -32,6 +33,8 @@ function historyText(decision: Decision, groups: string[], version: number, text
 
 export function useDecide(materialId: string) {
   const queryClient = useQueryClient()
+  // The approval length from Settings (Workspace tab), so a change there applies to the next approval.
+  const approvalDays = useApprovalDays()
 
   return ({ decision, text, group, override }: DecisionInput) => {
     const detail = queryClient.getQueryData<MaterialDetail | null>(['material-detail', materialId])
@@ -49,11 +52,13 @@ export function useDecide(materialId: string) {
         groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'approved', by: demoViewer.name, at: now } : g))
         if (groups.every((g) => g.state === 'approved')) {
           status = 'approved'
-          // TODO: the server sets the expiry from the rule, disclosure and rate dates. One year is a placeholder.
-          const expires = new Date()
-          expires.setFullYear(expires.getFullYear() + 1)
+          // The workspace approval length (PRD F9, F15). TODO: the server also ends it early at a rule,
+          // disclosure or rate date that comes sooner.
+          const approvedAt = new Date(now)
+          const expires = new Date(now)
+          expires.setDate(expires.getDate() + approvalDays)
           approval = {
-            approvalId: `CP-${expires.getFullYear() - 1}-${String(Math.floor(1000 + Math.random() * 9000))}-v${detail.version}`,
+            approvalId: `CP-${approvedAt.getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}-v${detail.version}`,
             expiresAt: expires.toISOString().slice(0, 10),
           }
         }
