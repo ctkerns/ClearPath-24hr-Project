@@ -33,6 +33,9 @@ import { Route as AppSettingsReviewerGroupsRouteImport } from './routes/_app.set
 import { Route as AppSettingsRoutingRouteImport } from './routes/_app.settings.routing'
 import { Route as AppSettingsUsersRouteImport } from './routes/_app.settings.users'
 import { Route as AppSettingsWorkspaceRouteImport } from './routes/_app.settings.workspace'
+import { Route as AppLibraryBuildingBlocksBlockIdRouteImport } from './routes/_app.library.building-blocks_.$blockId'
+import { Route as AppLibraryDisclosuresDisclosureIdRouteImport } from './routes/_app.library.disclosures_.$disclosureId'
+import { Route as AppLibraryRegulatoryChangesChangeIdRouteImport } from './routes/_app.library.regulatory-changes_.$changeId'
 import { Route as AppLibraryRulesRuleIdRouteImport } from './routes/_app.library.rules_.$ruleId'
 import { Route as AppMaterialsMaterialIdIndexRouteImport } from './routes/_app.materials.$materialId.index'
 import { Route as AppMaterialsMaterialIdNewVersionRouteImport } from './routes/_app.materials.$materialId.new-version'
@@ -159,6 +162,24 @@ const AppSettingsWorkspaceRoute = AppSettingsWorkspaceRouteImport.update({
   path: '/workspace',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppLibraryBuildingBlocksBlockIdRoute =
+  AppLibraryBuildingBlocksBlockIdRouteImport.update({
+    id: '/building-blocks_/$blockId',
+    path: '/building-blocks/$blockId',
+    getParentRoute: () => AppLibraryRoute,
+  } as any)
+const AppLibraryDisclosuresDisclosureIdRoute =
+  AppLibraryDisclosuresDisclosureIdRouteImport.update({
+    id: '/disclosures_/$disclosureId',
+    path: '/disclosures/$disclosureId',
+    getParentRoute: () => AppLibraryRoute,
+  } as any)
+const AppLibraryRegulatoryChangesChangeIdRoute =
+  AppLibraryRegulatoryChangesChangeIdRouteImport.update({
+    id: '/regulatory-changes_/$changeId',
+    path: '/regulatory-changes/$changeId',
+    getParentRoute: () => AppLibraryRoute,
+  } as any)
 const AppLibraryRulesRuleIdRoute = AppLibraryRulesRuleIdRouteImport.update({
   id: '/rules_/$ruleId',
   path: '/rules/$ruleId',
@@ -201,6 +222,9 @@ export interface FileRoutesByFullPath {
   '/library/': typeof AppLibraryIndexRoute
   '/materials/': typeof AppMaterialsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
+  '/library/building-blocks/$blockId': typeof AppLibraryBuildingBlocksBlockIdRoute
+  '/library/disclosures/$disclosureId': typeof AppLibraryDisclosuresDisclosureIdRoute
+  '/library/regulatory-changes/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
@@ -227,6 +251,9 @@ export interface FileRoutesByTo {
   '/library': typeof AppLibraryIndexRoute
   '/materials': typeof AppMaterialsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
+  '/library/building-blocks/$blockId': typeof AppLibraryBuildingBlocksBlockIdRoute
+  '/library/disclosures/$disclosureId': typeof AppLibraryDisclosuresDisclosureIdRoute
+  '/library/regulatory-changes/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/library/rules/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/materials/$materialId': typeof AppMaterialsMaterialIdIndexRoute
@@ -257,6 +284,9 @@ export interface FileRoutesById {
   '/_app/library/': typeof AppLibraryIndexRoute
   '/_app/materials/': typeof AppMaterialsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
+  '/_app/library/building-blocks_/$blockId': typeof AppLibraryBuildingBlocksBlockIdRoute
+  '/_app/library/disclosures_/$disclosureId': typeof AppLibraryDisclosuresDisclosureIdRoute
+  '/_app/library/regulatory-changes_/$changeId': typeof AppLibraryRegulatoryChangesChangeIdRoute
   '/_app/library/rules_/$ruleId': typeof AppLibraryRulesRuleIdRoute
   '/_app/materials/$materialId/new-version': typeof AppMaterialsMaterialIdNewVersionRoute
   '/_app/materials/$materialId/': typeof AppMaterialsMaterialIdIndexRoute
@@ -287,6 +317,9 @@ export interface FileRouteTypes {
     | '/library/'
     | '/materials/'
     | '/settings/'
+    | '/library/building-blocks/$blockId'
+    | '/library/disclosures/$disclosureId'
+    | '/library/regulatory-changes/$changeId'
     | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
     | '/materials/$materialId/'
@@ -313,6 +346,9 @@ export interface FileRouteTypes {
     | '/library'
     | '/materials'
     | '/settings'
+    | '/library/building-blocks/$blockId'
+    | '/library/disclosures/$disclosureId'
+    | '/library/regulatory-changes/$changeId'
     | '/library/rules/$ruleId'
     | '/materials/$materialId/new-version'
     | '/materials/$materialId'
@@ -342,6 +378,9 @@ export interface FileRouteTypes {
     | '/_app/library/'
     | '/_app/materials/'
     | '/_app/settings/'
+    | '/_app/library/building-blocks_/$blockId'
+    | '/_app/library/disclosures_/$disclosureId'
+    | '/_app/library/regulatory-changes_/$changeId'
     | '/_app/library/rules_/$ruleId'
     | '/_app/materials/$materialId/new-version'
     | '/_app/materials/$materialId/'
@@ -523,6 +562,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsWorkspaceRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/library/building-blocks_/$blockId': {
+      id: '/_app/library/building-blocks_/$blockId'
+      path: '/building-blocks/$blockId'
+      fullPath: '/library/building-blocks/$blockId'
+      preLoaderRoute: typeof AppLibraryBuildingBlocksBlockIdRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/disclosures_/$disclosureId': {
+      id: '/_app/library/disclosures_/$disclosureId'
+      path: '/disclosures/$disclosureId'
+      fullPath: '/library/disclosures/$disclosureId'
+      preLoaderRoute: typeof AppLibraryDisclosuresDisclosureIdRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
+    '/_app/library/regulatory-changes_/$changeId': {
+      id: '/_app/library/regulatory-changes_/$changeId'
+      path: '/regulatory-changes/$changeId'
+      fullPath: '/library/regulatory-changes/$changeId'
+      preLoaderRoute: typeof AppLibraryRegulatoryChangesChangeIdRouteImport
+      parentRoute: typeof AppLibraryRoute
+    }
     '/_app/library/rules_/$ruleId': {
       id: '/_app/library/rules_/$ruleId'
       path: '/rules/$ruleId'
@@ -554,6 +614,9 @@ interface AppLibraryRouteChildren {
   AppLibraryRegulatoryChangesRoute: typeof AppLibraryRegulatoryChangesRoute
   AppLibraryRulesRoute: typeof AppLibraryRulesRoute
   AppLibraryIndexRoute: typeof AppLibraryIndexRoute
+  AppLibraryBuildingBlocksBlockIdRoute: typeof AppLibraryBuildingBlocksBlockIdRoute
+  AppLibraryDisclosuresDisclosureIdRoute: typeof AppLibraryDisclosuresDisclosureIdRoute
+  AppLibraryRegulatoryChangesChangeIdRoute: typeof AppLibraryRegulatoryChangesChangeIdRoute
   AppLibraryRulesRuleIdRoute: typeof AppLibraryRulesRuleIdRoute
 }
 
@@ -564,6 +627,11 @@ const AppLibraryRouteChildren: AppLibraryRouteChildren = {
   AppLibraryRegulatoryChangesRoute: AppLibraryRegulatoryChangesRoute,
   AppLibraryRulesRoute: AppLibraryRulesRoute,
   AppLibraryIndexRoute: AppLibraryIndexRoute,
+  AppLibraryBuildingBlocksBlockIdRoute: AppLibraryBuildingBlocksBlockIdRoute,
+  AppLibraryDisclosuresDisclosureIdRoute:
+    AppLibraryDisclosuresDisclosureIdRoute,
+  AppLibraryRegulatoryChangesChangeIdRoute:
+    AppLibraryRegulatoryChangesChangeIdRoute,
   AppLibraryRulesRuleIdRoute: AppLibraryRulesRuleIdRoute,
 }
 

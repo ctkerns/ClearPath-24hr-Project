@@ -655,8 +655,8 @@
     "owner": "Owner",
     "check": {
       "heading": "How ClearPath checks it",
-      "triggerTerms": "Code check. When the content contains any of these terms, it must also contain disclosure {{disclosure}}.",
-      "requiredDisclosure": "Code check. Every material it applies to must contain disclosure {{disclosure}}.",
+      "triggerTerms": "Code check. When the content contains any of these terms, it must also contain this disclosure:",
+      "requiredDisclosure": "Code check. Every material it applies to must contain this disclosure:",
       "phraseRequired": "Code check. The content must contain at least one of these:",
       "phraseBanned": "Code check. The content must not contain any of these phrases:",
       "rateSheet": "Code check. Each rate and fee in the content is compared with the current range for its product in the",
@@ -673,5 +673,230 @@
       "note": "When this rule changes, these materials are flagged for re-review."
     },
     "allStates": "All states"
+  },
+  "regChanges": {
+    "preset": {
+      "waiting_one": "Waiting · {{count}}",
+      "waiting_other": "Waiting · {{count}}",
+      "applied": "Applied",
+      "dismissed": "Dismissed",
+      "all": "All"
+    },
+    "searchPlaceholder": "Filter by title, agency or citation…",
+    "sort": {
+      "effective": "Soonest effective date",
+      "published": "Newest published"
+    },
+    "field": {
+      "status": "Status",
+      "agency": "Agency",
+      "product": "Product"
+    },
+    "status": {
+      "waiting": "Waiting",
+      "in_review": "In review",
+      "applied": "Applied",
+      "dismissed": "Dismissed"
+    },
+    "column": {
+      "title": "Change",
+      "agency": "Agency",
+      "status": "Status",
+      "rules": "Affected rules",
+      "effective": "Effective"
+    },
+    "empty": "No regulatory changes match these filters.",
+    "loadError": "Regulatory changes did not load. Reload the page to try again.",
+    "notFound": "This regulatory change does not exist.",
+    "published": "Published {{date}}",
+    "effectiveOn": "Effective {{date}}",
+    "summary": "Summary",
+    "edit": {
+      "waiting": "Suggested change to the rule",
+      "in_review": "Suggested change to the rule",
+      "applied": "Change made to the rule",
+      "dismissed": "Suggested change, not made"
+    },
+    "editNote": "Struck-through words would be removed. Underlined words would be added.",
+    "decision": {
+      "heading": "Decision",
+      "applied": "Applied by {{name}} on {{date}}",
+      "dismissed": "Dismissed by {{name}} on {{date}}"
+    },
+    "reviewingBy": "{{name}} is reviewing this change.",
+    "apply": "Apply to rule",
+    "dismiss": "Dismiss",
+    "readOnly": "Only Managers apply or dismiss regulatory changes. You can read them.",
+    "sourceNote": "Seeded for the demo. The feed connector is not set up yet.",
+    "rules": {
+      "heading_one": "{{count}} affected rule",
+      "heading_other": "{{count}} affected rules"
+    },
+    "flagged": {
+      "heading_one": "{{count}} approved material",
+      "heading_other": "{{count}} approved materials",
+      "waiting": "Applying this change flags these materials for re-review.",
+      "in_review": "Applying this change flags these materials for re-review.",
+      "applied": "These materials were flagged for re-review when the change was applied.",
+      "dismissed": "Nothing was flagged, because the change was dismissed."
+    },
+    "detail": {
+      "status": "Status",
+      "agency": "Agency",
+      "citation": "Citation",
+      "published": "Published",
+      "effective": "Effective",
+      "source": "Source"
+    }
+  },
+  "rateSheet": {
+    "meta": "Effective <date>{{date}}</date> · uploaded by <avatar/><person>{{name}}</person> from <file>{{file}}</file>",
+    "replaced": "This sheet was replaced by the {{date}} sheet. Reviews check rates against the current sheet only.",
+    "viewCurrent": "View the current sheet",
+    "readOnly": "Only Managers upload a new rate sheet, as a CSV. You can read it and use it in reviews.",
+    "loadError": "The rate sheet could not be loaded. Refresh the page to try again.",
+    "footnote": "Effective and Source show when each offer last changed, and which upload set it. Rates and fees are inclusive of all ranges a member can be offered.",
+    "column": {
+      "offer": "Offer and term",
+      "rate": "Rate",
+      "fees": "Fees",
+      "effective": "Effective",
+      "source": "Source"
+    },
+    "kind": {
+      "apr": "APR",
+      "apy": "APY"
+    },
+    "range": "{{min}} – {{max}}",
+    "field": {
+      "offer": "Offer",
+      "min": "Min {{kind}}",
+      "max": "Max {{kind}}",
+      "fees": "Fees"
+    },
+    "changes": {
+      "since": "Changed since the {{date}} sheet",
+      "added": "New since the {{date}} sheet",
+      "summary_one": "{{count}} offer changed since the {{date}} sheet.",
+      "summary_other": "{{count}} offers changed since the {{date}} sheet.",
+      "reReview": "Approved materials that quote an old rate are flagged for re-review.",
+      "rule": "Rule RATE-01"
+    },
+    "history": {
+      "heading": "Previous sheets",
+      "current": "Current",
+      "first": "First sheet uploaded",
+      "changed_one": "{{count}} offer changed",
+      "changed_other": "{{count}} offers changed"
+    }
+  },
+  "blocks": {
+    "preset": {
+      "all": "All",
+      "headline": "Headlines",
+      "claim": "Claims",
+      "disclosure": "Disclosures",
+      "expiring": "Expiring soon"
+    },
+    "searchPlaceholder": "Filter by text or source material…",
+    "sort": {
+      "text": "Text",
+      "expires": "Expires soonest",
+      "approved": "Newest approval",
+      "used": "Most used"
+    },
+    "field": {
+      "kind": "Type",
+      "product": "Product",
+      "state": "State",
+      "expiry": "Expiry"
+    },
+    "kind": {
+      "headline": "Headline",
+      "claim": "Claim",
+      "cta": "Call to action",
+      "disclosure": "Disclosure"
+    },
+    "kindLower": {
+      "headline": "headline",
+      "claim": "claim",
+      "cta": "call to action",
+      "disclosure": "disclosure"
+    },
+    "expiry": {
+      "current": "Current",
+      "expiring": "Expires within 30 days",
+      "expired": "Expired"
+    },
+    "column": {
+      "text": "Text",
+      "kind": "Type",
+      "appliesTo": "Approved for",
+      "usedIn": "Used in",
+      "expires": "Expires"
+    },
+    "usedInCount_one": "{{count}} material",
+    "usedInCount_other": "{{count}} materials",
+    "expiresOn": "Approval expires {{date}}",
+    "expiredOn": "Expired {{date}}",
+    "empty": "No building blocks match these filters.",
+    "loadError": "Building blocks did not load. Reload the page to try again.",
+    "notFound": "This building block does not exist.",
+    "readOnly": "Only Managers can change building blocks. You can read them, copy them, and use them in materials.",
+    "approvedLine": "Approved {{date}} by {{name}}",
+    "expiringWarning": "This approval expires on {{date}}. After that, materials that use this text need a full review.",
+    "expiredWarning": "This approval expired on {{date}}. Materials that use this text now need a full review until a Manager renews it.",
+    "characters_one": "{{count}} character",
+    "characters_other": "{{count}} characters",
+    "exactNote": "ClearPath finds this block in a material by its exact text. Copy it as written: any edit makes it new text that needs review.",
+    "swap": {
+      "heading": "Swap for another block",
+      "note": "Replacing this {{kind}} with another approved {{kind}} for the same products and states is a building block swap. It counts as no material change, so the new version takes the lighter review path.",
+      "none": "No other current {{kind}} is approved for the same products and states."
+    },
+    "expires": "Expires",
+    "approved": "Approved",
+    "approvedBy": "Approved by",
+    "usedIn": "Used in",
+    "savedFrom": {
+      "heading": "Saved from",
+      "note": "{{name}} saved this text to the library from this approved material."
+    }
+  },
+  "disclosures": {
+    "preset": {
+      "all": "All",
+      "lending": "Lending",
+      "cards": "Cards",
+      "deposits": "Deposits"
+    },
+    "searchPlaceholder": "Filter by title or text…",
+    "sort": {
+      "title": "Title",
+      "effective": "Newest effective date"
+    },
+    "field": {
+      "product": "Product",
+      "state": "State"
+    },
+    "column": {
+      "text": "Disclosure",
+      "products": "Products",
+      "states": "States",
+      "version": "Version",
+      "effective": "Effective"
+    },
+    "empty": "No disclosures match these filters.",
+    "loadError": "Disclosures did not load. Reload the page to try again.",
+    "notFound": "This disclosure does not exist.",
+    "effectiveOn": "Effective {{date}}",
+    "readOnly": "Only Managers can change disclosures. Copy the text exactly; do not retype it.",
+    "approvedText": "Approved text",
+    "placement": "Where it goes:",
+    "copy": "Copy text",
+    "copied": "Copied",
+    "requiredBy_one": "Required by {{count}} rule",
+    "requiredBy_other": "Required by {{count}} rules",
+    "notRequired": "No rule requires it. Reviewers ask for it when it applies."
   }
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Bot, ChevronLeft, ExternalLink, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useDisclosures } from '@/components/library/disclosure-data'
 import { dependentMaterials, useRules, type RuleCheck } from '@/components/library/rule-data'
 import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
@@ -135,12 +136,12 @@ function CheckDescription({ check }: { check: RuleCheck }) {
     case 'trigger_terms':
       return (
         <div className="grid gap-2">
-          <p>{t('rules.check.triggerTerms', { disclosure: check.disclosure })}</p>
+          <p>{t('rules.check.triggerTerms')} <DisclosureLink id={check.disclosure} /></p>
           <Terms items={check.terms} />
         </div>
       )
     case 'required_disclosure':
-      return <p>{t('rules.check.requiredDisclosure', { disclosure: check.disclosure })}</p>
+      return <p>{t('rules.check.requiredDisclosure')} <DisclosureLink id={check.disclosure} /></p>
     case 'phrase_required':
       return (
         <div className="grid gap-2">
@@ -175,6 +176,17 @@ function CheckDescription({ check }: { check: RuleCheck }) {
         </div>
       )
   }
+}
+
+/** The disclosure by its title, linked to its page. The ID shows only while the list loads. */
+function DisclosureLink({ id }: { id: string }) {
+  const disclosures = useDisclosures()
+  const title = disclosures.data?.find((d) => d.id === id)?.title ?? id
+  return (
+    <Link to="/library/disclosures/$disclosureId" params={{ disclosureId: id }} className="font-medium text-primary hover:underline">
+      {title}
+    </Link>
+  )
 }
 
 /** Terms or phrases as quiet chips, in the monospace face, because the check matches them exactly. */

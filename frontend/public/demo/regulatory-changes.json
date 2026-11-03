@@ -1,0 +1,140 @@
+{
+  "changes": [
+    {
+      "id": "cfpb-regz-trigger-terms-commentary",
+      "title": "Reg Z commentary: variable-rate notice must sit next to the APR",
+      "summary": "The CFPB updated the official commentary to 12 CFR 1026.24. When a closed-end credit ad states a trigger term and the rate can increase, the notice that the rate can increase must appear next to the annual percentage rate, not in a footnote. The commentary also says that a payment amount shown as a range is a trigger term.",
+      "source": "compliance.ai",
+      "agency": "CFPB",
+      "citation": {
+        "label": "12 CFR 1026.24(c), (d), Supplement I",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1026/24/"
+      },
+      "publishedAt": "2026-10-21",
+      "effectiveDate": "2027-01-01",
+      "status": "waiting",
+      "edits": [
+        {
+          "ruleId": "REGZ-1026.24",
+          "before": "If an ad for closed-end credit states a trigger term (the amount or percentage of a down payment, the number of payments or period of repayment, the amount of any payment, or the amount of any finance charge), it must also state the down payment, the terms of repayment, and the annual percentage rate. If the rate can increase after the loan is made, the ad must say so.",
+          "after": "If an ad for closed-end credit states a trigger term (the amount or percentage of a down payment, the number of payments or period of repayment, the amount of any payment, including a range of payment amounts, or the amount of any finance charge), it must also state the down payment, the terms of repayment, and the annual percentage rate. If the rate can increase after the loan is made, the ad must say so next to the annual percentage rate."
+        }
+      ]
+    },
+    {
+      "id": "ncua-digital-official-sign",
+      "title": "NCUA: official sign on digital and mobile banking pages",
+      "summary": "The NCUA's rule on the official advertising statement now covers digital channels. Pages where a member can open a share account, including mobile app screens, must show the official NCUA digital sign near the credit union's name. Short social posts and loan-only ads stay exempt.",
+      "source": "compliance.ai",
+      "agency": "NCUA",
+      "citation": {
+        "label": "12 CFR 740.4, 740.5",
+        "url": "https://www.ecfr.gov/current/title-12/chapter-VII/subchapter-A/part-740"
+      },
+      "publishedAt": "2026-10-08",
+      "effectiveDate": "2027-03-01",
+      "status": "waiting",
+      "edits": [
+        {
+          "ruleId": "NCUA-740",
+          "before": "Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
+          "after": "Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Web and mobile pages where a member can open a share account must show the official NCUA digital sign near the credit union's name. Some ads are exempt, for example ads for loans only, short radio ads, and short social posts."
+        }
+      ]
+    },
+    {
+      "id": "ca-dfpi-ccfpl-rate-claims",
+      "title": "California DFPI: rate claims must be available to most applicants",
+      "summary": "The DFPI published guidance under the California Consumer Financial Protection Law. A loan ad that states a \"from\" or \"as low as\" rate must also state the credit criteria for that rate, unless most applicants in the past quarter received it.",
+      "source": "compliance.ai",
+      "agency": "California DFPI",
+      "citation": {
+        "label": "Cal. Fin. Code 22161, 90009",
+        "url": "https://dfpi.ca.gov/"
+      },
+      "publishedAt": "2026-09-30",
+      "effectiveDate": "2026-12-15",
+      "status": "in_review",
+      "edits": [
+        {
+          "ruleId": "CA-FIN-22161",
+          "before": "Licensees must not advertise in a way that is false, misleading or deceptive, including statements about rates, terms or conditions that are not available to most applicants.",
+          "after": "Licensees must not advertise in a way that is false, misleading or deceptive, including statements about rates, terms or conditions that are not available to most applicants. An ad that states a \"from\" or \"as low as\" rate must also state the credit criteria for that rate."
+        }
+      ],
+      "reviewingBy": "Alex Chen"
+    },
+    {
+      "id": "cfpb-udaap-instant-approval-circular",
+      "title": "CFPB circular: \"pre-approved\" and \"instant decision\" claims",
+      "summary": "A CFPB circular says that \"pre-approved\" and \"instant decision\" are deceptive when the lender can still decline the applicant after underwriting. It names both phrases as examples next to \"guaranteed\".",
+      "source": "compliance.ai",
+      "agency": "CFPB",
+      "citation": {
+        "label": "CFPB Circular 2026-03",
+        "url": "https://www.consumerfinance.gov/compliance/circulars/"
+      },
+      "publishedAt": "2026-06-12",
+      "effectiveDate": "2026-06-12",
+      "status": "applied",
+      "edits": [
+        {
+          "ruleId": "UDAAP-03",
+          "before": "Do not say or suggest that approval is certain, instant, or does not depend on credit, unless that is true for every applicant. Words such as \"guaranteed\" or \"everyone qualifies\" are deceptive when approval depends on underwriting.",
+          "after": "Do not say or suggest that approval is certain, instant, or does not depend on credit, unless that is true for every applicant. Words such as \"guaranteed\", \"everyone qualifies\" or \"approved in minutes\" are deceptive when approval depends on underwriting."
+        }
+      ],
+      "decidedBy": "Maya Ruiz",
+      "decidedAt": "2026-06-20",
+      "decisionNote": "Added \"approved in minutes\", which we used in two auto loan ads. \"Pre-approved\" is already on the banned phrase list (POL-04)."
+    },
+    {
+      "id": "cfpb-regdd-promotional-apy",
+      "title": "Reg DD: promotional APY must state when the rate ends",
+      "summary": "The CFPB clarified that an ad for a promotional deposit rate must state the date or period when the promotional APY ends, and the APY that applies after it ends if it is known.",
+      "source": "compliance.ai",
+      "agency": "CFPB",
+      "citation": {
+        "label": "12 CFR 1030.8(c)",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1030/8/"
+      },
+      "publishedAt": "2026-04-02",
+      "effectiveDate": "2026-07-01",
+      "status": "applied",
+      "edits": [
+        {
+          "ruleId": "REGDD-1030.8",
+          "before": "An ad that states a rate of return on a deposit account must state it as an \"annual percentage yield\" (the abbreviation APY may also be used). It must state the minimum balance to earn the APY.",
+          "after": "An ad that states a rate of return on a deposit account must state it as an \"annual percentage yield\" (the abbreviation APY may also be used). If the rate is variable or has a time limit, the ad must say so, and it must state the minimum balance to earn the APY."
+        }
+      ],
+      "decidedBy": "Alex Chen",
+      "decidedAt": "2026-04-14",
+      "decisionNote": "Folded the time limit into the variable-rate sentence. The rate sheet already stores promotion end dates."
+    },
+    {
+      "id": "ftc-can-spam-transactional",
+      "title": "FTC: when a transactional email counts as commercial",
+      "summary": "FTC staff guidance on messages that mix account information with promotion. If the subject line or the first part of the message promotes a product, the whole email is commercial and needs an opt-out link and a postal address.",
+      "source": "compliance.ai",
+      "agency": "FTC",
+      "citation": {
+        "label": "16 CFR 316.3",
+        "url": "https://www.ecfr.gov/current/title-16/chapter-I/subchapter-C/part-316"
+      },
+      "publishedAt": "2026-08-18",
+      "effectiveDate": "2026-08-18",
+      "status": "dismissed",
+      "edits": [
+        {
+          "ruleId": "CANSPAM-01",
+          "before": "Each commercial email must include a clear way to opt out of future email and a valid physical postal address. The subject line must not mislead about the content.",
+          "after": "Each commercial email must include a clear way to opt out of future email and a valid physical postal address. An email that mixes account information with promotion is commercial if the subject line or the first part of the message promotes a product. The subject line must not mislead about the content."
+        }
+      ],
+      "decidedBy": "Maya Ruiz",
+      "decidedAt": "2026-08-25",
+      "decisionNote": "No change needed. Every email sent through the marketing connector already includes the opt-out link and address, and statements are not reviewed in ClearPath."
+    }
+  ]
+}

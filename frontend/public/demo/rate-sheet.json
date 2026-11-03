@@ -1,0 +1,400 @@
+{
+  "sheets": [
+    {
+      "id": "2026-11",
+      "effectiveDate": "2026-11-01",
+      "uploadedAt": "2026-10-30T16:12:00Z",
+      "uploadedBy": "Alex Chen",
+      "file": "rates-2026-11.csv",
+      "rows": [
+        {
+          "key": "personal_loan.fixed",
+          "product": "personal_loan",
+          "offer": "12 to 60 months, fixed rate",
+          "rate": "apr",
+          "min": 0.0899,
+          "max": 0.2499,
+          "fees": "No origination fee. Late fee $25."
+        },
+        {
+          "key": "credit_card.intro",
+          "product": "credit_card",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "rate": "apr",
+          "min": 0,
+          "max": 0,
+          "fees": "Annual fee $0. Balance transfer fee 3%, minimum $5."
+        },
+        {
+          "key": "credit_card.ongoing",
+          "product": "credit_card",
+          "offer": "Ongoing APR after the intro period, variable",
+          "rate": "apr",
+          "min": 0.1724,
+          "max": 0.2824,
+          "fees": "Annual fee $0. Cash advance fee 4%, minimum $10."
+        },
+        {
+          "key": "mortgage.30",
+          "product": "mortgage",
+          "offer": "30-year fixed",
+          "rate": "apr",
+          "min": 0.06125,
+          "max": 0.06875,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "mortgage.15",
+          "product": "mortgage",
+          "offer": "15-year fixed",
+          "rate": "apr",
+          "min": 0.055,
+          "max": 0.0625,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "heloc.variable",
+          "product": "heloc",
+          "offer": "Up to 80% combined loan-to-value, 10-year draw, variable",
+          "rate": "apr",
+          "min": 0.0749,
+          "max": 0.0999,
+          "fees": "No closing costs on lines up to $250,000. Annual fee $50."
+        },
+        {
+          "key": "auto_loan.new",
+          "product": "auto_loan",
+          "offer": "Up to 72 months, new vehicle",
+          "rate": "apr",
+          "min": 0.0549,
+          "max": 0.1149,
+          "fees": "None."
+        },
+        {
+          "key": "auto_loan.used",
+          "product": "auto_loan",
+          "offer": "Up to 60 months, used vehicle, model year 2019 or newer",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1299,
+          "fees": "None."
+        },
+        {
+          "key": "savings.share",
+          "product": "savings",
+          "offer": "Share savings, $5 minimum balance",
+          "rate": "apy",
+          "min": 0.0025,
+          "max": 0.0025,
+          "fees": "No monthly fee."
+        },
+        {
+          "key": "savings.certificate",
+          "product": "savings",
+          "offer": "12-month share certificate, $1,000 minimum",
+          "rate": "apy",
+          "min": 0.0415,
+          "max": 0.0415,
+          "fees": "Early withdrawal penalty: 90 days of dividends."
+        }
+      ]
+    },
+    {
+      "id": "2026-07",
+      "effectiveDate": "2026-07-01",
+      "uploadedAt": "2026-06-29T14:40:00Z",
+      "uploadedBy": "Alex Chen",
+      "file": "rates-2026-07.csv",
+      "rows": [
+        {
+          "key": "personal_loan.fixed",
+          "product": "personal_loan",
+          "offer": "12 to 60 months, fixed rate",
+          "rate": "apr",
+          "min": 0.0899,
+          "max": 0.2499,
+          "fees": "No origination fee. Late fee $25."
+        },
+        {
+          "key": "credit_card.intro",
+          "product": "credit_card",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "rate": "apr",
+          "min": 0,
+          "max": 0,
+          "fees": "Annual fee $0. Balance transfer fee 3%, minimum $5."
+        },
+        {
+          "key": "credit_card.ongoing",
+          "product": "credit_card",
+          "offer": "Ongoing APR after the intro period, variable",
+          "rate": "apr",
+          "min": 0.1749,
+          "max": 0.2849,
+          "fees": "Annual fee $0. Cash advance fee 4%, minimum $10."
+        },
+        {
+          "key": "mortgage.30",
+          "product": "mortgage",
+          "offer": "30-year fixed",
+          "rate": "apr",
+          "min": 0.06375,
+          "max": 0.07125,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "mortgage.15",
+          "product": "mortgage",
+          "offer": "15-year fixed",
+          "rate": "apr",
+          "min": 0.0575,
+          "max": 0.065,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "heloc.variable",
+          "product": "heloc",
+          "offer": "Up to 80% combined loan-to-value, 10-year draw, variable",
+          "rate": "apr",
+          "min": 0.0774,
+          "max": 0.1024,
+          "fees": "No closing costs on lines up to $250,000. Annual fee $50."
+        },
+        {
+          "key": "auto_loan.new",
+          "product": "auto_loan",
+          "offer": "Up to 72 months, new vehicle",
+          "rate": "apr",
+          "min": 0.0574,
+          "max": 0.1149,
+          "fees": "None."
+        },
+        {
+          "key": "auto_loan.used",
+          "product": "auto_loan",
+          "offer": "Up to 60 months, used vehicle, model year 2019 or newer",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1299,
+          "fees": "None."
+        },
+        {
+          "key": "savings.share",
+          "product": "savings",
+          "offer": "Share savings, $5 minimum balance",
+          "rate": "apy",
+          "min": 0.0025,
+          "max": 0.0025,
+          "fees": "No monthly fee."
+        },
+        {
+          "key": "savings.certificate",
+          "product": "savings",
+          "offer": "12-month share certificate, $1,000 minimum",
+          "rate": "apy",
+          "min": 0.044,
+          "max": 0.044,
+          "fees": "Early withdrawal penalty: 90 days of dividends."
+        }
+      ]
+    },
+    {
+      "id": "2026-06",
+      "effectiveDate": "2026-06-01",
+      "uploadedAt": "2026-05-29T15:05:00Z",
+      "uploadedBy": "Maya Ruiz",
+      "file": "rates-2026-06.csv",
+      "rows": [
+        {
+          "key": "personal_loan.fixed",
+          "product": "personal_loan",
+          "offer": "12 to 60 months, fixed rate",
+          "rate": "apr",
+          "min": 0.0924,
+          "max": 0.2499,
+          "fees": "No origination fee. Late fee $25."
+        },
+        {
+          "key": "credit_card.intro",
+          "product": "credit_card",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "rate": "apr",
+          "min": 0,
+          "max": 0,
+          "fees": "Annual fee $0. Balance transfer fee 3%, minimum $5."
+        },
+        {
+          "key": "credit_card.ongoing",
+          "product": "credit_card",
+          "offer": "Ongoing APR after the intro period, variable",
+          "rate": "apr",
+          "min": 0.1749,
+          "max": 0.2849,
+          "fees": "Annual fee $0. Cash advance fee 4%, minimum $10."
+        },
+        {
+          "key": "mortgage.30",
+          "product": "mortgage",
+          "offer": "30-year fixed",
+          "rate": "apr",
+          "min": 0.06375,
+          "max": 0.07125,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "mortgage.15",
+          "product": "mortgage",
+          "offer": "15-year fixed",
+          "rate": "apr",
+          "min": 0.0575,
+          "max": 0.065,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "heloc.variable",
+          "product": "heloc",
+          "offer": "Up to 80% combined loan-to-value, 10-year draw, variable",
+          "rate": "apr",
+          "min": 0.0774,
+          "max": 0.1024,
+          "fees": "No closing costs on lines up to $250,000. Annual fee $50."
+        },
+        {
+          "key": "auto_loan.new",
+          "product": "auto_loan",
+          "offer": "Up to 72 months, new vehicle",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1149,
+          "fees": "None."
+        },
+        {
+          "key": "auto_loan.used",
+          "product": "auto_loan",
+          "offer": "Up to 60 months, used vehicle, model year 2019 or newer",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1299,
+          "fees": "None."
+        },
+        {
+          "key": "savings.share",
+          "product": "savings",
+          "offer": "Share savings, $5 minimum balance",
+          "rate": "apy",
+          "min": 0.0025,
+          "max": 0.0025,
+          "fees": "No monthly fee."
+        },
+        {
+          "key": "savings.certificate",
+          "product": "savings",
+          "offer": "12-month share certificate, $1,000 minimum",
+          "rate": "apy",
+          "min": 0.044,
+          "max": 0.044,
+          "fees": "Early withdrawal penalty: 90 days of dividends."
+        }
+      ]
+    },
+    {
+      "id": "2026-05",
+      "effectiveDate": "2026-05-01",
+      "uploadedAt": "2026-04-28T13:20:00Z",
+      "uploadedBy": "Alex Chen",
+      "file": "rates-2026-05.csv",
+      "rows": [
+        {
+          "key": "personal_loan.fixed",
+          "product": "personal_loan",
+          "offer": "12 to 60 months, fixed rate",
+          "rate": "apr",
+          "min": 0.0949,
+          "max": 0.2499,
+          "fees": "No origination fee. Late fee $25."
+        },
+        {
+          "key": "credit_card.intro",
+          "product": "credit_card",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "rate": "apr",
+          "min": 0,
+          "max": 0,
+          "fees": "Annual fee $0. Balance transfer fee 3%, minimum $5."
+        },
+        {
+          "key": "credit_card.ongoing",
+          "product": "credit_card",
+          "offer": "Ongoing APR after the intro period, variable",
+          "rate": "apr",
+          "min": 0.1749,
+          "max": 0.2849,
+          "fees": "Annual fee $0. Cash advance fee 4%, minimum $10."
+        },
+        {
+          "key": "mortgage.30",
+          "product": "mortgage",
+          "offer": "30-year fixed",
+          "rate": "apr",
+          "min": 0.06375,
+          "max": 0.07125,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "mortgage.15",
+          "product": "mortgage",
+          "offer": "15-year fixed",
+          "rate": "apr",
+          "min": 0.0575,
+          "max": 0.065,
+          "fees": "Origination fee 0.5% of the loan amount."
+        },
+        {
+          "key": "heloc.variable",
+          "product": "heloc",
+          "offer": "Up to 80% combined loan-to-value, 10-year draw, variable",
+          "rate": "apr",
+          "min": 0.0774,
+          "max": 0.1024,
+          "fees": "No closing costs on lines up to $250,000. Annual fee $50."
+        },
+        {
+          "key": "auto_loan.new",
+          "product": "auto_loan",
+          "offer": "Up to 72 months, new vehicle",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1149,
+          "fees": "None."
+        },
+        {
+          "key": "auto_loan.used",
+          "product": "auto_loan",
+          "offer": "Up to 60 months, used vehicle, model year 2018 or newer",
+          "rate": "apr",
+          "min": 0.0599,
+          "max": 0.1299,
+          "fees": "None."
+        },
+        {
+          "key": "savings.share",
+          "product": "savings",
+          "offer": "Share savings, $5 minimum balance",
+          "rate": "apy",
+          "min": 0.0025,
+          "max": 0.0025,
+          "fees": "No monthly fee."
+        },
+        {
+          "key": "savings.certificate",
+          "product": "savings",
+          "offer": "12-month share certificate, $1,000 minimum",
+          "rate": "apy",
+          "min": 0.0425,
+          "max": 0.0425,
+          "fees": "Early withdrawal penalty: 90 days of dividends."
+        }
+      ]
+    }
+  ]
+}

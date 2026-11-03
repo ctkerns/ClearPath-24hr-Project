@@ -1,0 +1,235 @@
+{
+  "disclosures": [
+    {
+      "id": "D-7",
+      "title": "Personal loan APR range and term",
+      "version": 3,
+      "text": "APR = Annual Percentage Rate. Rates from 8.99% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87.",
+      "products": [
+        "personal_loan"
+      ],
+      "states": "all",
+      "placement": "Directly after the first rate or payment amount, in the same size as the body text.",
+      "effectiveDate": "2026-07-01",
+      "owner": "Alex Chen",
+      "versions": [
+        {
+          "version": 3,
+          "effectiveDate": "2026-07-01",
+          "by": "Alex Chen",
+          "note": "New minimum APR from the July rate sheet.",
+          "text": "APR = Annual Percentage Rate. Rates from 8.99% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87."
+        },
+        {
+          "version": 2,
+          "effectiveDate": "2026-06-01",
+          "by": "Alex Chen",
+          "note": "New minimum APR from the June rate sheet, and a payment example, as Reg Z asks for when an ad states a payment.",
+          "text": "APR = Annual Percentage Rate. Rates from 9.24% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2026-05-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "APR = Annual Percentage Rate. Rates from 9.49% to 24.99% APR, based on creditworthiness. Terms up to 60 months."
+        }
+      ]
+    },
+    {
+      "id": "D-4",
+      "title": "Cash back card rewards terms",
+      "version": 2,
+      "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms.",
+      "products": [
+        "credit_card"
+      ],
+      "states": "all",
+      "placement": "Directly below the reward amount. Affiliates must not shorten it.",
+      "effectiveDate": "2025-09-15",
+      "owner": "Alex Chen",
+      "versions": [
+        {
+          "version": 2,
+          "effectiveDate": "2025-09-15",
+          "by": "Alex Chen",
+          "note": "Says how and when cash back is paid.",
+          "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2024-02-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Cash back paid quarterly. Restrictions apply."
+        }
+      ]
+    },
+    {
+      "id": "D-1",
+      "title": "Federal insurance statement",
+      "version": 1,
+      "text": "Federally insured by NCUA.",
+      "products": [],
+      "states": "all",
+      "placement": "On every ad except loan-only ads and short radio ads. Use the official NCUA sign where there is space.",
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "id": "D-2",
+      "title": "Savings APY terms",
+      "version": 2,
+      "text": "APY = Annual Percentage Yield. APY is accurate as of the date shown and can change after the account is opened. You need a minimum balance of $100 to earn the APY. Fees can reduce earnings.",
+      "products": [
+        "savings"
+      ],
+      "states": "all",
+      "placement": "Next to the first APY, or linked from it with a footnote mark.",
+      "effectiveDate": "2025-01-10",
+      "owner": "Alex Chen",
+      "versions": [
+        {
+          "version": 2,
+          "effectiveDate": "2025-01-10",
+          "by": "Alex Chen",
+          "note": "Plain language rewrite.",
+          "text": "APY = Annual Percentage Yield. APY is accurate as of the date shown and can change after the account is opened. You need a minimum balance of $100 to earn the APY. Fees can reduce earnings."
+        },
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Annual Percentage Yield (APY) accurate as of date shown. Rate may change after account opening. $100 minimum balance required to obtain APY. Fees may reduce earnings."
+        }
+      ]
+    },
+    {
+      "id": "D-3",
+      "title": "Equal Housing Opportunity",
+      "version": 1,
+      "text": "Equal Housing Opportunity.",
+      "products": [
+        "mortgage",
+        "heloc"
+      ],
+      "states": "all",
+      "placement": "With the logo where there is space. Text only is fine in search ads and email subject lines.",
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Equal Housing Opportunity."
+        }
+      ]
+    },
+    {
+      "id": "D-5",
+      "title": "Mortgage lender NMLS ID",
+      "version": 1,
+      "text": "ClearPath Credit Union NMLS #401822.",
+      "products": [
+        "mortgage",
+        "heloc"
+      ],
+      "states": "all",
+      "placement": "In the footer of pages and emails, and in the ad text where the platform allows it.",
+      "effectiveDate": "2022-09-01",
+      "owner": "Maya Ruiz",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2022-09-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "ClearPath Credit Union NMLS #401822."
+        }
+      ]
+    },
+    {
+      "id": "D-8",
+      "title": "Auto loan APR and term",
+      "version": 1,
+      "text": "Rates from 5.49% APR for terms up to 72 months, based on creditworthiness, vehicle age and mileage. Not all applicants qualify for the lowest rate.",
+      "products": [
+        "auto_loan"
+      ],
+      "states": "all",
+      "placement": "Directly after the first rate.",
+      "effectiveDate": "2026-11-01",
+      "owner": "Alex Chen",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2026-11-01",
+          "by": "Alex Chen",
+          "note": "First version.",
+          "text": "Rates from 5.49% APR for terms up to 72 months, based on creditworthiness, vehicle age and mileage. Not all applicants qualify for the lowest rate."
+        }
+      ]
+    },
+    {
+      "id": "D-6",
+      "title": "Rate check and credit score",
+      "version": 1,
+      "text": "Checking your rate uses a soft credit inquiry and does not affect your credit score. If you apply, we use a hard inquiry, which can affect your score.",
+      "products": [
+        "personal_loan",
+        "auto_loan",
+        "credit_card"
+      ],
+      "states": "all",
+      "placement": "Next to any \"check your rate\" claim.",
+      "effectiveDate": "2024-04-01",
+      "owner": "Maya Ruiz",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2024-04-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Checking your rate uses a soft credit inquiry and does not affect your credit score. If you apply, we use a hard inquiry, which can affect your score."
+        }
+      ]
+    },
+    {
+      "id": "D-9",
+      "title": "California: rates and availability",
+      "version": 1,
+      "text": "Not all applicants qualify for the lowest rate. Rates and terms for California residents can differ; see clearpathcu.example/ca for details.",
+      "products": [
+        "personal_loan",
+        "auto_loan"
+      ],
+      "states": [
+        "CA"
+      ],
+      "placement": "In every ad that targets California, after the rate disclosure.",
+      "effectiveDate": "2025-07-01",
+      "owner": "Maya Ruiz",
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2025-07-01",
+          "by": "Maya Ruiz",
+          "note": "First version.",
+          "text": "Not all applicants qualify for the lowest rate. Rates and terms for California residents can differ; see clearpathcu.example/ca for details."
+        }
+      ]
+    }
+  ]
+}
