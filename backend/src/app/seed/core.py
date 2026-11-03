@@ -1,6 +1,7 @@
 """Seeds the tables every area uses: the demo workspace, its users, reviewer groups, and affiliates."""
 
 import uuid
+from functools import cache
 
 from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,13 @@ from app.seed.context import (
     load,
     parse_time,
 )
+
+
+@cache
+def demo_password_hash() -> str:
+    """One Argon2 hash for every demo user: they all share DEMO_PASSWORD, and hashing is slow on purpose.
+    The cache keeps it for the life of the process, so tests and demo resets hash only once."""
+    return hash_password(DEMO_PASSWORD)
 
 
 async def create(ctx: SeedContext) -> None:
@@ -42,7 +50,7 @@ async def create(ctx: SeedContext) -> None:
             role=Role(row["role"]),
             status=status,
             # An invited user has not chosen a password yet, so they cannot sign in.
-            password_hash=None if status is UserStatus.INVITED else hash_password(DEMO_PASSWORD),
+            password_hash=None if status is UserStatus.INVITED else demo_password_hash(),
             last_active_at=parse_time(row.get("lastActiveAt")),
             invited_at=parse_time(row.get("invitedAt")),
             seeded=True,
