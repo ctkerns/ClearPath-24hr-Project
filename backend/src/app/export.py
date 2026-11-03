@@ -68,7 +68,6 @@ from app.models.materials import (
     MaterialStatus,
     MaterialVersion,
     Outcome,
-    Product,
 )
 
 router = APIRouter(prefix="/api/exports", tags=["exports"])
@@ -89,7 +88,7 @@ class ExportFilters(APIModel):
     date_from: date
     date_to: date
     channel: Channel | None = None
-    product: Product | None = None
+    product: str | None = Field(default=None, max_length=32)  # any ID; an unknown one matches nothing
     status: MaterialStatus | None = None  # the material's status now
     material_ids: list[uuid.UUID] = Field(default=[], max_length=MAX_MATERIAL_IDS)
     list_filters: MaterialMatch | None = None

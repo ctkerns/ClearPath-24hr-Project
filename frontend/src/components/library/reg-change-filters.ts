@@ -1,5 +1,4 @@
 import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
-import { PRODUCTS } from '@/components/materials/material-data'
 import type { Rule } from './rule-data'
 import { affectedRules, type RegChange } from './reg-change-data'
 
@@ -13,12 +12,12 @@ export type RegChangeSort = (typeof REG_CHANGE_SORTS)[number]
 
 export const validateRegChangesSearch = (raw: Record<string, unknown>) => validateListSearch(raw, REG_CHANGE_FILTER_KEYS, REG_CHANGE_SORTS)
 
-/** Products come from the affected rules. A rule with no products applies to all of them. */
-export function regChangeValues(c: RegChange, key: RegChangeFilterKey, rules: Rule[]): string[] {
+/** Products come from the affected rules. A rule with no products applies to all of them (`allProducts`, every product ID in the Library). */
+export function regChangeValues(c: RegChange, key: RegChangeFilterKey, rules: Rule[], allProducts: readonly string[]): string[] {
   switch (key) {
     case 'status': return [c.status]
     case 'agency': return [c.agency]
-    case 'product': return [...new Set(affectedRules(c, rules).flatMap((r) => (r.products.length ? r.products : [...PRODUCTS])))]
+    case 'product': return [...new Set(affectedRules(c, rules).flatMap((r) => (r.products.length ? r.products : allProducts)))]
   }
 }
 

@@ -2,10 +2,11 @@ import { ClipboardCheck, Landmark, MapPin, Megaphone, Package, RefreshCw } from 
 import { useTranslation } from 'react-i18next'
 import type { FilterField, Preset, SortOption } from '@/components/list/list-filters'
 import { SeverityFieldIcon } from '@/components/issues/issue-meta'
-import { CHANNELS, PRODUCTS, type Channel } from '@/components/materials/material-data'
+import { CHANNELS, type Channel } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
 import { SeverityLabel, type RiskLevel } from '@/components/ui/risk-tag'
+import { filterableProducts, useProducts } from './product-data'
 import { CHECK_LAYERS, RULE_KINDS, type CheckLayer, type Rule, type RuleKind } from './rule-data'
 import { RULE_FILTER_KEYS, RULE_PRESETS, RULE_SORTS, ruleValues, type RuleFilterKey } from './rule-filters'
 import { CheckLayerTag } from './rule-meta'
@@ -27,6 +28,7 @@ const icons = {
 export function useRuleList() {
   const { t } = useTranslation()
   const material = useOptionLabel()
+  const productIds = filterableProducts(useProducts().data ?? []).map((p) => p.id)
 
   const label = (key: RuleFilterKey, v: string): string => {
     switch (key) {
@@ -40,7 +42,7 @@ export function useRuleList() {
     }
   }
   const fixed: Partial<Record<RuleFilterKey, readonly string[]>> = {
-    kind: RULE_KINDS, severity: ['high', 'medium', 'low'], layer: CHECK_LAYERS, product: PRODUCTS, channel: CHANNELS, change: ['pending', 'current'],
+    kind: RULE_KINDS, severity: ['high', 'medium', 'low'], layer: CHECK_LAYERS, product: productIds, channel: CHANNELS, change: ['pending', 'current'],
   }
   const render: Partial<Record<RuleFilterKey, (v: string) => React.ReactNode>> = {
     severity: (v) => <SeverityLabel level={v as RiskLevel} />,
@@ -52,8 +54,8 @@ export function useRuleList() {
     key,
     label: t(`rules.field.${key}`),
     icon: icons[key],
-    values: (r) => ruleValues(r, key),
-    options: (items) => [...(fixed[key] ?? [...new Set(items.flatMap((r) => ruleValues(r, key)))].sort((a, b) => jurisdictionOrder(a) - jurisdictionOrder(b) || a.localeCompare(b)))],
+    values: (r) => ruleValues(r, key, productIds),
+    options: (items) => [...(fixed[key] ?? [...new Set(items.flatMap((r) => ruleValues(r, key, productIds)))].sort((a, b) => jurisdictionOrder(a) - jurisdictionOrder(b) || a.localeCompare(b)))],
     optionLabel: (v) => label(key, v),
     renderOption: render[key],
   }))

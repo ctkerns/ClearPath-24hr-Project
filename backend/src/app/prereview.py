@@ -32,6 +32,7 @@ from app.audit import OtherActor, record
 from app.material_access import Db, Reviewer, visible
 from app.models import Workspace
 from app.models.library import CheckLayer, Disclosure, RateSheet, Rule
+from app.models.products import Product
 from app.models.materials import (
     Finding,
     FindingSource,
@@ -95,6 +96,11 @@ class Library:
     disclosures: dict[str, DisclosureSpec]
     rates: list[RateRange] | None  # None when the workspace has no rate sheet
     licensed_states: list[str]
+    # The workspace's product names by ID, for messages. The caller loads them (load_library does).
+    product_names: dict[str, str] = field(default_factory=dict)
+
+    def product_name(self, product: str) -> str:
+        return self.product_names.get(product) or product.replace("_", " ")
 
 
 @dataclass
@@ -418,14 +424,6 @@ RATE_PATTERNS = [
     re.compile(rf"(?<!\w)(?:interest )?rates?{_LEAD}{_RANGE}"),
 ]
 KINDS = {"apr": "apr", "annual percentage rate": "apr", "apy": "apy", "annual percentage yield": "apy"}
-PRODUCT_NAMES = {
-    "personal_loan": "personal loans",
-    "credit_card": "credit cards",
-    "mortgage": "mortgages",
-    "heloc": "home equity lines",
-    "auto_loan": "auto loans",
-    "savings": "savings",
-}
 
 
 def rates_in(content: Content, default_kind: str) -> list[tuple[int, int, int, Decimal, str]]:
@@ -463,11 +461,14 @@ def check_rate_sheet(rule: RuleSpec, content: Content, lib: Library, product: st
         raise ConfigError("the workspace has no rate sheet")
     hits: list[Hit] = []
     seen: set[str] = set()
-    for i, s, e, value, kind in rates_in(content, "apy" if product == "savings" else "apr"):
+    # A rate with no label is an APY when the sheet has only APYs for the product (savings), else an APR.
+    kinds = {r.rate for r in lib.rates if r.product == product}
+    for i, s, e, value, kind in rates_in(content, "apy" if kinds == {"apy"} else "apr"):
         rows = [r for r in lib.rates if r.product == product and r.rate == kind]
         if any(pct(r.min) <= value <= pct(r.max) for r in rows):
             continue
-        name = PRODUCT_NAMES.get(product, product)
+        # The name as Managers wrote it, for example "Personal loan": 'the APR range for the product "Personal loan"'
+        name = f'the product "{lib.product_name(product)}"'
         if rows:
             ranges = ", ".join(fmt(pct(r.min)) if r.min == r.max else f"{fmt(pct(r.min))} to {fmt(pct(r.max))}" for r in rows)
             why = f"is outside the {kind.upper()} range for {name} on the current rate sheet ({ranges})."
@@ -728,11 +729,13 @@ async def load_library(db: AsyncSession, workspace_id: uuid.UUID, on: date) -> L
     )
     sheet = sheet_on(sheets, on)
     workspace = await db.get_one(Workspace, workspace_id)
+    names = await db.execute(select(Product.id, Product.name).where(Product.workspace_id == workspace_id))
     return Library(
         rules=[rule_spec(r) for r in rules],
         disclosures={d.id: disclosure_spec(d) for d in disclosures},
         rates=rate_ranges(sheet) if sheet else None,
         licensed_states=list(workspace.licensed_states),
+        product_names=dict(names.all()),
     )
 
 
@@ -842,7 +845,7 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     states = target_states(version.details, lib.licensed_states)
     results = check_content(
         lib,
-        m.product.value,
+        m.product,
         m.channel.value,
         states,
         [(str(f.get("label", "")), t) for f, t in zip(version.fields, texts, strict=True)],

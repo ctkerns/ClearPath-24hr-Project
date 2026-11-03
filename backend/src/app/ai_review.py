@@ -768,7 +768,7 @@ def checklist_rules(rules: Sequence[RuleSpec], m: Material, version: MaterialVer
     """The AI rules on the version's checklist (F7)."""
     states = target_states(version.details, licensed)
     end = iso_date(version.details.get("endDate"))
-    return [r for r in rules if in_scope(r, m.product.value, m.channel.value, states, end)]
+    return [r for r in rules if in_scope(r, m.product, m.channel.value, states, end)]
 
 
 async def ai_rules(db: AsyncSession, workspace_id: uuid.UUID) -> list[RuleSpec]:
@@ -884,7 +884,7 @@ async def snapshot(db: AsyncSession, version_id: uuid.UUID) -> Snapshot | None:
             )
     d = version.details
     metadata = {
-        "Product": m.product.value,
+        "Product": m.product,
         "Channel": m.channel.value,
         "Target states": str(d.get("targetStates") or "Nationwide"),
         "Launch date": str(d.get("launchDate") or ""),
@@ -927,8 +927,8 @@ async def load_context(db: AsyncSession, m: Material, version: MaterialVersion) 
     states = target_states(version.details, licensed)
     return Context(
         sheet_date=sheet.effective_date if sheet else None,
-        offers=offers_for(rows, m.product.value),
-        disclosures=disclosures_for((disclosure_spec(d) for d in disclosures), m.product.value, states),
+        offers=offers_for(rows, m.product),
+        disclosures=disclosures_for((disclosure_spec(d) for d in disclosures), m.product, states),
         earlier=await earlier_of(db, version),
     )
 

@@ -13,7 +13,7 @@ from app.db import SessionLocal
 from app.models import Affiliate, User, Workspace
 from app.models.audit import AuditEvent
 from app.models.flags import MaterialFlag
-from app.models.materials import Channel, Material, MaterialStatus, MaterialVersion, Product
+from app.models.materials import Channel, Material, MaterialStatus, MaterialVersion
 from tests.helpers import AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
 from tests.test_library import CSV, WAITING, disclosure_body, rule, rule_body
 from tests.test_materials import DEBT, SUMMER, VIEWER, submission
@@ -32,7 +32,7 @@ async def approved(title, *, product="personal_loan", channel="meta", states="Na
         ws = await db.scalar(select(Workspace).where(Workspace.is_demo))
         owner = await db.scalar(select(User).where(User.email == SUBMITTER))
         company = await db.scalar(select(Affiliate).where(Affiliate.name == affiliate)) if affiliate else None
-        m = Material(workspace_id=ws.id, title=title, channel=Channel(channel), product=Product(product), status=status,
+        m = Material(workspace_id=ws.id, title=title, channel=Channel(channel), product=product, status=status,
                      owner_id=owner.id, affiliate_id=company.id if company else None, approval_id=f"CP-T-{uuid.uuid4().hex[:6]}")
         db.add(m)
         await db.flush()

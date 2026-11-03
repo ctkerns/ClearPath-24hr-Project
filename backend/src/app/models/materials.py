@@ -14,7 +14,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import ForeignKey, Index, String, Text, UniqueConstraint, text
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -54,15 +54,6 @@ class Channel(enum.StrEnum):
     WORDPRESS = "wordpress"
     AFFILIATE = "affiliate"
     OTHER = "other"
-
-
-class Product(enum.StrEnum):
-    PERSONAL_LOAN = "personal_loan"
-    CREDIT_CARD = "credit_card"
-    MORTGAGE = "mortgage"
-    HELOC = "heloc"
-    AUTO_LOAN = "auto_loan"
-    SAVINGS = "savings"
 
 
 class GroupState(enum.StrEnum):
@@ -118,13 +109,17 @@ class Material(Base):
     __table_args__ = (
         # An approval ID is the reference for audits, so it is unique (PRD section 5).
         Index("uq_materials_workspace_approval", "workspace_id", "approval_id", unique=True),
+        # The product is a row of the workspace's product list (app.models.products, PRD F8).
+        ForeignKeyConstraint(
+            ["workspace_id", "product"], ["products.workspace_id", "products.id"], name="fk_materials_product_products"
+        ),
     )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), index=True)
     title: Mapped[str] = mapped_column(String(300))
     channel: Mapped[Channel] = mapped_column(str_enum(Channel, "channel"))
-    product: Mapped[Product] = mapped_column(str_enum(Product, "product"))
+    product: Mapped[str] = mapped_column(String(32))  # a product ID, for example "personal_loan"
     status: Mapped[MaterialStatus] = mapped_column(str_enum(MaterialStatus, "status"))
     live_status: Mapped[LiveStatus] = mapped_column(
         str_enum(LiveStatus, "live_status"), server_default=LiveStatus.NOT_LIVE.value

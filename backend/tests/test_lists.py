@@ -160,7 +160,6 @@ async def test_materials_paging(client):
         "status=draft,bogus",
         "live=gone",
         "channel=tiktok",
-        "product=boat",
         "sort=newest",
         "limit=0",
         "limit=201",
@@ -174,6 +173,14 @@ async def test_materials_paging(client):
 async def test_materials_invalid_params(client, query):
     await as_user(client, VIEWER)
     assert (await client.get(f"/api/materials?{query}")).status_code == 422
+
+
+async def test_materials_unknown_product_matches_nothing(client):
+    """Products are the workspace's own list (PRD F8): an unknown ID is no error, it matches nothing."""
+    await as_user(client, VIEWER)
+    body = await page(client, "/api/materials", product="boat_loan")
+    assert (body["items"], body["total"]) == ([], 0)
+    assert (await page(client, "/api/materials", product="boat_loan,savings"))["total"] > 0
 
 
 def counts(rows, key, values_of):

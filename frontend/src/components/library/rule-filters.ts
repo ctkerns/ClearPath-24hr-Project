@@ -1,5 +1,5 @@
 import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
-import { CHANNELS, PRODUCTS } from '@/components/materials/material-data'
+import { CHANNELS } from '@/components/materials/material-data'
 import type { Rule } from './rule-data'
 
 // Rules list configuration: filter keys, sorts and quick views. Labels and menus are in use-rule-list.tsx.
@@ -12,14 +12,17 @@ export type RuleSort = (typeof RULE_SORTS)[number]
 
 export const validateRulesSearch = (raw: Record<string, unknown>) => validateListSearch(raw, RULE_FILTER_KEYS, RULE_SORTS)
 
-/** A rule with no products or channels applies to all of them, so it matches every product or channel filter. */
-export function ruleValues(r: Rule, key: RuleFilterKey): string[] {
+/**
+ * A rule with no products or channels applies to all of them, so it matches every product or channel filter.
+ * `allProducts` is every product ID in the Library.
+ */
+export function ruleValues(r: Rule, key: RuleFilterKey, allProducts: readonly string[]): string[] {
   switch (key) {
     case 'kind': return [r.kind]
     case 'severity': return [r.severity]
     case 'layer': return [r.layer]
     case 'jurisdiction': return [r.jurisdiction]
-    case 'product': return r.products.length ? r.products : [...PRODUCTS]
+    case 'product': return r.products.length ? r.products : [...allProducts]
     case 'channel': return r.channels.length ? r.channels : [...CHANNELS]
     case 'change': return [r.pendingChange ? 'pending' : 'current']
   }

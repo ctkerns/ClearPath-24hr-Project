@@ -42,16 +42,16 @@ from app.models.library import (
     RuleVersion,
     Severity,
 )
+from app.models.products import Product
+from app.products import ProductId, check_products, unique
 from app.workspace import US_STATES
 
 router = APIRouter(prefix="/api/library", tags=["library"])
 Db = Annotated[AsyncSession, Depends(get_db)]
 Reviewer = Annotated[User, Depends(require_role(Role.REVIEWER))]
 
-# The same lists as the frontend (materials/material-data.ts)
-Product = Literal["personal_loan", "credit_card", "mortgage", "heloc", "auto_loan", "savings"]
+# The same list as the frontend (materials/material-data.ts). Products are the workspace's own list (app.products).
 Channel = Literal["meta", "google", "mailchimp", "wordpress", "affiliate", "other"]
-PRODUCTS: tuple[str, ...] = Product.__args__  # type: ignore[attr-defined]
 
 # A short ID that people read, like "REGZ-1026.24" or "D-7". It is part of URLs, so no spaces or slashes.
 TextId = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")]
@@ -227,7 +227,7 @@ class RuleScope(APIModel):
     """Where a rule applies, and from when: what decides which approved materials depend on it (F7)."""
 
     jurisdiction: str
-    products: list[Product] = Field(max_length=10)
+    products: list[ProductId] = Field(max_length=10)
     channels: list[Channel] = Field(max_length=10)
     effective_date: date
 
@@ -272,7 +272,7 @@ def set_rule_fields(rule: Rule, body: RuleInput) -> None:
     rule.kind = body.kind
     rule.text = body.text.strip()
     rule.jurisdiction = body.jurisdiction
-    rule.products = list(body.products)
+    rule.products = unique(body.products)
     rule.channels = list(body.channels)
     rule.citation_label = body.citation.label if body.citation else None
     rule.citation_url = body.citation.url if body.citation else None
@@ -287,6 +287,7 @@ async def create_rule(body: NewRule, viewer: Manager, db: Db) -> RuleOut:
     if await db.get(Rule, (viewer.workspace_id, body.id)):
         raise conflict("Another rule already uses this ID")
     await check_disclosure_exists(db, viewer, body)
+    await check_products(db, viewer.workspace_id, body.products)
     rule = Rule(workspace_id=viewer.workspace_id, id=body.id, version=1, owner_id=viewer.id)
     set_rule_fields(rule, body)
     rule.versions = [RuleVersion(version=1, effective_date=body.effective_date, by_id=viewer.id, note=body.note.strip())]
@@ -331,6 +332,7 @@ async def edit_rule(rule_id: str, body: RuleInput, viewer: Manager, db: Db) -> R
     The approved materials that depend on the rule get a flag for re-review, in the same transaction (F7)."""
     rule = await load_rule(db, viewer, rule_id)
     await check_disclosure_exists(db, viewer, body)
+    await check_products(db, viewer.workspace_id, body.products, had=rule.products)
     affected = await rule_edit_impact(db, viewer, rule, body)
     set_rule_fields(rule, body)
     new_rule_version(rule, viewer, body.effective_date, body.note.strip())
@@ -422,7 +424,7 @@ async def list_disclosures(viewer: InternalUser, db: Db) -> list[DisclosureOut]:
 class DisclosureInput(APIModel):
     title: ShortText
     text: LongText
-    products: list[Product] = Field(max_length=10)
+    products: list[ProductId] = Field(max_length=10)
     states: Literal["all"] | list[str]
     placement: LongText
     effective_date: date
@@ -441,7 +443,7 @@ class NewDisclosure(DisclosureInput):
 def set_disclosure_fields(d: Disclosure, body: DisclosureInput) -> None:
     d.title = body.title.strip()
     d.text = body.text.strip()
-    d.products = list(body.products)
+    d.products = unique(body.products)
     d.states = states_in(body.states)
     d.placement = body.placement.strip()
     d.effective_date = body.effective_date
@@ -451,6 +453,7 @@ def set_disclosure_fields(d: Disclosure, body: DisclosureInput) -> None:
 async def create_disclosure(body: NewDisclosure, viewer: Manager, db: Db) -> DisclosureOut:
     if await db.get(Disclosure, (viewer.workspace_id, body.id)):
         raise conflict("Another disclosure already uses this ID")
+    await check_products(db, viewer.workspace_id, body.products)
     d = Disclosure(workspace_id=viewer.workspace_id, id=body.id, version=1, owner_id=viewer.id)
     set_disclosure_fields(d, body)
     d.versions = [
@@ -484,6 +487,7 @@ async def edit_disclosure(disclosure_id: str, body: DisclosureInput, viewer: Man
     """Every change is a new version, and each version keeps its full text.
     The approved materials that depend on the old version get a flag for re-review, in the same transaction."""
     d = await load_disclosure(db, viewer, disclosure_id)
+    await check_products(db, viewer.workspace_id, body.products, had=d.products)
     affected = await disclosure_impact(db, viewer, d, body.effective_date)
     set_disclosure_fields(d, body)
     d.version += 1
@@ -567,7 +571,7 @@ async def list_blocks(viewer: InternalUser, db: Db) -> list[BlockOut]:
 class BlockScope(APIModel):
     """Where a block may be used, and until when. An approval is valid only in its context (F9)."""
 
-    products: list[Product] = Field(max_length=10)
+    products: list[ProductId] = Field(max_length=10)
     states: Literal["all"] | list[str]
     expires_at: date
 
@@ -602,11 +606,12 @@ async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
     )
     if taken:
         raise conflict("This text is already a building block")
+    await check_products(db, viewer.workspace_id, body.products)
     block = BuildingBlock(
         workspace_id=viewer.workspace_id,
         kind=body.kind,
         text=text,
-        products=list(body.products),
+        products=unique(body.products),
         states=states_in(body.states),
         approved_by_id=viewer.id,
         approved_at=clock.today(await db.get_one(Workspace, viewer.workspace_id)),
@@ -625,11 +630,12 @@ async def edit_block(block_id: uuid.UUID, body: BlockScope, viewer: Manager, db:
     """Managers curate where a block applies and when it expires. The text stays as it was approved."""
     block = await load_block(db, viewer, block_id)
     await body.check_expiry(db, viewer)
+    await check_products(db, viewer.workspace_id, body.products, had=block.products)
     record(db, viewer, "building_block", block.id, "updated", {
         "before": {"products": block.products, "states": states_out(block.states), "expiresAt": block.expires_at},
         "after": body,
     })
-    block.products = list(body.products)
+    block.products = unique(body.products)
     block.states = states_in(body.states)
     block.expires_at = body.expires_at
     return await block_saved(db, viewer, block.id)
@@ -695,6 +701,38 @@ async def list_rate_sheets(viewer: InternalUser, db: Db) -> list[RateSheetOut]:
 CSV_COLUMNS = ["key", "product", "offer", "rate", "min", "max", "fees"]
 
 
+@dataclasses.dataclass
+class SheetProducts:
+    """What the product column may name: the workspace's products, and the (key, product) pairs of the
+    current sheet. A row keeps an inactive product that the same row (same key) already has (PRD F8)."""
+
+    products: list[Product]
+    kept: set[tuple[str, str]]
+
+    def resolve(self, value: str, key: str, line: int) -> str:
+        """The product ID for the cell: an ID, or a name in any case."""
+        p = next((p for p in self.products if p.id == value), None) or next(
+            (p for p in self.products if p.name.strip().casefold() == value.casefold()), None
+        )
+        if p is None:
+            raise bad_request(f"Line {line}: unknown product {value!r}")
+        if not p.active and (key, p.id) not in self.kept:
+            raise bad_request(f"Line {line}: the product {p.name} is inactive")
+        return p.id
+
+
+async def sheet_products(db: AsyncSession, viewer: User) -> SheetProducts:
+    products = list(await db.scalars(select(Product).where(Product.workspace_id == viewer.workspace_id)))
+    current = await db.scalar(
+        select(RateSheet)
+        .where(RateSheet.workspace_id == viewer.workspace_id)
+        .options(selectinload(RateSheet.rows))
+        .order_by(RateSheet.effective_date.desc(), RateSheet.uploaded_at.desc())
+        .limit(1)
+    )
+    return SheetProducts(products, {(r.key, r.product) for r in current.rows} if current else set())
+
+
 class RateSheetUpload(APIModel):
     effective_date: date
     file: Annotated[str, Field(min_length=1, max_length=255)]  # the CSV file name
@@ -712,7 +750,7 @@ def percent(value: str, line: int) -> float:
     return round(number / 100, 6)
 
 
-def parse_rate_csv(content: str) -> list[RateSheetRow]:
+def parse_rate_csv(content: str, products: SheetProducts) -> list[RateSheetRow]:
     reader = csv.DictReader(io.StringIO(content.lstrip("﻿")))
     header = [h.strip().lower() for h in reader.fieldnames or []]
     if header != CSV_COLUMNS:
@@ -729,8 +767,7 @@ def parse_rate_csv(content: str) -> list[RateSheetRow]:
             raise bad_request(f"Line {line}: key and offer cannot be empty")
         if cell["key"] in keys:
             raise bad_request(f"Line {line}: the key {cell['key']} is used twice")
-        if cell["product"] not in PRODUCTS:
-            raise bad_request(f"Line {line}: unknown product {cell['product']!r}")
+        product = products.resolve(cell["product"], cell["key"][:100], line)
         if cell["rate"].lower() not in ("apr", "apy"):
             raise bad_request(f"Line {line}: rate must be apr or apy")
         low, high = percent(cell["min"], line), percent(cell["max"], line)
@@ -741,7 +778,7 @@ def parse_rate_csv(content: str) -> list[RateSheetRow]:
             RateSheetRow(
                 position=len(rows),
                 key=cell["key"][:100],
-                product=cell["product"],
+                product=product,
                 offer=cell["offer"][:300],
                 rate=RateKind(cell["rate"].lower()),
                 min=low,
@@ -765,7 +802,8 @@ async def rate_impact(db: AsyncSession, viewer: User, rows: list[RateSheetRow], 
 @router.post("/rate-sheets/impact")
 async def rate_sheet_preview(body: RateSheetUpload, viewer: Manager, db: Db) -> list[AffectedMaterial]:
     """What uploading this sheet flags, before the Manager uploads it. Checks the CSV the same way. Changes nothing."""
-    affected = await rate_impact(db, viewer, parse_rate_csv(body.csv), body.effective_date)
+    rows = parse_rate_csv(body.csv, await sheet_products(db, viewer))
+    affected = await rate_impact(db, viewer, rows, body.effective_date)
     return [AffectedMaterial.of(a, rates) for a, rates in affected]
 
 
@@ -773,7 +811,7 @@ async def rate_sheet_preview(body: RateSheetUpload, viewer: Manager, db: Db) -> 
 async def upload_rate_sheet(body: RateSheetUpload, viewer: Manager, db: Db) -> RateSheetOut:
     """A new full sheet. Older sheets stay as history. Approved materials that state a rate the new sheet
     no longer covers get a flag for re-review, in the same transaction (F7, F8)."""
-    rows = parse_rate_csv(body.csv)
+    rows = parse_rate_csv(body.csv, await sheet_products(db, viewer))
     affected = await rate_impact(db, viewer, rows, body.effective_date)
     sheet = RateSheet(
         workspace_id=viewer.workspace_id,

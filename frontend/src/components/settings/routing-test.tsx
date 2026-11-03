@@ -1,7 +1,8 @@
 import { Check, FlaskConical, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CHANNELS, PRODUCTS, type Channel, type Product } from '@/components/materials/material-data'
+import { pickableProducts, useProductName, useProducts } from '@/components/library/product-data'
+import { CHANNELS, type Channel } from '@/components/materials/material-data'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
@@ -16,8 +17,11 @@ import { GroupPill } from './routing-rule-sentence'
  */
 export function RoutingTest({ rules, groups, lighterPathGroup }: { rules: RoutingRule[]; groups: ReviewerGroup[]; lighterPathGroup?: ReviewerGroup }) {
   const { t } = useTranslation()
-  const [v, setV] = useState<RoutingInput>({ product: 'mortgage', channel: 'meta', source: 'internal', affiliateHistory: false, nationwide: false, states: ['CA'] })
+  const [input, setV] = useState<RoutingInput>({ product: '', channel: 'meta', source: 'internal', affiliateHistory: false, nationwide: false, states: ['CA'] })
   const set = (next: Partial<RoutingInput>) => setV((prev) => ({ ...prev, ...next }))
+  // The example starts on the first active product, once the products have loaded.
+  const products = pickableProducts(useProducts().data ?? [], input.product ? [input.product] : [])
+  const v = { ...input, product: input.product || products[0]?.id || '' }
   const defaultGroup = groups.find((g) => g.isDefault)
   const hasStates = v.nationwide || v.states.length > 0
   const result = hasStates ? evaluateRouting(rules, defaultGroup?.id, v) : undefined
@@ -36,9 +40,9 @@ export function RoutingTest({ rules, groups, lighterPathGroup }: { rules: Routin
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
           <FieldLabel>{t('settingsRouting.field.product')}</FieldLabel>
-          <Select value={v.product} onValueChange={(p) => set({ product: p as Product })}>
+          <Select value={v.product} onValueChange={(p) => set({ product: p })} disabled={!products.length}>
             <SelectTrigger size="sm" className="w-full" aria-label={t('settingsRouting.field.product')}><SelectValue /></SelectTrigger>
-            <SelectContent>{PRODUCTS.map((p) => <SelectItem key={p} value={p}>{t(`materials.product.${p}`)}</SelectItem>)}</SelectContent>
+            <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="grid gap-1.5">
@@ -136,9 +140,10 @@ export function RoutingTest({ rules, groups, lighterPathGroup }: { rules: Routin
 /** Why a rule was skipped, in the item's own terms: "product is Savings". */
 function MissText({ miss }: { miss: Miss }) {
   const { t } = useTranslation()
+  const productName = useProductName()
   switch (miss.field) {
     case 'product':
-      return <>{t('settingsRouting.miss.product', { value: t(`materials.product.${miss.value}`) })}</>
+      return <>{t('settingsRouting.miss.product', { value: productName(miss.value) })}</>
     case 'channel':
       return <>{t('settingsRouting.miss.channel', { value: t(`materials.channel.${miss.value}`) })}</>
     case 'source':

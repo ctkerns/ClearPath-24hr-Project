@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint, text
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,7 +48,14 @@ class IntegrationErrorCode(enum.StrEnum):
 
 class Integration(Base):
     __tablename__ = "integrations"
-    __table_args__ = (UniqueConstraint("workspace_id", "provider", name="uq_integrations_workspace_provider"),)
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "provider", name="uq_integrations_workspace_provider"),
+        ForeignKeyConstraint(
+            ["workspace_id", "default_product_id"],
+            ["products.workspace_id", "products.id"],
+            name="fk_integrations_default_product_id_products",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), index=True)
@@ -64,6 +71,8 @@ class Integration(Base):
     # Accounts the platform offers after sign-in, as [{name, detail}]. Seeded for the demo.
     # TODO: the real list comes from the platform after the OAuth flow.
     available: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, server_default=text("'[]'"))
+    # The product that materials imported by this connector get (PRD F3, section 9). Null: the owner chooses one.
+    default_product_id: Mapped[str | None] = mapped_column(String(32))
     seeded: Mapped[bool] = mapped_column(server_default=text("false"))
     created_at: Mapped[datetime] = now_default()
 

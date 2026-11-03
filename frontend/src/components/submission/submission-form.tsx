@@ -1,7 +1,8 @@
 import { FileUp, Globe, ImageIcon, Lock, Paperclip, PenLine, Route as RouteIcon, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CHANNELS, PRODUCTS, type Channel, type Product } from '@/components/materials/material-data'
+import { pickableProducts, useProducts } from '@/components/library/product-data'
+import { CHANNELS, type Channel } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
 import { SaveError } from '@/components/save-error'
@@ -61,6 +62,10 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
   const set = <K extends keyof SubmissionValues>(key: K, value: SubmissionValues[K]) => setValues((v) => ({ ...v, [key]: value }))
   // Licensed states and routing come from Settings (Workspace and Routing tabs), so a change there shows here at once.
   const licensedStates = useLicensedStates()
+  // The active products, plus the one the material has now (a new version keeps an inactive product, F8).
+  const productList = useProducts().data
+  const products = pickableProducts(productList ?? [], [initial.product, values.product].filter(Boolean))
+  const noProducts = !!productList && products.length === 0
   const save = useSave(() => {})
   const channelFields = useChannelFields()
   // A preview from the server; the server decides again on submit (PRD R2, F6).
@@ -159,12 +164,12 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
         <aside className="grid gap-4 lg:sticky lg:top-24">
           {hasFixes && values.source === 'text' && <FixesPanel review={review} state={fixState} fields={values.fields} />}
           <Field id="product" label={t('submit.product')} error={shown.product}>
-            <Select value={values.product} onValueChange={(p) => set('product', p as Product)}>
+            <Select value={values.product} onValueChange={(p) => set('product', p)} disabled={!products.length}>
               <SelectTrigger id="product" className="w-full" aria-invalid={!!shown.product}>
-                <SelectValue placeholder={t('submit.choose')} />
+                <SelectValue placeholder={noProducts ? t('submit.noProducts') : t('submit.choose')} />
               </SelectTrigger>
               <SelectContent>
-                {PRODUCTS.map((p) => <SelectItem key={p} value={p}>{label('product', p)}</SelectItem>)}
+                {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>

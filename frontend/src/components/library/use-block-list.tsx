@@ -1,9 +1,9 @@
 import { CalendarClock, MapPin, Package, Shapes } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { FilterField, Preset, SortOption } from '@/components/list/list-filters'
-import { PRODUCTS } from '@/components/materials/material-data'
 import { useOptionLabel } from '@/components/materials/use-option-label'
 import { useLicensedStates } from '@/components/settings/workspace-data'
+import { filterableProducts, useProducts } from './product-data'
 import { BLOCK_KINDS, EXPIRY_STATES, type Block, type BlockKind, type ExpiryState } from './block-data'
 import { BLOCK_FILTER_KEYS, BLOCK_PRESETS, BLOCK_SORTS, blockValues, type BlockFilterKey } from './block-filters'
 import { BlockKindLabel } from './block-meta'
@@ -20,6 +20,7 @@ export function useBlockList() {
   const { t } = useTranslation()
   const material = useOptionLabel()
   const licensedStates = useLicensedStates()
+  const productIds = filterableProducts(useProducts().data ?? []).map((p) => p.id)
 
   const label = (key: BlockFilterKey, v: string): string => {
     switch (key) {
@@ -30,7 +31,7 @@ export function useBlockList() {
     }
   }
   const fixed: Record<BlockFilterKey, readonly string[]> = {
-    kind: BLOCK_KINDS, product: PRODUCTS, state: licensedStates, expiry: EXPIRY_STATES,
+    kind: BLOCK_KINDS, product: productIds, state: licensedStates, expiry: EXPIRY_STATES,
   }
   const render: Partial<Record<BlockFilterKey, (v: string) => React.ReactNode>> = {
     kind: (v) => <BlockKindLabel kind={v as BlockKind} className="text-foreground" />,
@@ -40,7 +41,7 @@ export function useBlockList() {
     key,
     label: t(`blocks.field.${key}`),
     icon: icons[key],
-    values: (b) => blockValues(b, key, licensedStates),
+    values: (b) => blockValues(b, key, licensedStates, productIds),
     options: () => [...fixed[key]],
     optionLabel: (v) => label(key, v),
     renderOption: render[key],

@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useProductName } from '@/components/library/product-data'
 import { cn } from '@/lib/utils'
 import type { ReviewerGroup } from './group-data'
 import { formatList, matchesEverything, type RuleConditions } from './routing-data'
@@ -16,8 +17,9 @@ export function RuleSentence({ conditions: c, groupIds, groups, className }: {
   className?: string
 }) {
   const { t } = useTranslation()
+  const productName = useProductName()
   const parts: { lead: string; value: string }[] = []
-  if (c.products.length) parts.push({ lead: t('settingsRouting.sentence.product'), value: formatList(c.products.map((p) => t(`materials.product.${p}`)), 'disjunction') })
+  if (c.products.length) parts.push({ lead: t('settingsRouting.sentence.product'), value: formatList(c.products.map(productName), 'disjunction') })
   if (c.channels.length) parts.push({ lead: t('settingsRouting.sentence.channel'), value: formatList(c.channels.map((ch) => t(`materials.channel.${ch}`)), 'disjunction') })
   if (c.affiliateHistory) parts.push({ lead: t('settingsRouting.sentence.history'), value: t('settingsRouting.sentence.historyValue') })
   else if (c.source) parts.push({ lead: t('settingsRouting.sentence.source'), value: t(`settingsRouting.source.${c.source}`) })

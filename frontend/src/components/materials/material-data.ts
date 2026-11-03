@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import type { ProductId } from '@/components/library/product-data'
 import { daysBetween, today } from '@/lib/workspace-time'
 import { FileText, Globe, Handshake, Mail, Megaphone, Search, type LucideIcon } from 'lucide-react'
 import type { ListPage } from '@/components/list/list-filters'
@@ -28,8 +29,8 @@ export const channelIcons: Record<Channel, LucideIcon> = {
   other: FileText,
 }
 
-export const PRODUCTS = ['personal_loan', 'credit_card', 'mortgage', 'heloc', 'auto_loan', 'savings'] as const
-export type Product = (typeof PRODUCTS)[number]
+/** A product's ID. The list of products is data, kept in the Library (PRD F8): see product-data.ts. */
+export type Product = ProductId
 
 /** Where one required reviewer group stands on the current version (PRD F6). */
 export type GroupState = 'waiting' | 'approved' | 'changes' | 'rejected'

@@ -65,7 +65,8 @@ def seed_library() -> Library:
     sheet = load(SEED / "rate-sheet.json")["sheets"][0]  # newest first
     rates = [RateRange(r["product"], r["rate"], r["min"], r["max"]) for r in sheet["rows"]]
     licensed = load(SEED / "workspace.json")["workspace"]["licensedStates"]
-    return Library(rules, disclosures, rates, licensed)
+    names = {p["id"]: p["name"] for p in load(SEED / "products.json")["products"]}
+    return Library(rules, disclosures, rates, licensed, names)
 
 
 def seed_sheet() -> tuple[date, list[Offer]]:

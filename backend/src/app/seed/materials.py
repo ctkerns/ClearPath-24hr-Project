@@ -38,7 +38,6 @@ from app.models.materials import (
     MaterialStatus,
     MaterialVersion,
     Outcome,
-    Product,
     ReviewPath,
     Severity,
 )
@@ -53,7 +52,7 @@ async def create(ctx: SeedContext) -> None:
             workspace_id=ctx.workspace.id,
             title=row["title"],
             channel=Channel(row["channel"]),
-            product=Product(row["product"]),
+            product=row["product"],
             status=MaterialStatus(row["status"]),
             live_status=LiveStatus(row["liveStatus"]),
             source=row.get("source"),

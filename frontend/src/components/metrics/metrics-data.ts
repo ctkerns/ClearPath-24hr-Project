@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CHANNELS, PRODUCTS, type Channel, type Material, type Product } from '@/components/materials/material-data'
+import { CHANNELS, type Channel, type Material, type Product } from '@/components/materials/material-data'
 import type { ReviewerGroup } from '@/components/settings/group-data'
 import { api } from '@/lib/api'
 import { addDays, dayAt, dayStart, weekday } from '@/lib/workspace-time'
@@ -62,7 +62,8 @@ export function validateMetricsSearch(raw: Record<string, unknown>): MetricsSear
   return {
     period: one(raw.period, PERIODS),
     channel: one(raw.channel, CHANNELS),
-    product: one(raw.product, PRODUCTS),
+    // Any product ID: the list lives in the Library (Products), and an unknown ID just matches nothing.
+    product: typeof raw.product === 'string' && raw.product ? raw.product : undefined,
     // Any group name: the list lives in Settings (Reviewer groups), and an unknown name just matches nothing.
     group: typeof raw.group === 'string' && raw.group ? raw.group : undefined,
   }

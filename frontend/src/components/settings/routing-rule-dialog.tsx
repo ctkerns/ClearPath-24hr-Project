@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { SaveError } from '@/components/save-error'
 import { useTranslation } from 'react-i18next'
-import { CHANNELS, PRODUCTS } from '@/components/materials/material-data'
+import { pickableProducts, useProducts } from '@/components/library/product-data'
+import { CHANNELS } from '@/components/materials/material-data'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -44,6 +45,8 @@ function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: Revie
   const [tried, setTried] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const c = value.conditions
+  // The active products, plus any inactive one the rule had when the dialog opened, so unticking it does not hide it.
+  const products = pickableProducts(useProducts().data ?? [], [...(rule?.conditions.products ?? []), ...c.products])
   const setC = (next: Partial<RuleConditions>) => setValue((v) => ({ ...v, conditions: { ...v.conditions, ...next } }))
   const toggle = <T,>(list: T[], x: T) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x])
 
@@ -87,8 +90,8 @@ function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: Revie
         <div className="grid gap-1.5">
           <FieldLabel>{t('settingsRouting.field.product')}</FieldLabel>
           <div className="flex flex-wrap gap-1" role="group" aria-label={t('settingsRouting.field.product')}>
-            {PRODUCTS.map((p) => (
-              <ToggleChip key={p} on={c.products.includes(p)} onToggle={() => setC({ products: toggle(c.products, p) })}>{t(`materials.product.${p}`)}</ToggleChip>
+            {products.map((p) => (
+              <ToggleChip key={p.id} on={c.products.includes(p.id)} onToggle={() => setC({ products: toggle(c.products, p.id) })}>{p.name}</ToggleChip>
             ))}
           </div>
         </div>

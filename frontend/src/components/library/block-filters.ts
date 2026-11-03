@@ -1,5 +1,4 @@
 import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
-import { PRODUCTS } from '@/components/materials/material-data'
 import { blockStates, expiryState, type Block } from './block-data'
 
 // Building blocks list configuration: filter keys, sorts and quick views. Labels and menus are in use-block-list.tsx.
@@ -12,11 +11,14 @@ export type BlockSort = (typeof BLOCK_SORTS)[number]
 
 export const validateBlocksSearch = (raw: Record<string, unknown>) => validateListSearch(raw, BLOCK_FILTER_KEYS, BLOCK_SORTS)
 
-/** A block with no products, or for all states, is approved for each of them, so it matches every such filter. */
-export function blockValues(b: Block, key: BlockFilterKey, licensedStates: readonly string[]): string[] {
+/**
+ * A block with no products, or for all states, is approved for each of them, so it matches every such filter.
+ * `allProducts` is every product ID in the Library.
+ */
+export function blockValues(b: Block, key: BlockFilterKey, licensedStates: readonly string[], allProducts: readonly string[]): string[] {
   switch (key) {
     case 'kind': return [b.kind]
-    case 'product': return b.products.length ? b.products : [...PRODUCTS]
+    case 'product': return b.products.length ? b.products : [...allProducts]
     case 'state': return blockStates(b, licensedStates)
     case 'expiry': return [expiryState(b.expiresAt)]
   }

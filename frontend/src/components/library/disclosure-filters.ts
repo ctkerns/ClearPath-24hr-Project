@@ -1,5 +1,4 @@
 import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
-import { PRODUCTS } from '@/components/materials/material-data'
 import type { Disclosure } from './disclosure-data'
 
 // Disclosures list configuration. Labels and menus are in use-disclosure-list.tsx.
@@ -12,10 +11,10 @@ export type DisclosureSort = (typeof DISCLOSURE_SORTS)[number]
 
 export const validateDisclosuresSearch = (raw: Record<string, unknown>) => validateListSearch(raw, DISCLOSURE_FILTER_KEYS, DISCLOSURE_SORTS)
 
-/** A disclosure for every product, or every state, matches every filter value. */
-export function disclosureValues(d: Disclosure, key: DisclosureFilterKey): string[] {
+/** A disclosure for every product, or every state, matches every filter value. `allProducts` is every product ID in the Library. */
+export function disclosureValues(d: Disclosure, key: DisclosureFilterKey, allProducts: readonly string[]): string[] {
   switch (key) {
-    case 'product': return d.products.length ? d.products : [...PRODUCTS]
+    case 'product': return d.products.length ? d.products : [...allProducts]
     case 'state': return d.states === 'all' ? ['all'] : d.states
   }
 }

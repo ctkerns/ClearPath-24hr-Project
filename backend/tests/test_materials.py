@@ -7,7 +7,8 @@ from app.config import settings
 from app.db import SessionLocal
 from app.models import Role, User, Workspace
 from app.models.audit import AuditEvent
-from app.models.materials import Channel, Comment, Material, MaterialStatus, MaterialVersion, Product
+from app.models.materials import Channel, Comment, Material, MaterialStatus, MaterialVersion
+from app.models.products import Product
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
 from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today, EXAMPLE_FIELDS, with_channel_fields
@@ -110,7 +111,7 @@ async def material_without_version() -> str:
     async with SessionLocal() as db:
         ws = await db.scalar(select(Workspace).where(Workspace.is_demo))
         owner = await db.scalar(select(User).where(User.email == SUBMITTER))
-        m = Material(workspace_id=ws.id, title="Holiday HELOC rate email, copy", channel=Channel.MAILCHIMP, product=Product.HELOC,
+        m = Material(workspace_id=ws.id, title="Holiday HELOC rate email, copy", channel=Channel.MAILCHIMP, product="heloc",
                      status=MaterialStatus.SUBMITTED, owner_id=owner.id)
         db.add(m)
         await db.commit()
@@ -583,6 +584,7 @@ async def test_other_workspace_sees_nothing(client):
                 password_hash=hash_password(DEMO_PASSWORD),
             )
         )
+        db.add(Product(workspace_id=other.id, id="savings", name="Savings", description="Savings accounts."))
     await as_user(client, "admin@real.example")
     assert (await client.get("/api/materials")).json()["items"] == []
     assert (await client.get(f"/api/materials/{SUMMER}")).status_code == 404

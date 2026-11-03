@@ -1,5 +1,5 @@
 import { validatePagedSearch } from '@/components/list/list-filters'
-import { CHANNELS, LIVE_STATUSES, PRODUCTS, STATUSES } from './material-data'
+import { CHANNELS, LIVE_STATUSES, STATUSES } from './material-data'
 
 // Materials list configuration: filter keys, sorts and quick views. Labels and menus are in use-material-list.tsx.
 // The server filters, searches, sorts and pages (GET /api/materials, backend/src/app/material_list.py):
@@ -11,12 +11,14 @@ export type MaterialFilterKey = (typeof MATERIAL_FILTER_KEYS)[number]
 export const MATERIAL_SORTS = ['updated', 'created', 'expires', 'title'] as const
 export type MaterialSort = (typeof MATERIAL_SORTS)[number]
 
-/** The fixed values from the PRD. People, groups and affiliates come from the server's counts. */
+/**
+ * The fixed values from the PRD. Products come from the Library (use-material-list.tsx), so the URL keeps any
+ * product ID. People, groups and affiliates come from the server's counts.
+ */
 export const MATERIAL_FIXED: Partial<Record<MaterialFilterKey, readonly string[]>> = {
   status: STATUSES,
   live: LIVE_STATUSES,
   channel: CHANNELS,
-  product: PRODUCTS,
 }
 
 export const validateMaterialsSearch = (raw: Record<string, unknown>) =>
