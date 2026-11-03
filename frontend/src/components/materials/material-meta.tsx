@@ -2,6 +2,7 @@ import type * as React from 'react'
 import { Check, CircleAlert, Clock, Radio, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { GoogleLogo, MailchimpLogo, MetaLogo, WordPressLogo } from './brand-logos'
 import { channelIcons, initials, type Channel, type GroupState, type LiveStatus } from './material-data'
 
 const liveTone: Record<LiveStatus, string> = {
@@ -57,7 +58,17 @@ export function GroupApprovals({ groups, className }: { groups: { name: string; 
   )
 }
 
+const brandLogos: Partial<Record<Channel, (props: { className?: string }) => React.ReactNode>> = {
+  meta: MetaLogo,
+  google: GoogleLogo,
+  mailchimp: MailchimpLogo,
+  wordpress: WordPressLogo,
+}
+
+/** The platform's own logo when the channel has one, otherwise a plain icon (Affiliate, Other). */
 export function ChannelIcon({ channel, className }: { channel: Channel; className?: string }) {
+  const Logo = brandLogos[channel]
+  if (Logo) return <Logo className={className} />
   const Icon = channelIcons[channel]
   return <Icon className={cn('size-4 shrink-0 text-muted-foreground', className)} strokeWidth={1.75} aria-hidden="true" />
 }
