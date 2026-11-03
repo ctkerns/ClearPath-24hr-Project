@@ -983,5 +983,36 @@
     "aiMiss": "AI miss rate",
     "aiMissDef": "Reviewer comments on selected text that no AI finding covered. A rough signal of AI recall.",
     "evalNote": "AI precision and recall on the evaluation set are in the test report, not here."
+  },
+  "signIn": {
+    "heading": "Sign in to ClearPath Review",
+    "who": "For ClearPath Credit Union staff and approved affiliates.",
+    "email": "Work email",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Sign in",
+    "forgot": "Forgot your password? Ask your Admin to reset it.",
+    "error": {
+      "missing": "Enter your email and password.",
+      "invalid": "The email or password is not correct.",
+      "storage": "Your browser blocks site storage, so you cannot stay signed in. Allow storage for this site and try again."
+    },
+    "demo": {
+      "heading": "Try the demo",
+      "note": "Each demo account opens the demo workspace, which has sample data. Demo accounts cannot open the real workspace.",
+      "password": "Password for every demo account:",
+      "signIn": "Sign in",
+      "signInAs": "Sign in as {{role}}",
+      "can": {
+        "viewer": "Reads everything and runs regulator exports",
+        "submitter": "Submits materials and fixes them",
+        "reviewer": "Reviews and approves for the Compliance group",
+        "manager": "Owns the library, reviewer groups and routing",
+        "admin": "Manages users, integrations and the workspace",
+        "affiliate": "Submits for LendWise and sees only its own items"
+      }
+    },
+    "footer": "An internal tool of ClearPath Credit Union. The audit log records every sign-in."
   }
 }

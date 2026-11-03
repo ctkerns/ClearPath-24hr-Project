@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
+import { getSession } from '@/lib/session'
 import { useTranslation } from 'react-i18next'
 import { activeIndicatorClass, useActiveIndicator } from '@/lib/use-active-indicator'
 import { AppLogo } from '@/components/app-logo'
@@ -12,6 +13,10 @@ import { WorkspaceBand } from '@/components/workspace-band'
 // Layout route with no URL of its own ("_" prefix). Every signed-in page is a child of it.
 // Affiliates will get the same shell with fewer links; the server limits what they can see (PRD R4).
 export const Route = createFileRoute('/_app')({
+  // No session: go to sign-in, and come back to this page after. TODO: the server also rejects the API calls.
+  beforeLoad: ({ location }) => {
+    if (!getSession()) throw redirect({ to: '/sign-in', search: { redirect: location.href } })
+  },
   component: AppLayout,
 })
 
