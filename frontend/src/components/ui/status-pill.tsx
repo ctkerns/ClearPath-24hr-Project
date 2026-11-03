@@ -1,6 +1,7 @@
 import * as React from "react"
 import { cva } from "class-variance-authority"
 import { cn } from "cn"
+import { useTranslation } from "react-i18next"
 
 /** Material statuses from PRD section 6. */
 export type MaterialStatus =
@@ -13,18 +14,6 @@ export type MaterialStatus =
   | "live"
   | "expired"
   | "retired"
-
-export const statusLabels: Record<MaterialStatus, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  in_review: "In review",
-  changes_requested: "Changes requested",
-  rejected: "Rejected",
-  approved: "Approved",
-  live: "Live",
-  expired: "Expired",
-  retired: "Retired",
-}
 
 const statusPillVariants = cva(
   "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap before:size-1.5 before:shrink-0 before:rounded-full before:content-['']",
@@ -51,6 +40,7 @@ function StatusPill({
   children,
   ...props
 }: React.ComponentProps<"span"> & { status: MaterialStatus }) {
+  const { t } = useTranslation()
   return (
     <span
       data-slot="status-pill"
@@ -58,7 +48,7 @@ function StatusPill({
       className={cn(statusPillVariants({ status }), className)}
       {...props}
     >
-      {children ?? statusLabels[status]}
+      {children ?? t(`status.${status}`)}
     </span>
   )
 }

@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "ClearPath",
+    "product": "Review"
+  },
+  "nav": {
+    "home": "Home",
+    "materials": "Materials",
+    "myMaterials": "My materials",
+    "issues": "Issues",
+    "library": "Library",
+    "metrics": "Metrics",
+    "settings": "Settings",
+    "designSystem": "Design system"
+  },
+  "status": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "in_review": "In review",
+    "changes_requested": "Changes requested",
+    "rejected": "Rejected",
+    "approved": "Approved",
+    "live": "Live",
+    "expired": "Expired",
+    "retired": "Retired"
+  },
+  "level": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "riskTag": {
+    "low": "Low risk",
+    "medium": "Medium risk",
+    "high": "High risk"
+  },
+  "finding": {
+    "aiSuggestion": "AI suggestion",
+    "outdated": "Outdated",
+    "fix": "Fix:"
+  }
+}
