@@ -170,7 +170,7 @@ function Rows({ materials, groupBy }: { materials: Material[]; groupBy: GroupBy 
 }
 
 /**
- * One material on one line, like a Linear issue row. Left: ID, channel, title. Right: properties.
+ * One material on one line. Left: channel and title. Right: properties.
  * The column that the list is grouped by is left out, because the group header already shows it.
  * Narrow screens drop the less important columns first.
  */
@@ -185,7 +185,6 @@ function MaterialRow({ material: m, groupBy }: { material: Material; groupBy: Gr
       params={{ materialId: m.id }}
       className="flex h-11 items-center gap-3 px-3 transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
     >
-      <code className="w-17 shrink-0 text-xs text-muted-foreground max-sm:hidden">{m.id}</code>
       {groupBy !== 'channel' && (
         <span title={label('channel', m.channel)}><ChannelIcon channel={m.channel} /></span>
       )}
@@ -203,6 +202,9 @@ function MaterialRow({ material: m, groupBy }: { material: Material; groupBy: Gr
           {m.liveStatus !== 'not_live' && <LiveStatusTag status={m.liveStatus} />}
         </span>
       )}
+
+      {/* The approval ID is the reference for audits and affiliates (PRD glossary). Only approved versions have one. */}
+      <code className="w-32 shrink-0 text-right text-xs text-muted-foreground max-lg:hidden">{m.approvalId}</code>
 
       {groupBy !== 'status' && <StatusPill status={m.status} className="max-sm:hidden" />}
 
@@ -231,7 +233,7 @@ function MaterialRow({ material: m, groupBy }: { material: Material; groupBy: Gr
 function LoadingRows() {
   return Array.from({ length: 6 }, (_, i) => (
     <div key={i} className="flex h-11 items-center gap-3 border-b px-3 last:border-b-0">
-      <Skeleton className="h-3 w-16" />
+      <Skeleton className="size-4" />
       <Skeleton className="h-3 flex-1" />
       <Skeleton className="size-6 rounded-full" />
     </div>

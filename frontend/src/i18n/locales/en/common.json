@@ -127,7 +127,7 @@
       "monitoring": "Live problems"
     },
     "searchLabel": "Filter materials by text",
-    "searchPlaceholder": "Filter by title, ID, approval ID…",
+    "searchPlaceholder": "Filter by title or approval ID…",
     "filter": "Filter",
     "display": "Display",
     "groupBy": "Group by",
@@ -142,8 +142,8 @@
     },
     "sort": {
       "updated": "Last updated",
+      "created": "Newest first",
       "expires": "Expiry date",
-      "id": "Newest ID",
       "title": "Title"
     },
     "field": {

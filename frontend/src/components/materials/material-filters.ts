@@ -13,7 +13,7 @@ export type FilterKey = (typeof FILTER_KEYS)[number]
 export const GROUP_BY = ['status', 'live', 'channel', 'product', 'owner', 'none'] as const
 export type GroupBy = (typeof GROUP_BY)[number]
 
-export const SORTS = ['updated', 'expires', 'id', 'title'] as const
+export const SORTS = ['updated', 'created', 'expires', 'title'] as const
 export type Sort = (typeof SORTS)[number]
 
 export type MaterialsSearch = Partial<Record<FilterKey, string>> & { q?: string; groupBy?: GroupBy; sort?: Sort }
@@ -78,7 +78,7 @@ export function applyFilters(materials: Material[], search: MaterialsSearch) {
       const wanted = filterValues(search, key)
       if (wanted.length && !fieldValues(m, key).some((v) => wanted.includes(v))) return false
     }
-    if (q && ![m.id, m.title, m.approvalId, m.affiliate, m.owner].some((v) => v?.toLowerCase().includes(q))) return false
+    if (q && ![m.title, m.approvalId, m.affiliate, m.owner].some((v) => v?.toLowerCase().includes(q))) return false
     return true
   })
 }
@@ -87,7 +87,8 @@ export function sortMaterials(materials: Material[], sort: Sort) {
   const list = [...materials]
   switch (sort) {
     case 'updated': return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    case 'id': return list.sort((a, b) => b.id.localeCompare(a.id))
+    // TODO: sort by createdAt when the API has it. Demo IDs count up in creation order.
+    case 'created': return list.sort((a, b) => b.id.localeCompare(a.id))
     case 'title': return list.sort((a, b) => a.title.localeCompare(b.title))
     // Soonest expiry first; materials with no expiry go last.
     case 'expires': return list.sort((a, b) => (a.expiresAt ?? '9999').localeCompare(b.expiresAt ?? '9999'))

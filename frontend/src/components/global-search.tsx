@@ -144,14 +144,14 @@ export function GlobalSearch() {
                 {data.materials.map((m) => (
                   <CommandItem
                     key={m.id}
-                    value={`${m.id} ${m.title} ${m.channel} ${m.approvalId ?? ''}`}
+                    value={`${m.title} ${m.channel} ${m.approvalId ?? ''} ${m.id}`}
                     onSelect={() => go('/materials/$materialId', { materialId: m.id })}
                   >
                     <FileText />
                     <span className="grid min-w-0 flex-1">
                       <span className="truncate">{m.title}</span>
                       <span className="truncate text-xs text-muted-foreground">
-                        <code>{m.approvalId ?? m.id}</code> · {m.channel}
+                        {m.approvalId && <><code>{m.approvalId}</code> · </>}{m.channel}
                       </span>
                     </span>
                     <StatusPill status={m.status} />
