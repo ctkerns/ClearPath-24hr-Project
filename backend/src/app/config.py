@@ -1,4 +1,5 @@
 from datetime import timedelta
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +17,10 @@ class Settings(BaseSettings):
     cookie_secure: bool = True
     # A session ends this long after sign-in. Then the user signs in again.
     session_lifetime: timedelta = timedelta(hours=12)
+    # Uploaded material files (PRD F3). The default is backend/uploads, which git ignores.
+    upload_dir: Path = Path(__file__).parents[2] / "uploads"
+    # The largest file one upload may have
+    upload_max_bytes: int = 20 * 1024 * 1024
 
 
 settings = Settings()

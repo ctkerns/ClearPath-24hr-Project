@@ -17,6 +17,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { approvedByViewer, groupsForViewer, useDecide } from './decide'
 import type { Decision, MaterialDetail } from './material-detail-data'
 import { useViewer } from '@/lib/session'
+import { useSave } from '@/lib/use-save'
+import { SaveError } from '@/components/save-error'
 
 /** Which decisions need text before they can be sent. Approve alone takes an optional comment. */
 const textRequired: Record<Decision, boolean> = {
@@ -52,6 +54,7 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
   const viewer = useViewer()
   const { t } = useTranslation()
   const decide = useDecide(materialId)
+  const { pending, error, run } = useSave(onDone)
   const [text, setText] = useState('')
   const [group, setGroup] = useState<string>()
   const [override, setOverride] = useState('')
@@ -70,8 +73,7 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!ready) return
-    decide({ decision, text: text.trim(), group, override: needsOverride ? override.trim() : undefined })
-    onDone()
+    void run(() => decide({ decision, text: text.trim(), group, override: needsOverride ? override.trim() : undefined }))
   }
 
   return (
@@ -148,9 +150,10 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
         <p className="text-xs text-muted-foreground">{t(`review.dialog.${decision}.help`)}</p>
       </div>
 
+      <SaveError error={error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone}>{t('review.dialog.cancel')}</Button>
-        <Button type="submit" variant={decision === 'reject' ? 'destructive' : 'default'} disabled={!ready}>
+        <Button type="submit" variant={decision === 'reject' ? 'destructive' : 'default'} disabled={!ready || pending}>
           {t(`review.dialog.${decision}.confirm`)}
         </Button>
       </DialogFooter>

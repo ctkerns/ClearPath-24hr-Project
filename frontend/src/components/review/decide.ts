@@ -1,13 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
-import type { Material } from '@/components/materials/material-data'
-import type { MaterialStatus } from '@/components/ui/status-pill'
-import { useApprovalDays } from '@/components/settings/workspace-data'
-import { useViewer, type SessionUser } from '@/lib/session'
+import { api } from '@/lib/api'
+import type { SessionUser } from '@/lib/session'
 import type { Decision, MaterialDetail } from './material-detail-data'
 
-// Applies a review decision (PRD F5) to the demo data in the query cache.
-// TODO: replace with a POST to the decisions API; the server checks the role, writes the audit log,
-// creates the approval ID and expiry, and returns the new state.
+// Sends a review decision (PRD F5) to POST /api/materials/<id>/decisions. The server checks the role and
+// the reviewer groups (R1, R2), writes the comment and the audit log, creates the approval ID and expiry
+// from the workspace approval length (F15), and returns the new detail.
 
 /** override: the written reason for approving with an open High finding (PRD F6). */
 export type DecisionInput = { decision: Decision; text: string; group?: string; override?: string }
@@ -20,94 +18,14 @@ export const groupsForViewer = (detail: MaterialDetail, viewer: SessionUser) =>
 export const approvedByViewer = (detail: MaterialDetail, viewer: SessionUser) =>
   detail.groups.filter((g) => g.state === 'approved' && g.by === viewer.name).map((g) => g.name)
 
-function historyText(decision: Decision, groups: string[], version: number, text: string, group?: string) {
-  const on = `on version ${version}`
-  switch (decision) {
-    case 'approve': return `Approved for ${groups.join(', ')} ${on}.`
-    case 'approve_conditions': return `Approved with conditions for ${groups.join(', ')} ${on}: ${text}`
-    case 'request_changes': return `Requested changes for ${groups.join(', ')} ${on}: ${text}`
-    case 'reject': return `Rejected for ${groups.join(', ')} ${on}: ${text}`
-    case 'escalate': return `Escalated: added ${group} as a required group. ${text}`
-    case 'retract': return `Retracted own approval ${on}: ${text}`
-  }
-}
-
 export function useDecide(materialId: string) {
-  const viewer = useViewer()
   const queryClient = useQueryClient()
-  // The approval length from Settings (Workspace tab), so a change there applies to the next approval.
-  const approvalDays = useApprovalDays()
 
-  return ({ decision, text, group, override }: DecisionInput) => {
-    const detail = queryClient.getQueryData<MaterialDetail | null>(['material-detail', materialId])
-    if (!detail) return
-    const now = new Date().toISOString()
-    const mine = groupsForViewer(detail, viewer)
-
-    let groups = detail.groups
-    let status: MaterialStatus = 'in_review'
-    let approval: Pick<Material, 'approvalId' | 'expiresAt'> = {}
-
-    switch (decision) {
-      case 'approve':
-      case 'approve_conditions':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'approved', by: viewer.name, at: now } : g))
-        if (groups.every((g) => g.state === 'approved')) {
-          status = 'approved'
-          // The workspace approval length (PRD F9, F15). TODO: the server also ends it early at a rule,
-          // disclosure or rate date that comes sooner.
-          const approvedAt = new Date(now)
-          const expires = new Date(now)
-          expires.setDate(expires.getDate() + approvalDays)
-          approval = {
-            approvalId: `CP-${approvedAt.getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}-v${detail.version}`,
-            expiresAt: expires.toISOString().slice(0, 10),
-          }
-        }
-        break
-      case 'request_changes':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'changes', by: viewer.name, at: now } : g))
-        status = 'changes_requested'
-        break
-      case 'reject':
-        groups = groups.map((g) => (mine.includes(g.name) ? { ...g, state: 'rejected', by: viewer.name, at: now } : g))
-        status = 'rejected'
-        break
-      case 'escalate':
-        if (group) groups = [...groups, { name: group, state: 'waiting', reason: text, escalatedBy: viewer.name }]
-        break
-      case 'retract': {
-        // The groups that the approval covered count as waiting again (PRD section 6).
-        const retracted = approvedByViewer(detail, viewer)
-        groups = groups.map((g) => (retracted.includes(g.name) ? { name: g.name, state: 'waiting', members: g.members, reason: g.reason } : g))
-        approval = { approvalId: undefined, expiresAt: undefined }
-        break
-      }
-    }
-
-    const comment = {
-      id: `c-${Date.now()}`,
-      author: viewer.name,
-      role: viewer.groups.join(', '),
-      at: now,
-      body: [decision === 'escalate' && group ? `${group}: ${text}` : text, override && `Override: ${override}`].filter(Boolean).join('\n'),
-      decision,
-    }
-
-    queryClient.setQueryData<MaterialDetail>(['material-detail', materialId], {
-      ...detail,
-      groups,
-      conditions: decision === 'approve_conditions' ? text : decision === 'retract' ? undefined : detail.conditions,
-      comments: [...detail.comments, comment],
-      // Demo only: the server writes the audit log, and the text comes from the event type.
-      history: [...detail.history, { at: now, actor: viewer.name, type: 'decision', text: historyText(decision, mine, detail.version, text, group) + (override ? ` Override reason: ${override}` : '') }],
-    })
-    queryClient.setQueryData<Material[]>(['materials'], (list) =>
-      list?.map((m) =>
-        m.id === materialId
-          ? { ...m, ...approval, status, updatedAt: now, groups: groups.map((g) => ({ name: g.name, state: g.state })) }
-          : m,
-      ),
-    )
+  /** Rejects with an ApiError, so the dialog can show what went wrong. */
+  return async (input: DecisionInput) => {
+    const detail = await api<MaterialDetail>('POST', `/materials/${materialId}/decisions`, input)
+    queryClient.setQueryData(['material-detail', materialId], detail)
+    // The status, approval ID and group states in the list change too.
+    await queryClient.invalidateQueries({ queryKey: ['materials'] })
   }
 }

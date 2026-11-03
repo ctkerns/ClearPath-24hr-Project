@@ -43,9 +43,9 @@ function NewVersionPage() {
         initial={valuesFromMaterial(material, detail.data ?? null)}
         ready
         onCancel={back}
-        onSubmit={(values) => {
-          submitMaterial(values, { material, detail: detail.data ?? null })
-          void back()
+        onSubmit={async (values) => {
+          await submitMaterial(values, { material })
+          await back()
         }}
       />
     </div>

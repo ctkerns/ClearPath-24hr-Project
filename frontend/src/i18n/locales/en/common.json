@@ -234,6 +234,7 @@
       "dates": "Runs",
       "destination": "Links to",
       "platformId": "Platform ID",
+      "files": "Files",
       "path": "Review path",
       "submitted": "Submitted"
     },
@@ -396,6 +397,8 @@
     "chooseFile": "Choose files",
     "orDrop": "or drop them here",
     "removeFile": "Remove {{name}}",
+    "uploading": "Uploading…",
+    "uploadFailed": "The file did not upload. Try again.",
     "routing": "Goes to these reviewer groups",
     "routingEmpty": "Choose a channel, product and states to see who reviews this.",
     "cancel": "Cancel",

@@ -1,8 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
-import { uuidv7 } from '@/lib/uuid'
-import { versionFields, type MaterialDetail } from '@/components/review/material-detail-data'
-import { useViewer } from '@/lib/session'
+import { versionFields, type MaterialDetail, type MaterialFile } from '@/components/review/material-detail-data'
+import { api, ApiError } from '@/lib/api'
 import { useReviewerGroups, type ReviewerGroup } from '@/components/settings/group-data'
 import { evaluateRouting, formatList, useRouting, type RoutingRule } from '@/components/settings/routing-data'
 import i18n from '@/i18n'
@@ -33,10 +32,10 @@ export type SubmissionValues = {
   product: Product | ''
   source: ContentSource
   fields: Record<string, string>
-  /** Demo only keeps file names. TODO: upload to storage and keep the file IDs. */
-  files: string[]
+  /** Uploaded as soon as they are picked; the submission refers to their IDs. */
+  files: UploadedFile[]
   /** The ad image, for channels that have one. */
-  imageFiles: string[]
+  imageFiles: UploadedFile[]
   contentUrl: string
   nationwide: boolean
   states: string[]
@@ -44,7 +43,21 @@ export type SubmissionValues = {
   launchDate: string
   endDate: string
   destinationUrl: string
-  proofFiles: string[]
+  proofFiles: UploadedFile[]
+}
+
+export type UploadedFile = Pick<MaterialFile, 'id' | 'name'>
+
+/** POST /api/materials/files. The server keeps the file; only people who may see the material can read it. */
+export async function uploadFile(file: File): Promise<UploadedFile> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch('/api/materials/files', { method: 'POST', body: form })
+  if (!res.ok) {
+    const json = await res.json().catch(() => null)
+    throw new ApiError(res.status, typeof json?.detail === 'string' ? json.detail : `HTTP ${res.status}`)
+  }
+  return res.json()
 }
 
 export const emptyValues: SubmissionValues = {
@@ -74,7 +87,8 @@ export function valuesFromMaterial(m: Material, detail: MaterialDetail | null): 
 /**
  * Which reviewer groups a submission goes to (PRD F6), so the form can show it before you submit.
  * It runs the Routing tab's rules and default group through evaluateRouting, the same function as "Test routing".
- * TODO: the server evaluates the rules on every new version; it also knows the affiliate's history.
+ * The submit sends the result; the server checks that the groups exist, and uses the default group when there are none.
+ * TODO: the server evaluates the rules on every new version, once they are in the database; it also knows the affiliate's history.
  */
 export function previewRouting(rules: RoutingRule[], groups: ReviewerGroup[], v: SubmissionValues): { name: string; reason: string }[] {
   if (!v.product || !v.channel) return []
@@ -119,77 +133,42 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
 
 
 /**
- * Saves a submission into the demo cache and returns the material ID.
- * TODO: replace with a POST to the API. The server stores files, routes the version, and starts pre-review (F4).
+ * Sends a submission: POST /api/materials for a new material, POST /api/materials/<id>/versions for a new version.
+ * Resolves with the material ID, and rejects with an ApiError, so the form can show what went wrong.
+ * The server stores the version, routes it, and moves the material to In review. TODO (F4): pre-review.
  */
 export function useSubmitMaterial() {
-  const viewer = useViewer()
   const queryClient = useQueryClient()
   const routing = useRoutingPreview()
 
-  return (values: SubmissionValues, existing?: { material: Material; detail: MaterialDetail | null }) => {
-    const now = new Date().toISOString()
+  return async (values: SubmissionValues, existing?: { material: Material }) => {
     const channel = values.channel as Channel
-    const template = channelFields[channel]
     const fields =
       values.source === 'text'
-        ? template.filter((f) => values.fields[f.label]?.trim()).map((f) => ({ label: f.label, kind: f.kind, segments: [values.fields[f.label].trim()] }))
+        ? channelFields[channel].map((f) => ({ label: f.label, kind: f.kind, text: values.fields[f.label]?.trim() ?? '' })).filter((f) => f.text)
         : values.source === 'file'
-          ? [{ label: 'Files', segments: [values.files.join(', ')] }]
-          : [{ label: 'URL', segments: [values.contentUrl] }]
-    const groups = routing.preview(values).map((g) => ({ ...g, state: 'waiting' as const }))
-    const prev = existing?.detail
-    const number = (prev?.version ?? 0) + 1
-    const id = existing?.material.id ?? uuidv7()
-
-    const detail: MaterialDetail = {
-      id,
-      version: number,
-      versionCount: number,
-      submittedAt: now,
-      submittedBy: viewer.name,
-      path: 'full',
-      details: {
-        targetStates: values.nationwide ? 'Nationwide' : values.states.join(', '),
-        launchDate: values.launchDate || undefined,
-        endDate: values.endDate || undefined,
-        destinationUrl: values.destinationUrl || undefined,
-        platformId: prev?.details.platformId,
-      },
-      fields,
-      // Findings on the old version become outdated; pre-review adds new ones (F4).
-      findings: (prev?.findings ?? []).map((f) => (f.status === 'open' ? { ...f, status: 'outdated' as const } : f)),
-      checklist: [],
-      groups,
-      comments: prev?.comments ?? [],
-      versions: [
-        ...(prev?.versions ?? []).map((v) => (v.current ? { ...v, current: false, fields: versionFields(prev!, v) } : v)),
-        { number, submittedAt: now, submittedBy: viewer.name, path: 'full', current: true },
-      ],
-      history: [
-        ...(prev?.history ?? []),
-        { at: now, actor: viewer.name, type: 'submitted', text: `Submitted version ${number} by manual upload.` },
-        { at: now, actor: 'Routing', type: 'routed', text: `Required ${groups.map((g) => `${g.name} (rule "${g.reason}")`).join(', ')}.` },
-      ],
-      live: prev?.live ?? [],
-      issues: prev?.issues ?? [],
-    }
-
-    const summary: Material = {
-      ...(existing?.material ?? { liveStatus: 'not_live', owner: viewer.name }),
-      id,
-      title: values.title.trim() || existing?.material.title || '',
+          ? [{ label: 'Files', text: values.files.map((f) => f.name).join(', ') }]
+          : [{ label: 'URL', text: values.contentUrl.trim() }]
+    const files = [...(values.source === 'file' ? values.files : []), ...(values.source === 'text' ? values.imageFiles : []), ...values.proofFiles]
+    const body = {
+      title: values.title.trim(),
       channel,
-      product: values.product as Product,
-      status: 'submitted',
-      groups: groups.map((g) => ({ name: g.name, state: g.state })),
-      updatedAt: now,
+      product: values.product,
+      fields,
+      fileIds: files.map((f) => f.id),
+      nationwide: values.nationwide,
+      states: values.nationwide ? [] : values.states,
+      targeting: values.targeting,
+      launchDate: values.launchDate || null,
+      endDate: values.endDate || null,
+      destinationUrl: values.destinationUrl,
+      groups: routing.preview(values),
     }
-
-    queryClient.setQueryData(['material-detail', id], detail)
-    queryClient.setQueryData<Material[]>(['materials'], (list = []) =>
-      existing ? list.map((m) => (m.id === id ? summary : m)) : [summary, ...list],
-    )
-    return id
+    const detail = existing
+      ? await api<MaterialDetail>('POST', `/materials/${existing.material.id}/versions`, body)
+      : await api<MaterialDetail>('POST', '/materials', body)
+    queryClient.setQueryData(['material-detail', detail.id], detail)
+    await queryClient.invalidateQueries({ queryKey: ['materials'] })
+    return detail.id
   }
 }

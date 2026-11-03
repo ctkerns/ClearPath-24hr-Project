@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { SaveError } from '@/components/save-error'
+import { useSave } from '@/lib/use-save'
 import type { IssueDetail } from './issue-data'
 import { useIssueUpdate } from './issue-update'
 
@@ -16,6 +18,10 @@ export function ResolveDialog({ issueId, detail, open, onClose }: { issueId: str
   const { t } = useTranslation()
   const { setStatus } = useIssueUpdate(issueId)
   const [note, setNote] = useState('')
+  const { pending, error, run } = useSave(() => {
+    setNote('')
+    onClose()
+  })
   const open_ = detail?.actions.filter((a) => !a.done).length ?? 0
 
   return (
@@ -25,9 +31,7 @@ export function ResolveDialog({ issueId, detail, open, onClose }: { issueId: str
           className="grid gap-4"
           onSubmit={(e) => {
             e.preventDefault()
-            setStatus('resolved', note.trim())
-            setNote('')
-            onClose()
+            void run(() => setStatus('resolved', note.trim()))
           }}
         >
           <DialogHeader>
@@ -44,9 +48,10 @@ export function ResolveDialog({ issueId, detail, open, onClose }: { issueId: str
             <Label htmlFor="resolve-note">{t('issue.resolve.noteLabel')}</Label>
             <Textarea id="resolve-note" value={note} onChange={(e) => setNote(e.target.value)} rows={4} required />
           </div>
+          <SaveError error={error} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t('issue.notice.cancel')}</Button>
-            <Button type="submit" disabled={!note.trim()}>{t('issue.resolve.submit')}</Button>
+            <Button type="submit" disabled={!note.trim() || pending}>{t('issue.resolve.submit')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

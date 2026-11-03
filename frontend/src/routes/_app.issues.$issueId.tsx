@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useIssueDetail, useIssues, type Issue } from '@/components/issues/issue-data'
+import { canManageIssue, useIssueDetail, useIssues, type Issue } from '@/components/issues/issue-data'
 import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { Activity, ActionList, IssuePanel, LiveContent } from '@/components/issues/issue-sections'
 import { useIssueUpdate } from '@/components/issues/issue-update'
@@ -14,6 +14,9 @@ import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatRelativeTime } from '@/i18n/format'
+import { useViewer } from '@/lib/session'
+import { useSave } from '@/lib/use-save'
+import { SaveError } from '@/components/save-error'
 
 export const Route = createFileRoute('/_app/issues/$issueId')({
   component: IssuePage,
@@ -54,7 +57,7 @@ function IssuePage() {
         <div className="grid min-w-0 content-start gap-8">
           {d ? (
             <>
-              <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>
+              {d.summary && <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>}
               <LiveContent detail={d} />
               <ActionList issue={issue} detail={d} />
               <Activity issueId={issue.id} detail={d} />
@@ -85,7 +88,9 @@ function BackLink() {
 /** Title, severity and status, one line of facts, and the status buttons. */
 function Header({ issue: i, onResolve }: { issue: Issue; onResolve: () => void }) {
   const { t } = useTranslation()
+  const viewer = useViewer()
   const { setStatus } = useIssueUpdate(i.id)
+  const { pending, error, run } = useSave(() => undefined)
 
   return (
     <header className="grid gap-2">
@@ -106,14 +111,22 @@ function Header({ issue: i, onResolve }: { issue: Issue; onResolve: () => void }
           </p>
         </div>
 
-        {/* Statuses move forward: Open, then In progress, then Resolved. Reopen is the only way back. */}
-        <div className="flex flex-wrap items-center gap-2">
-          {i.status === 'open' && <Button variant="outline" onClick={() => setStatus('in_progress')}>{t('issue.startWork')}</Button>}
-          {i.status !== 'resolved' && <Button onClick={onResolve}>{t('issue.resolve.button')}</Button>}
-          {i.status === 'resolved' && (
-            <Button variant="outline" onClick={() => setStatus('open')}><RotateCcw />{t('issue.reopen')}</Button>
-          )}
-        </div>
+        {/* Statuses move forward: Open, then In progress, then Resolved. Reopen is the only way back.
+            Only the owner or a Manager changes them (PRD F12); the server checks it too. */}
+        {canManageIssue(viewer, i) && (
+          <div className="grid justify-items-end gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {i.status === 'open' && (
+                <Button variant="outline" disabled={pending} onClick={() => void run(() => setStatus('in_progress'))}>{t('issue.startWork')}</Button>
+              )}
+              {i.status !== 'resolved' && <Button onClick={onResolve}>{t('issue.resolve.button')}</Button>}
+              {i.status === 'resolved' && (
+                <Button variant="outline" disabled={pending} onClick={() => void run(() => setStatus('open'))}><RotateCcw />{t('issue.reopen')}</Button>
+              )}
+            </div>
+            <SaveError error={error} />
+          </div>
+        )}
       </div>
     </header>
   )
