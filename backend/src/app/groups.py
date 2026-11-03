@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, InternalUser, Manager, bad_request, conflict, not_found
+from app.audit import changes, record
 from app.db import get_db
 from app.models import ReviewerGroup, User, UserStatus
 from app.users import WorkspaceUser, load_user, uses_groups
@@ -73,6 +74,11 @@ async def check_name_free(db: AsyncSession, viewer: User, name: str, except_id: 
         raise conflict("Another group already uses this name")
 
 
+def fields(g: ReviewerGroup) -> dict:
+    """What the audit log keeps of a group."""
+    return {"name": g.name, "description": g.description, "targetBusinessDays": g.target_business_days}
+
+
 async def saved(db: AsyncSession, viewer: User, group_id: uuid.UUID) -> GroupOut:
     await db.commit()
     return GroupOut.of(await load_group(db, viewer, group_id))
@@ -109,6 +115,7 @@ async def create_group(body: GroupInput, viewer: Manager, db: Db) -> GroupOut:
     )
     db.add(group)
     await db.flush()
+    record(db, viewer, "reviewer_group", group.id, "created", fields(group))
     return await saved(db, viewer, group.id)
 
 
@@ -119,11 +126,13 @@ async def edit_group(group_id: uuid.UUID, body: GroupInput, viewer: Manager, db:
     group = await load_group(db, viewer, group_id)
     name = body.name.strip()
     await check_name_free(db, viewer, name, except_id=group.id)
+    before = fields(group)
     group.name = name
     group.description = body.description.strip()
     group.target_business_days = body.target_business_days
     group.updated_by_id = viewer.id
     group.updated_at = datetime.now(UTC)
+    record(db, viewer, "reviewer_group", group.id, "updated", changes(before, fields(group)))
     return await saved(db, viewer, group.id)
 
 
@@ -139,18 +148,25 @@ def can_join(user: User) -> bool:
 async def add_members(group_id: uuid.UUID, body: MembersInput, viewer: Manager, db: Db) -> list[WorkspaceUser]:
     """Returns the group's members after the change."""
     group = await load_group(db, viewer, group_id)
+    added = []
     for user_id in body.user_ids:
         user = await load_user(db, viewer, user_id)
         if not can_join(user):
             raise bad_request(f"{user.name} cannot be in a reviewer group")
         if user not in group.members:
             group.members.append(user)
+            added.append(user)
+    if added:
+        record(db, viewer, "reviewer_group", group.id, "members_added", {"users": [{"id": u.id, "name": u.name} for u in added]})
     return await members_after(db, viewer, group.id)
 
 
 @router.delete("/{group_id}/members/{user_id}")
 async def remove_member(group_id: uuid.UUID, user_id: uuid.UUID, viewer: Manager, db: Db) -> list[WorkspaceUser]:
     group = await load_group(db, viewer, group_id)
+    for m in group.members:
+        if m.id == user_id:
+            record(db, viewer, "reviewer_group", group.id, "member_removed", {"user": {"id": m.id, "name": m.name}})
     group.members = [m for m in group.members if m.id != user_id]
     return await members_after(db, viewer, group.id)
 

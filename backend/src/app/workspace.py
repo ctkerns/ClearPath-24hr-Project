@@ -11,6 +11,7 @@ from pydantic import Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import Admin, APIModel, SignedIn, bad_request
+from app.audit import changes, record
 from app.db import get_db
 from app.models import Workspace
 
@@ -55,11 +56,15 @@ async def change_workspace(
     change: WorkspaceChange, viewer: Admin, db: Annotated[AsyncSession, Depends(get_db)]
 ) -> WorkspaceOut:
     workspace: Workspace = viewer.workspace
+    before = {"licensedStates": list(workspace.licensed_states), "approvalDays": workspace.approval_days}
     if change.licensed_states is not None:
         if not change.licensed_states:
             raise bad_request("Choose at least one licensed state")
         workspace.licensed_states = change.licensed_states
     if change.approval_days is not None:
         workspace.approval_days = change.approval_days
+    after = {"licensedStates": list(workspace.licensed_states), "approvalDays": workspace.approval_days}
+    if diff := changes(before, after):
+        record(db, viewer, "workspace", workspace.id, "updated", diff)
     await db.commit()
     return WorkspaceOut.model_validate(workspace)

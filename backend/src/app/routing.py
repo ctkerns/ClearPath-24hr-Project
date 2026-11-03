@@ -3,7 +3,7 @@ and the no-material-change types.
 
 Every signed-in internal user reads them, because the submit form shows where an item will go (F3).
 Affiliates do not: routing is internal data (PRD R4). Only Managers and higher change them (PRD section 4).
-TODO: record each change in the audit log. Open reviews keep their groups when a rule changes.
+Every change goes in the audit log. Open reviews keep their groups when a rule changes.
 """
 
 import uuid
@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, InternalUser, Manager, bad_request, not_found
+from app.audit import record
 from app.db import get_db
 from app.groups import GroupOut, load_group
 from app.models import ReviewerGroup, User
@@ -229,6 +230,7 @@ async def create_rule(body: RuleInput, viewer: Manager, db: Db) -> RuleOut:
     db.add(rule)
     await db.flush()
     rule_id = rule.id
+    record(db, viewer, "routing_rule", rule_id, "created", body.model_dump(by_alias=True))
     await db.commit()
     return RuleOut.of(await load_rule(db, viewer, rule_id))
 
@@ -253,13 +255,16 @@ async def change_rule(rule_id: uuid.UUID, body: RuleChange, viewer: Manager, db:
         rule.enabled = body.enabled
     rule.updated_by_id = viewer.id
     rule.updated_at = datetime.now(UTC)
+    record(db, viewer, "routing_rule", rule_id, "updated", body.model_dump(by_alias=True, exclude_unset=True))
     await db.commit()
     return RuleOut.of(await load_rule(db, viewer, rule_id))
 
 
 @router.delete("/rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_rule(rule_id: uuid.UUID, viewer: Manager, db: Db) -> Response:
-    await db.delete(await load_rule(db, viewer, rule_id))
+    rule = await load_rule(db, viewer, rule_id)
+    record(db, viewer, "routing_rule", rule_id, "deleted", {"name": rule.name})
+    await db.delete(rule)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -281,6 +286,7 @@ async def move_rule(rule_id: uuid.UUID, body: MoveInput, viewer: Manager, db: Db
         rules[i], rules[j] = rules[j], rules[i]
         for n, r in enumerate(rules):  # number them again, so gaps and ties go away
             r.position = n + 1
+        record(db, viewer, "routing_rule", rule_id, "moved", {"by": body.by, "position": j + 1})
         await db.commit()
     return await routing_out(db, viewer)
 
@@ -315,6 +321,7 @@ async def change_routing(body: SettingsChange, viewer: Manager, db: Db) -> Routi
         settings.enabled_change_types = [t for t in CHANGE_TYPES if t in on]
     settings.updated_by_id = viewer.id
     settings.updated_at = datetime.now(UTC)
+    record(db, viewer, "routing_settings", viewer.workspace_id, "updated", body.model_dump(by_alias=True, exclude_unset=True))
     await db.commit()
     return await routing_out(db, viewer)
 
@@ -331,6 +338,10 @@ async def set_default_group(body: DefaultGroupInput, viewer: Manager, db: Db) ->
     """Moves the default flag to this group in one transaction. It never clears it: one group is always the default.
     The partial unique index allows one default per workspace, so clear the old one first."""
     group = await load_group(db, viewer, body.group_id)
+    before = await db.scalar(
+        select(ReviewerGroup.id).where(ReviewerGroup.workspace_id == viewer.workspace_id, ReviewerGroup.is_default)
+    )
+    record(db, viewer, "routing_settings", viewer.workspace_id, "default_group_changed", {"before": before, "after": group.id})
     await db.execute(
         update(ReviewerGroup)
         .where(ReviewerGroup.workspace_id == viewer.workspace_id, ReviewerGroup.is_default, ReviewerGroup.id != group.id)

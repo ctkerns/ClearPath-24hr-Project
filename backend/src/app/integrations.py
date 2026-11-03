@@ -2,7 +2,7 @@
 
 Only Admins read and change them (PRD section 4): the tab is Admin-only, and no other screen reads it.
 No call goes to a real platform yet. Connect, disconnect and "Sync now" change only the stored state.
-TODO: run the OAuth flow, store the token encrypted, run the sync, and write the audit log.
+Every change goes in the audit log. TODO: run the OAuth flow, store the token encrypted, and run the sync.
 """
 
 import uuid
@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import Admin, APIModel, bad_request, conflict, not_found
+from app.audit import record
 from app.db import get_db
 from app.models import Role, User, UserStatus
 from app.models.integrations import (
@@ -150,6 +151,7 @@ async def sync_now(integration_id: uuid.UUID, viewer: Admin, db: Db) -> Integrat
     if integration.status is not IntegrationStatus.CONNECTED:
         raise conflict("Connect this connector before you sync it")
     integration.last_sync_at = datetime.now(UTC)
+    record(db, viewer, "integration", integration.id, "synced", {"provider": integration.provider})
     return await saved(db, viewer, integration.id)
 
 
@@ -199,6 +201,9 @@ async def connect(integration_id: uuid.UUID, body: ConnectInput, viewer: Admin, 
     integration.error_code = None
     integration.error_at = None
     integration.last_sync_at = datetime.now(UTC)
+    record(db, viewer, "integration", integration.id, "connected", {
+        "provider": integration.provider, "accounts": picked, "defaultOwnerId": body.default_owner_id if owns_content else None
+    })
     return await saved(db, viewer, integration.id)
 
 
@@ -211,6 +216,7 @@ async def disconnect(integration_id: uuid.UUID, viewer: Admin, db: Db) -> Integr
     integration.error_code = None
     integration.error_at = None
     integration.accounts = []
+    record(db, viewer, "integration", integration.id, "disconnected", {"provider": integration.provider})
     return await saved(db, viewer, integration.id)
 
 
@@ -229,5 +235,8 @@ async def set_default_owner(
     if integration.provider not in OWNS_CONTENT:
         raise bad_request("This connector has no default owner")
     await check_owner(db, viewer, body.default_owner_id)
+    record(db, viewer, "integration", integration.id, "default_owner_changed", {
+        "account": account.name, "before": account.default_owner_id, "after": body.default_owner_id
+    })
     account.default_owner_id = body.default_owner_id
     return await saved(db, viewer, integration.id)

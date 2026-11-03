@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import Admin, APIModel, InternalUser, bad_request, conflict, not_found
+from app.audit import record
 from app.db import get_db
 from app.models import Affiliate, ReviewerGroup, Role, Session, User, UserStatus
 
@@ -126,6 +127,7 @@ async def change_user(user_id: uuid.UUID, body: UserChange, viewer: Admin, db: D
     if body.role is not None and body.role != user.role:
         if Role.AFFILIATE in (body.role, user.role):
             raise bad_request("An affiliate cannot become an internal user, or the opposite. Invite them again.")
+        record(db, viewer, "user", user.id, "role_changed", {"before": user.role, "after": body.role})
         user.role = body.role
         if not uses_groups(body.role):
             user.groups.clear()  # below Reviewer, groups no longer apply
@@ -133,6 +135,7 @@ async def change_user(user_id: uuid.UUID, body: UserChange, viewer: Admin, db: D
     if body.status is not None and body.status != user.status:
         if user.status is UserStatus.INVITED or body.status is UserStatus.INVITED:
             raise bad_request("Cancel or resend an invite instead")
+        record(db, viewer, "user", user.id, "deactivated" if body.status is UserStatus.DEACTIVATED else "reactivated")
         user.status = body.status
         if body.status is UserStatus.DEACTIVATED:
             # Sign them out everywhere at once. Their materials, decisions, and history stay.
@@ -150,7 +153,9 @@ async def set_groups(user_id: uuid.UUID, body: GroupsChange, viewer: Admin, db: 
     user = await load_user(db, viewer, user_id)
     if body.groups and not uses_groups(user.role):
         raise bad_request("Only Reviewers and higher roles can be in reviewer groups")
+    before = [g.name for g in user.groups]
     user.groups = await groups_by_name(db, viewer.workspace_id, body.groups) if body.groups else []
+    record(db, viewer, "user", user.id, "groups_changed", {"before": before, "after": sorted(g.name for g in user.groups)})
     return await reload(db, viewer, user.id)
 
 
@@ -213,6 +218,9 @@ async def invite(body: Invite, viewer: Admin, db: Db) -> list[WorkspaceUser]:
     db.add_all(added)
     await db.flush()
     ids = [u.id for u in added]
+    for u in added:
+        data = {"email": u.email, "role": u.role, "groups": [g.name for g in groups]}
+        record(db, viewer, "user", u.id, "invited", data | ({"affiliate": affiliate.name} if affiliate else {}))
     await db.commit()
     return [WorkspaceUser.of(await load_user(db, viewer, i)) for i in ids]
 
@@ -224,6 +232,7 @@ async def resend_invite(user_id: uuid.UUID, viewer: Admin, db: Db) -> WorkspaceU
         raise bad_request("This user is not invited")
     user.invited_at = datetime.now(UTC)
     user.invited_by_id = viewer.id
+    record(db, viewer, "user", user.id, "invite_resent")
     return await reload(db, viewer, user.id)
 
 
@@ -233,5 +242,6 @@ async def cancel_invite(user_id: uuid.UUID, viewer: Admin, db: Db) -> None:
     user = await load_user(db, viewer, user_id)
     if user.status is not UserStatus.INVITED:
         raise bad_request("Only an invited user can be removed. Deactivate this user instead.")
+    record(db, viewer, "user", user.id, "invite_cancelled", {"email": user.email})
     await db.delete(user)
     await db.commit()

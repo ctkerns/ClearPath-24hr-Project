@@ -17,6 +17,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from app.audit import record
 from app.config import settings
 from app.db import get_db
 from app.models import Role, Session, User, UserStatus
@@ -123,6 +124,8 @@ async def sign_in(
 
     token = secrets.token_urlsafe(32)  # 256 random bits
     db.add(Session(user_id=user.id, token_hash=_hash_token(token), expires_at=datetime.now(UTC) + settings.session_lifetime))
+    # Only successful sign-ins: a failed one would store the guessed email.
+    record(db, user, "user", user.id, "signed_in")
     await db.commit()
 
     _set_cookie(response, token)
@@ -137,7 +140,10 @@ async def sign_out(
 ) -> None:
     """Ends the session on the server, so the token stops working even if someone copied it. Always succeeds."""
     if token:
-        await db.execute(delete(Session).where(Session.token_hash == _hash_token(token)))
+        user_id = await db.scalar(delete(Session).where(Session.token_hash == _hash_token(token)).returning(Session.user_id))
+        user = await db.get(User, user_id) if user_id else None
+        if user:
+            record(db, user, "user", user.id, "signed_out")
         await db.commit()
     response.delete_cookie(COOKIE_NAME, path="/api", httponly=True, secure=settings.cookie_secure, samesite="lax")
 
