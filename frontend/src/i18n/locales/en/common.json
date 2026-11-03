@@ -129,17 +129,7 @@
     "searchLabel": "Filter materials by text",
     "searchPlaceholder": "Filter by title or approval ID…",
     "filter": "Filter",
-    "display": "Display",
-    "groupBy": "Group by",
-    "orderBy": "Order by",
-    "groupByOption": {
-      "status": "Status",
-      "live": "Live status",
-      "channel": "Channel",
-      "product": "Product",
-      "owner": "Owner",
-      "none": "No grouping"
-    },
+    "orderBy": "Sort by",
     "sort": {
       "updated": "Last updated",
       "created": "Newest first",
@@ -203,7 +193,8 @@
       "approved": "approved",
       "changes": "changes requested",
       "rejected": "rejected"
-    }
+    },
+    "sortButton": "Sort: {{sort}}"
   },
   "review": {
     "notFound": "This material does not exist, or you do not have access to it.",

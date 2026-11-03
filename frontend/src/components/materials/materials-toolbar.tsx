@@ -1,5 +1,5 @@
 import type * as React from 'react'
-import { ListFilter, Search, SlidersHorizontal, X } from 'lucide-react'
+import { ArrowUpDown, ListFilter, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,7 +9,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -28,11 +27,9 @@ import {
   filterIcons,
   filterOptions,
   filterValues,
-  GROUP_BY,
   PRESETS,
   SORTS,
   type FilterKey,
-  type GroupBy,
   type MaterialsSearch,
   type Sort,
 } from './material-filters'
@@ -78,12 +75,11 @@ function FilterOptionItems({ field, materials, search, setSearch }: { field: Fil
 export function MaterialsToolbar({ materials, search, setSearch, action }: { materials: Material[]; search: MaterialsSearch; setSearch: SetSearch; action?: React.ReactNode }) {
   const { t } = useTranslation()
   const preset = activePreset(search)
-  const groupBy = search.groupBy ?? 'status'
   const sort = search.sort ?? 'updated'
 
   return (
     <div className="grid gap-2">
-      {/* Quick views, then search, filter and display controls. */}
+      {/* Quick views, then search, filter and sort controls. */}
       <div className="flex flex-wrap items-center gap-2">
         <div role="group" aria-label={t('materials.views')} className="flex gap-1 overflow-x-auto">
           {PRESETS.map((p) => (
@@ -96,7 +92,6 @@ export function MaterialsToolbar({ materials, search, setSearch, action }: { mat
                   ...Object.fromEntries(FILTER_KEYS.map((k) => [k, undefined])),
                   ...p.filters,
                   q: prev.q,
-                  groupBy: prev.groupBy,
                   sort: prev.sort,
                 }))
               }
@@ -150,18 +145,11 @@ export function MaterialsToolbar({ materials, search, setSearch, action }: { mat
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                <SlidersHorizontal className="size-3.5" />
-                <span className="max-sm:sr-only">{t('materials.display')}</span>
+                <ArrowUpDown className="size-3.5" />
+                <span className="max-sm:sr-only">{t('materials.sortButton', { sort: t(`materials.sort.${sort}`) })}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">{t('materials.groupBy')}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={groupBy} onValueChange={(v) => setSearch((prev) => ({ ...prev, groupBy: v === 'status' ? undefined : (v as GroupBy) }))}>
-                {GROUP_BY.map((g) => (
-                  <DropdownMenuRadioItem key={g} value={g}>{t(`materials.groupByOption.${g}`)}</DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-xs text-muted-foreground">{t('materials.orderBy')}</DropdownMenuLabel>
               <DropdownMenuRadioGroup value={sort} onValueChange={(v) => setSearch((prev) => ({ ...prev, sort: v === 'updated' ? undefined : (v as Sort) }))}>
                 {SORTS.map((s) => (
@@ -224,7 +212,7 @@ function ActiveFilters({ materials, search, setSearch }: { materials: Material[]
       })}
       <button
         type="button"
-        onClick={() => setSearch((prev) => ({ q: prev.q, groupBy: prev.groupBy, sort: prev.sort }))}
+        onClick={() => setSearch((prev) => ({ q: prev.q, sort: prev.sort }))}
         className="h-7 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
       >
         {t('materials.clearFilters')}

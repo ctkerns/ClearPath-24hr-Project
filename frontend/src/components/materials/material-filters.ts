@@ -4,19 +4,16 @@ import { StatusFieldIcon } from './material-meta'
 import { channelIcons, CHANNELS, LIVE_STATUSES, PRODUCTS, STATUSES, type Material } from './material-data'
 
 // Filter, group and sort state for the Materials list. All of it lives in the URL
-// (?status=in_review,approved&groupBy=channel), so a filtered list can be shared,
+// (?status=in_review,approved&sort=expires), so a filtered list can be shared,
 // and later saved as a view.
 
 export const FILTER_KEYS = ['status', 'live', 'channel', 'product', 'group', 'owner', 'affiliate'] as const
 export type FilterKey = (typeof FILTER_KEYS)[number]
 
-export const GROUP_BY = ['status', 'live', 'channel', 'product', 'owner', 'none'] as const
-export type GroupBy = (typeof GROUP_BY)[number]
-
 export const SORTS = ['updated', 'created', 'expires', 'title'] as const
 export type Sort = (typeof SORTS)[number]
 
-export type MaterialsSearch = Partial<Record<FilterKey, string>> & { q?: string; groupBy?: GroupBy; sort?: Sort }
+export type MaterialsSearch = Partial<Record<FilterKey, string>> & { q?: string; sort?: Sort }
 
 const oneOf = <T extends string>(list: readonly T[], value: unknown) =>
   list.includes(value as T) ? (value as T) : undefined
@@ -26,7 +23,6 @@ const text = (value: unknown) => (typeof value === 'string' && value.trim() ? va
 export function validateMaterialsSearch(raw: Record<string, unknown>): MaterialsSearch {
   const search: MaterialsSearch = {
     q: text(raw.q),
-    groupBy: oneOf(GROUP_BY, raw.groupBy),
     sort: oneOf(SORTS, raw.sort),
   }
   for (const key of FILTER_KEYS) search[key] = text(raw[key])
