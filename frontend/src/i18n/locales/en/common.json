@@ -540,5 +540,40 @@
       "actionDone": "Marked done: {{action}}.",
       "noticeSent": "Sent the correction notice to {{to}}."
     }
+  },
+  "home": {
+    "viewAll": "View all",
+    "owner": "Owner: {{name}}",
+    "queue": {
+      "title": "My review queue",
+      "empty": "No materials wait for your groups. New submissions show here.",
+      "late_one": "{{count}} late",
+      "late_other": "{{count}} late"
+    },
+    "issues": {
+      "title": "My issues",
+      "empty": "You have no open issues.",
+      "raised": "Raised by you"
+    },
+    "submissions": {
+      "title": "My submissions",
+      "empty": "You have not submitted any materials."
+    },
+    "deadline": {
+      "late_one": "{{count}} day late",
+      "late_other": "{{count}} days late",
+      "today": "Due today",
+      "tomorrow": "Due tomorrow",
+      "on": "Due {{date}}",
+      "title": "Review deadline: {{date}} (2 business days after submission)"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "liveProblems": "Live problems",
+      "overdueIssues": "Overdue issues",
+      "highIssues": "Open high-severity issues",
+      "expiring": "Approvals expiring in 30 days",
+      "noneExpiring": "No approvals expire in the next 30 days."
+    }
   }
 }

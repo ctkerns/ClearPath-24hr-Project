@@ -46,6 +46,8 @@ export type Material = {
   source?: 'found_live'
   approvalId?: string
   expiresAt?: string
+  /** When the current version was submitted. Only set while it waits for review. */
+  submittedAt?: string
   updatedAt: string
 }
 

@@ -30,6 +30,8 @@ export type Issue = {
   affiliate?: string
   /** For affiliate content: the internal person who takes over the issue after its due date (PRD section 4). */
   affiliateManager?: string
+  /** Who raised it, for issues that a reviewer opened. */
+  openedBy?: string
   owner: string
   dueAt: string
   openedAt: string

@@ -92,7 +92,8 @@
       },
       "owner": "Dana Ortiz",
       "dueAt": "2026-11-09T17:00:00Z",
-      "openedAt": "2026-11-01T19:15:00Z"
+      "openedAt": "2026-11-01T19:15:00Z",
+      "openedBy": "Jordan Kim"
     },
     {
       "id": "01a192c2-c380-7304-a682-faf747d79d7a",
@@ -105,9 +106,10 @@
         "title": "HELOC Facebook carousel",
         "channel": "meta"
       },
-      "owner": "Priya Shah",
+      "owner": "Jordan Kim",
       "dueAt": "2026-11-12T17:00:00Z",
-      "openedAt": "2026-10-31T16:20:00Z"
+      "openedAt": "2026-10-31T16:20:00Z",
+      "openedBy": "Jordan Kim"
     },
     {
       "id": "01a18751-1380-70b5-811c-a6ca7fa835c5",
@@ -138,7 +140,8 @@
       "owner": "Sam Rivera",
       "dueAt": "2026-10-28T17:00:00Z",
       "openedAt": "2026-10-24T10:30:00Z",
-      "resolvedAt": "2026-10-27T15:10:00Z"
+      "resolvedAt": "2026-10-27T15:10:00Z",
+      "openedBy": "Maya Ruiz"
     },
     {
       "id": "01a14916-e680-78d9-9de9-77d6d4fd9d69",
