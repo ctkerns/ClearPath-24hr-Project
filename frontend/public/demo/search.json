@@ -1,0 +1,26 @@
+{
+  "materials": [
+    { "id": "MAT-0142", "title": "Summer personal loan, Meta feed ad", "channel": "Meta ad", "status": "in_review" },
+    { "id": "MAT-0139", "title": "Mortgage prequal landing page", "channel": "WordPress", "status": "live", "approvalId": "CP-2026-0118-v2" },
+    { "id": "MAT-0137", "title": "Balance transfer email", "channel": "Mailchimp", "status": "changes_requested" },
+    { "id": "MAT-0131", "title": "Cash back card, affiliate post", "channel": "Affiliate · Impact", "status": "approved", "approvalId": "CP-2026-0131-v1" },
+    { "id": "MAT-0126", "title": "Debt consolidation, Google search ad", "channel": "Google Ads", "status": "expired", "approvalId": "CP-2026-0090-v4" }
+  ],
+  "issues": [
+    { "id": "ISS-0031", "title": "Live page is missing disclosure D-4", "material": "Cash back card, affiliate post" },
+    { "id": "ISS-0029", "title": "Unapproved ad found live and paused", "material": "Debt consolidation, Google search ad" }
+  ],
+  "rules": [
+    { "id": "REGZ-1026.24", "title": "Trigger terms require APR disclosure" },
+    { "id": "UDAAP-03", "title": "No promise of guaranteed approval" },
+    { "id": "FCRA-02", "title": "Rate check claims must match the credit pull" }
+  ],
+  "disclosures": [
+    { "id": "D-7 v3", "title": "Personal loan APR range and term" },
+    { "id": "D-4 v2", "title": "Cash back card rewards terms" }
+  ],
+  "buildingBlocks": [
+    { "id": "BB-012", "title": "Get a decision in minutes" },
+    { "id": "BB-019", "title": "Checking your rate won't affect your credit score" }
+  ]
+}

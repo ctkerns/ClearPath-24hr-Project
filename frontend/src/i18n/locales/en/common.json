@@ -100,5 +100,26 @@
       "decision_changes_requested": "<0>{{actor}}</0> requested changes on <0>{{material}}</0>.",
       "decision_rejected": "<0>{{actor}}</0> rejected <0>{{material}}</0>."
     }
+  },
+  "search": {
+    "open": "Search",
+    "title": "Search",
+    "description": "Search materials, issues and the library, or jump to a page.",
+    "placeholder": "Search materials, issues, rules, disclosures…",
+    "placeholderShort": "Search…",
+    "empty": "No results.",
+    "loadError": "Search did not load. Close it and try again.",
+    "groups": {
+      "actions": "Actions",
+      "materials": "Materials",
+      "issues": "Issues",
+      "library": "Library",
+      "pages": "Go to"
+    },
+    "hints": {
+      "move": "to move",
+      "open": "to open",
+      "close": "to close"
+    }
   }
 }

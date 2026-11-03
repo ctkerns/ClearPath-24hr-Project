@@ -3,6 +3,7 @@ import { ChartColumn, CircleDot, Files, House, LibraryBig, type LucideIcon } fro
 import { useTranslation } from 'react-i18next'
 import { activeIndicatorClass, useActiveIndicator } from '@/lib/use-active-indicator'
 import { AppLogo } from '@/components/app-logo'
+import { GlobalSearch } from '@/components/global-search'
 import { NotificationsMenu } from '@/components/notifications-menu'
 import { UserMenu } from '@/components/user-menu'
 import { WorkspaceBand } from '@/components/workspace-band'
@@ -47,7 +48,8 @@ function AppLayout() {
             ))}
             <span ref={indicatorRef} aria-hidden="true" className={activeIndicatorClass} />
           </nav>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
+            <GlobalSearch />
             <NotificationsMenu />
             <UserMenu />
           </div>
