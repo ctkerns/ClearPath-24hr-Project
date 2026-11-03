@@ -1,14 +1,19 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useRules, type Rule } from '@/components/library/rule-data'
+import { canEditLibrary, useRules, type Rule } from '@/components/library/rule-data'
+import { RuleFormDialog } from '@/components/library/rule-form-dialog'
 import { ruleSearchText, sortRules, validateRulesSearch } from '@/components/library/rule-filters'
 import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
 import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
+import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { formatDate } from '@/i18n/format'
+import { useViewer } from '@/lib/session'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/library/rules')({
@@ -18,11 +23,13 @@ export const Route = createFileRoute('/_app/library/rules')({
 
 /** The rules library (PRD F7), in the same list as Materials and Issues. Each row opens the rule. */
 function RulesTab() {
+  const viewer = useViewer()
   const { t } = useTranslation()
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const rules = useRules()
   const { label, ...list } = useRuleList()
+  const [creating, setCreating] = useState(false)
 
   const setSearch = (update: (prev: ListSearch) => ListSearch) => void navigate({ search: update, replace: true })
 
@@ -31,8 +38,27 @@ function RulesTab() {
 
   return (
     <div className="grid gap-4">
-      {/* No "New rule" button yet: only Managers change the library (R3), and the demo viewer is a Reviewer. */}
-      <ListToolbar items={all} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('rules.searchPlaceholder')} />
+      <ListToolbar
+        items={all}
+        {...list}
+        search={search}
+        setSearch={setSearch}
+        searchPlaceholder={t('rules.searchPlaceholder')}
+        action={
+          // R3: only Managers and Admins change the library. The server checks too.
+          canEditLibrary(viewer.role) ? (
+            <Button size="sm" className="h-7 gap-1.5 text-xs" onClick={() => setCreating(true)} disabled={!rules.data}>
+              <Plus className="size-3.5" />
+              {t('rules.editor.new')}
+            </Button>
+          ) : undefined
+        }
+      />
+      <RuleFormDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        onCreated={(r) => void navigate({ to: '/library/rules/$ruleId', params: { ruleId: r.id } })}
+      />
 
       <ListFrame
         status={rules.status}

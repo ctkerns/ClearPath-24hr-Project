@@ -1,7 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { AlertTriangle, ChevronLeft, ArrowLeftRight, Lock } from 'lucide-react'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { AlertTriangle, ChevronLeft, ArrowLeftRight, Lock, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { blockStates, expiryState, useBlocks, type Block } from '@/components/library/block-data'
+import { BlockDeleteDialog, BlockScopeDialog } from '@/components/library/block-dialogs'
+import { canEditLibrary } from '@/components/library/rule-data'
 import { BlockExpiry, BlockKindLabel } from '@/components/library/block-meta'
 import { CopyButton } from '@/components/library/copy-button'
 import { useBlockList } from '@/components/library/use-block-list'
@@ -9,6 +12,7 @@ import { PRODUCTS } from '@/components/materials/material-data'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { useLicensedStates } from '@/components/settings/workspace-data'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/i18n/format'
 import { cn } from '@/lib/utils'
@@ -28,8 +32,10 @@ function BlockPage() {
   const { label } = useBlockList()
   const licensedStates = useLicensedStates()
   const block = blocks.data?.find((b) => b.id === blockId)
-  // R3: only Managers and Admins change the library.
-  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
+  // R3: only Managers and Admins change the library. The server checks too.
+  const canEdit = canEditLibrary(viewer.role)
+  const navigate = useNavigate()
+  const [dialog, setDialog] = useState<'scope' | 'delete'>()
 
   if (blocks.isPending) return <BlockSkeleton />
   if (!block) {
@@ -48,10 +54,32 @@ function BlockPage() {
     <div className="grid gap-6">
       <header className="grid gap-2">
         <BackLink />
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <BlockKindLabel kind={block.kind} className="font-medium text-foreground" />
-          <span>{t('blocks.approvedLine', { date: formatDate(block.approvedAt), name: block.approvedBy })}</span>
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <BlockKindLabel kind={block.kind} className="font-medium text-foreground" />
+            <span>{t('blocks.approvedLine', { date: formatDate(block.approvedAt), name: block.approvedBy })}</span>
+          </p>
+          {canEdit && (
+            // F9: Managers curate the products, states and expiry, or remove the block. The text stays as approved.
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setDialog('scope')}>
+                <Pencil aria-hidden="true" />
+                {t('blocks.editor.edit')}
+              </Button>
+              <Button size="sm" variant="destructive-outline" onClick={() => setDialog('delete')}>
+                <Trash2 aria-hidden="true" />
+                {t('blocks.editor.delete')}
+              </Button>
+              <BlockScopeDialog block={block} open={dialog === 'scope'} onClose={() => setDialog(undefined)} />
+              <BlockDeleteDialog
+                block={block}
+                open={dialog === 'delete'}
+                onClose={() => setDialog(undefined)}
+                onDeleted={() => navigate({ to: '/library/building-blocks' })}
+              />
+            </div>
+          )}
+        </div>
         {!canEdit && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="size-3.5" aria-hidden="true" />

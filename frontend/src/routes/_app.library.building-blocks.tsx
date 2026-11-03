@@ -29,7 +29,7 @@ function BuildingBlocksTab() {
 
   return (
     <div className="grid gap-4">
-      {/* No "New block" button: blocks come from "Save to library" on an approved material, and only Managers curate them (R3). */}
+      {/* No "New block" button: blocks come from "Save to library" on an approved material (F9), and Managers curate them on each block's page (R3). */}
       <ListToolbar items={all} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('blocks.searchPlaceholder')} />
 
       <ListFrame

@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Bot, ChevronLeft, ExternalLink, Lock } from 'lucide-react'
+import { Bot, ChevronLeft, ExternalLink, Lock, Pencil } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDisclosures } from '@/components/library/disclosure-data'
-import { dependentMaterials, useRules, type RuleCheck } from '@/components/library/rule-data'
+import { canEditLibrary, dependentMaterials, useRules, type RuleCheck } from '@/components/library/rule-data'
+import { RuleFormDialog } from '@/components/library/rule-form-dialog'
 import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
 import { useMaterials } from '@/components/materials/material-data'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
+import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
@@ -28,8 +31,9 @@ function RulePage() {
   const materials = useMaterials()
   const { label } = useRuleList()
   const rule = rules.data?.find((r) => r.id === ruleId)
-  // R3: only Managers and Admins change the library.
-  const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
+  // R3: only Managers and Admins change the library. The server checks too.
+  const canEdit = canEditLibrary(viewer.role)
+  const [editing, setEditing] = useState(false)
 
   if (rules.isPending) return <RuleSkeleton />
   if (!rule) {
@@ -53,7 +57,19 @@ function RulePage() {
             <Link to="/library/regulatory-changes" className="hover:opacity-80"><PendingChangeTag /></Link>
           )}
         </p>
-        <h1 className="text-xl font-semibold">{rule.title}</h1>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <h1 className="text-xl font-semibold">{rule.title}</h1>
+          {canEdit && (
+            <>
+              {/* An edit saves a new version; the Versions list below shows it (F7). */}
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Pencil aria-hidden="true" />
+                {t('rules.editor.edit')}
+              </Button>
+              <RuleFormDialog rule={rule} open={editing} onClose={() => setEditing(false)} />
+            </>
+          )}
+        </div>
         {!canEdit && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="size-3.5" aria-hidden="true" />

@@ -21,7 +21,9 @@ export async function api<T = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | '
   if (!res.ok) {
     const json = await res.json().catch(() => null)
     // FastAPI sends { detail: string } for its own errors, and { detail: [...] } for invalid input (422).
-    const detail = typeof json?.detail === 'string' ? json.detail : `HTTP ${res.status}`
+    // For a 422, show the first problem, like "The expiry date must be in the future", without pydantic's "Value error, ".
+    const first = Array.isArray(json?.detail) && typeof json.detail[0]?.msg === 'string' ? json.detail[0].msg.replace(/^Value error, /, '') : null
+    const detail = typeof json?.detail === 'string' ? json.detail : (first ?? `HTTP ${res.status}`)
     throw new ApiError(res.status, detail)
   }
   return (res.status === 204 ? undefined : await res.json()) as T
