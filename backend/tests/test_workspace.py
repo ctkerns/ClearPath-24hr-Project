@@ -1,6 +1,6 @@
 import pytest
 
-from tests.test_users_groups import ADMIN, AFFILIATE, MANAGER, as_user
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, as_user
 
 
 async def test_everyone_reads_workspace_settings(client):

@@ -21,6 +21,7 @@ from sqlalchemy import text  # noqa: E402
 
 from app.db import SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.models import Base  # noqa: E402
 from app.seed import create_demo  # noqa: E402
 
 
@@ -35,9 +36,10 @@ def database():
 
 @pytest.fixture(autouse=True)
 async def demo_data(database):
-    """Each test starts with only the seeded demo workspace."""
+    """Each test starts with only the seeded demo workspace. Empties every table, so new areas need no change here."""
+    tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE sessions, group_memberships, reviewer_groups, affiliates, users, workspaces CASCADE"))
+        await conn.execute(text(f"TRUNCATE {tables} CASCADE"))
     async with SessionLocal() as db, db.begin():
         await create_demo(db)
     yield

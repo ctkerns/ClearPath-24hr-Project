@@ -39,10 +39,15 @@ async def same_origin_only(request: Request, call_next):
     return await call_next(request)
 
 
-app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(groups.router)
-app.include_router(workspace.router)
+# One router per area, one per line. A new area adds its module here.
+ROUTERS = [
+    auth.router,
+    users.router,
+    groups.router,
+    workspace.router,
+]
+for router in ROUTERS:
+    app.include_router(router)
 
 
 class Health(BaseModel):
