@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import type { IssueStatus } from '@/components/issues/issue-data'
 import type { GroupState } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 
@@ -80,7 +81,7 @@ export type MaterialIssue = {
   id: string
   title: string
   severity: RiskLevel
-  status: 'open' | 'resolved'
+  status: IssueStatus
   owner: string
   dueAt: string
   openedAt: string

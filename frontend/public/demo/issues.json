@@ -1,0 +1,175 @@
+{
+  "issues": [
+    {
+      "id": "01a1993a-f3e0-7668-886f-7df89511ac54",
+      "title": "Live ad text differs from the approved version",
+      "severity": "high",
+      "status": "open",
+      "source": "monitoring",
+      "material": {
+        "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+        "title": "Personal loan search ad, debt payoff",
+        "channel": "google"
+      },
+      "owner": "Sam Rivera",
+      "dueAt": "2026-11-04T17:00:00Z",
+      "openedAt": "2026-11-01T22:29:00Z"
+    },
+    {
+      "id": "01a19b87-a300-7083-a17b-e83caf805f10",
+      "title": "Live page is missing disclosure D-4",
+      "severity": "high",
+      "status": "open",
+      "source": "monitoring",
+      "material": {
+        "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
+        "title": "Cash back card, affiliate post",
+        "channel": "affiliate"
+      },
+      "affiliate": "LendWise",
+      "owner": "Marcus Lee",
+      "dueAt": "2026-11-03T17:00:00Z",
+      "openedAt": "2026-11-02T09:12:00Z"
+    },
+    {
+      "id": "01a18d20-cee0-79d2-89ba-130fb18dca45",
+      "title": "Unapproved ad found live and paused",
+      "severity": "high",
+      "status": "in_progress",
+      "source": "monitoring",
+      "material": {
+        "id": "01a1252b-5800-7984-ae0e-64145a3d5342",
+        "title": "Unknown ad: \"Loans approved in 5 minutes\"",
+        "channel": "meta"
+      },
+      "owner": "Priya Shah",
+      "dueAt": "2026-11-01T17:00:00Z",
+      "openedAt": "2026-10-30T14:05:00Z"
+    },
+    {
+      "id": "01a17c5f-9000-73e0-8e41-e2fdb37444ab",
+      "title": "Ad still running after its approval expired",
+      "severity": "medium",
+      "status": "in_progress",
+      "source": "monitoring",
+      "material": {
+        "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29",
+        "title": "Debt consolidation, Google search ad",
+        "channel": "google"
+      },
+      "owner": "Sam Rivera",
+      "dueAt": "2026-10-31T17:00:00Z",
+      "openedAt": "2026-10-27T08:00:00Z"
+    },
+    {
+      "id": "01a19afc-7a00-7b94-a2c9-209ffc0a0fe5",
+      "title": "Comparison table no longer shows the APR range",
+      "severity": "high",
+      "status": "open",
+      "source": "monitoring",
+      "material": {
+        "id": "01a0cd1b-6600-73a9-8f0b-78172f5af13f",
+        "title": "Rewards card comparison, CardCompass",
+        "channel": "affiliate"
+      },
+      "affiliate": "CardCompass",
+      "owner": "Marcus Lee",
+      "dueAt": "2026-11-05T17:00:00Z",
+      "openedAt": "2026-11-02T06:40:00Z"
+    },
+    {
+      "id": "01a19889-5720-7964-a60c-b8ae0aa45686",
+      "title": "NMLS ID missing from the footer after the site redesign",
+      "severity": "medium",
+      "status": "open",
+      "source": "reviewer",
+      "material": {
+        "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
+        "title": "Mortgage prequal landing page",
+        "channel": "wordpress"
+      },
+      "owner": "Dana Ortiz",
+      "dueAt": "2026-11-09T17:00:00Z",
+      "openedAt": "2026-11-01T19:15:00Z"
+    },
+    {
+      "id": "01a192c2-c380-7304-a682-faf747d79d7a",
+      "title": "Comment replies quote a rate that is not in the approved ad",
+      "severity": "low",
+      "status": "open",
+      "source": "reviewer",
+      "material": {
+        "id": "01a0bf33-d400-758c-8181-f7618b0121bf",
+        "title": "HELOC Facebook carousel",
+        "channel": "meta"
+      },
+      "owner": "Priya Shah",
+      "dueAt": "2026-11-12T17:00:00Z",
+      "openedAt": "2026-10-31T16:20:00Z"
+    },
+    {
+      "id": "01a18751-1380-70b5-811c-a6ca7fa835c5",
+      "title": "Hero image changed on the live page",
+      "severity": "low",
+      "status": "in_progress",
+      "source": "monitoring",
+      "material": {
+        "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
+        "title": "Mortgage prequal landing page",
+        "channel": "wordpress"
+      },
+      "owner": "Dana Ortiz",
+      "dueAt": "2026-11-06T17:00:00Z",
+      "openedAt": "2026-10-29T11:00:00Z"
+    },
+    {
+      "id": "01a16d75-d040-7794-b078-777462c16a50",
+      "title": "Unsubscribe link broken in step 3 of the flow",
+      "severity": "medium",
+      "status": "resolved",
+      "source": "reviewer",
+      "material": {
+        "id": "01a10017-2800-7389-b220-910ed92e6d2d",
+        "title": "Auto loan pre-approval email flow",
+        "channel": "mailchimp"
+      },
+      "owner": "Sam Rivera",
+      "dueAt": "2026-10-28T17:00:00Z",
+      "openedAt": "2026-10-24T10:30:00Z",
+      "resolvedAt": "2026-10-27T15:10:00Z"
+    },
+    {
+      "id": "01a14916-e680-78d9-9de9-77d6d4fd9d69",
+      "title": "Affiliate post still shows last year’s intro APR",
+      "severity": "low",
+      "status": "resolved",
+      "source": "monitoring",
+      "material": {
+        "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
+        "title": "Cash back card, affiliate post",
+        "channel": "affiliate"
+      },
+      "affiliate": "LendWise",
+      "owner": "Marcus Lee",
+      "dueAt": "2026-10-22T17:00:00Z",
+      "openedAt": "2026-10-17T09:00:00Z",
+      "resolvedAt": "2026-10-20T12:45:00Z"
+    },
+    {
+      "id": "01a124b7-fcc0-72be-bf9b-ddefbca02045",
+      "title": "Retired email is still in an active automation",
+      "severity": "medium",
+      "status": "resolved",
+      "source": "monitoring",
+      "material": {
+        "id": "01a08795-8c00-7cb9-93fd-75d440fc0a38",
+        "title": "Spring savings promo email",
+        "channel": "mailchimp"
+      },
+      "owner": "Dana Ortiz",
+      "dueAt": "2026-10-15T17:00:00Z",
+      "openedAt": "2026-10-10T07:30:00Z",
+      "resolvedAt": "2026-10-13T16:00:00Z"
+    }
+  ]
+}

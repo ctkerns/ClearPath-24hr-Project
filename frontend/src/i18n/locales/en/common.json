@@ -119,17 +119,13 @@
     }
   },
   "materials": {
-    "views": "Views",
     "preset": {
       "all": "All",
       "review": "In review",
       "changes": "Needs changes",
       "monitoring": "Live problems"
     },
-    "searchLabel": "Filter materials by text",
     "searchPlaceholder": "Filter by title or approval ID…",
-    "filter": "Filter",
-    "orderBy": "Sort by",
     "sort": {
       "updated": "Last updated",
       "created": "Newest first",
@@ -145,13 +141,6 @@
       "owner": "Owner",
       "affiliate": "Affiliate"
     },
-    "is": "is",
-    "isAnyOf": "is any of",
-    "valuesCount_one": "{{count}} value",
-    "valuesCount_other": "{{count}} values",
-    "removeFilter": "Remove {{field}} filter",
-    "clearFilters": "Clear filters",
-    "clearAll": "Clear filters and search",
     "empty": "No materials match these filters.",
     "loadError": "Materials did not load. Reload the page to try again.",
     "expiresShort": "Exp. {{date}}",
@@ -194,7 +183,6 @@
       "changes": "changes requested",
       "rejected": "rejected"
     },
-    "sortButton": "Sort: {{sort}}",
     "column": {
       "title": "Material",
       "status": "Status",
@@ -425,5 +413,71 @@
         "url": "Add a full URL that starts with https://."
       }
     }
+  },
+  "list": {
+    "views": "Views",
+    "searchLabel": "Filter the list by text",
+    "filter": "Filter",
+    "sortButton": "Sort: {{sort}}",
+    "sortBy": "Sort by",
+    "is": "is",
+    "isAnyOf": "is any of",
+    "valuesCount_one": "{{count}} value",
+    "valuesCount_other": "{{count}} values",
+    "removeFilter": "Remove {{field}} filter",
+    "clearFilters": "Clear filters",
+    "clearAll": "Clear filters and search"
+  },
+  "issues": {
+    "preset": {
+      "all": "All",
+      "open": "Open",
+      "overdue": "Overdue",
+      "resolved": "Resolved"
+    },
+    "searchPlaceholder": "Filter by issue or material…",
+    "sort": {
+      "due": "Due date",
+      "opened": "Newest first",
+      "severity": "Severity",
+      "title": "Title"
+    },
+    "field": {
+      "status": "Status",
+      "severity": "Severity",
+      "due": "Due",
+      "source": "Source",
+      "channel": "Channel",
+      "owner": "Owner",
+      "affiliate": "Affiliate"
+    },
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "source": {
+      "monitoring": "Monitoring",
+      "reviewer": "Reviewer"
+    },
+    "due": {
+      "overdue": "Overdue",
+      "week": "Due in 7 days",
+      "later": "Due later"
+    },
+    "column": {
+      "severity": "Severity",
+      "title": "Issue",
+      "status": "Status",
+      "material": "Material",
+      "source": "Source",
+      "due": "Due"
+    },
+    "dueOn": "Due {{date}}",
+    "overdueShort": "Late, {{date}}",
+    "resolvedOn": "Resolved {{date}}",
+    "resolvedShort": "Done {{date}}",
+    "empty": "No issues match these filters.",
+    "loadError": "Issues did not load. Reload the page to try again."
   }
 }

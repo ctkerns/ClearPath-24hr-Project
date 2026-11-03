@@ -7,8 +7,8 @@
     { "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29", "title": "Debt consolidation, Google search ad", "channel": "Google Ads", "status": "expired", "approvalId": "CP-2026-0090-v4" }
   ],
   "issues": [
-    { "id": "ISS-0031", "title": "Live page is missing disclosure D-4", "material": "Cash back card, affiliate post" },
-    { "id": "ISS-0029", "title": "Unapproved ad found live and paused", "material": "Debt consolidation, Google search ad" }
+    { "id": "01a19b87-a300-7083-a17b-e83caf805f10", "title": "Live page is missing disclosure D-4", "material": "Cash back card, affiliate post" },
+    { "id": "01a18d20-cee0-79d2-89ba-130fb18dca45", "title": "Unapproved ad found live and paused", "material": "Unknown ad: \"Loans approved in 5 minutes\"" }
   ],
   "rules": [
     { "id": "REGZ-1026.24", "title": "Trigger terms require APR disclosure" },

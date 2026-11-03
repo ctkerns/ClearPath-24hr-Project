@@ -1,25 +1,18 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { ListFrame, ListHeader } from '@/components/list/list-frame'
+import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { ListToolbar } from '@/components/list/list-toolbar'
+import { daysUntil, useMaterials, type Material } from '@/components/materials/material-data'
+import { materialSearchText, sortMaterials, validateMaterialsSearch } from '@/components/materials/material-filters'
+import { ChannelIcon, GroupApprovals, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
+import { useMaterialList } from '@/components/materials/use-material-list'
+import { useOptionLabel } from '@/components/materials/use-option-label'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
 import { cn } from '@/lib/utils'
-import {
-  daysUntil,
-  useMaterials,
-  type Material,
-} from '@/components/materials/material-data'
-import { ChannelIcon, GroupApprovals, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
-import {
-  applyFilters,
-  sortMaterials,
-  validateMaterialsSearch,
-  type MaterialsSearch,
-} from '@/components/materials/material-filters'
-import { MaterialsToolbar } from '@/components/materials/materials-toolbar'
-import { useOptionLabel } from '@/components/materials/use-option-label'
 
 export const Route = createFileRoute('/_app/materials/')({
   validateSearch: validateMaterialsSearch,
@@ -31,23 +24,25 @@ function MaterialsPage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const materials = useMaterials()
+  const list = useMaterialList()
 
   // Filters change often, so they replace the history entry instead of adding one.
-  const setSearch = (update: (prev: MaterialsSearch) => MaterialsSearch) =>
-    void navigate({ search: update, replace: true })
+  const setSearch = (update: (prev: ListSearch) => ListSearch) => void navigate({ search: update, replace: true })
 
   const all = materials.data ?? []
-  const shown = sortMaterials(applyFilters(all, search), search.sort ?? 'updated')
+  const shown = sortMaterials(applyFilters(all, search, list.fields, materialSearchText), search)
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
       {/* No visible heading: the active tab in the top bar already names the page. */}
       <h1 className="sr-only">{t('page.materials')}</h1>
 
-      <MaterialsToolbar
-        materials={all}
+      <ListToolbar
+        items={all}
+        {...list}
         search={search}
         setSearch={setSearch}
+        searchPlaceholder={t('materials.searchPlaceholder')}
         action={
           <Button asChild size="sm" className="h-7 gap-1.5 text-xs">
             <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
@@ -55,22 +50,28 @@ function MaterialsPage() {
         }
       />
 
-      <div className="overflow-hidden rounded-lg border">
-        {materials.isPending && <LoadingRows />}
-        {materials.isError && <p className="p-6 text-center text-muted-foreground">{t('materials.loadError')}</p>}
-        {materials.data && shown.length === 0 && (
-          <div className="grid justify-items-center gap-2 p-10 text-center">
-            <p className="font-medium">{t('materials.empty')}</p>
-            <Button variant="outline" size="sm" onClick={() => setSearch((prev) => ({ sort: prev.sort }))}>
-              {t('materials.clearAll')}
-            </Button>
-          </div>
-        )}
-        {shown.length > 0 && (
-          // -mb-px tucks the last row line under the frame border.
-          <div className="-mb-px"><HeaderRow /><Rows materials={shown} /></div>
-        )}
-      </div>
+      <ListFrame
+        status={materials.status}
+        isEmpty={shown.length === 0}
+        emptyText={t('materials.empty')}
+        errorText={t('materials.loadError')}
+        onClear={() => setSearch((prev) => ({ sort: withoutFilters(prev).sort }))}
+      >
+        <ListHeader
+          columns={[
+            { className: col.channel },
+            { label: t('materials.column.title'), className: col.title },
+            { label: t('materials.column.status'), className: col.status },
+            { label: t('materials.column.groups'), className: cn(col.groups, 'block') },
+            { label: t('materials.column.live'), className: col.live },
+            { label: t('materials.column.approval'), className: col.approval },
+            { label: t('materials.column.product'), className: col.product },
+            { label: t('materials.column.date'), className: col.date },
+            { className: col.owner },
+          ]}
+        />
+        <Rows materials={shown} />
+      </ListFrame>
     </div>
   )
 }
@@ -89,26 +90,6 @@ const col = {
   product: 'w-28 shrink-0 text-right max-xl:hidden',
   date: 'w-24 shrink-0 text-right max-sm:hidden',
   owner: 'w-6 shrink-0',
-}
-
-/** Labels for the columns, in the same style as the table header in the design system.
- * Hidden from screen readers: each row is one link whose text already names its values. TODO: add a real table view for auditors. */
-function HeaderRow() {
-  const { t } = useTranslation()
-  const h = (key: 'title' | 'status' | 'groups' | 'live' | 'approval' | 'product' | 'date') => t(`materials.column.${key}`)
-  return (
-    <div aria-hidden="true" className="flex h-8 items-center gap-3 border-b bg-muted px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-      <span className={col.channel} />
-      <span className={col.title}>{h('title')}</span>
-      <span className={col.status}>{h('status')}</span>
-      <span className={cn(col.groups, 'block')}>{h('groups')}</span>
-      <span className={col.live}>{h('live')}</span>
-      <span className={col.approval}>{h('approval')}</span>
-      <span className={col.product}>{h('product')}</span>
-      <span className={col.date}>{h('date')}</span>
-      <span className={col.owner} />
-    </div>
-  )
 }
 
 function Rows({ materials }: { materials: Material[] }) {
@@ -136,7 +117,7 @@ function MaterialRow({ material: m }: { material: Material }) {
     <Link
       to="/materials/$materialId"
       params={{ materialId: m.id }}
-      className="flex h-11 items-center gap-3 px-3 transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+      className={listRowClass}
     >
       <span title={label('channel', m.channel)} className={col.channel}><ChannelIcon channel={m.channel} /></span>
       <span className={cn(col.title, 'flex items-center gap-2')}>
@@ -176,14 +157,4 @@ function MaterialRow({ material: m }: { material: Material }) {
       <PersonAvatar name={m.owner} className={col.owner} />
     </Link>
   )
-}
-
-function LoadingRows() {
-  return Array.from({ length: 6 }, (_, i) => (
-    <div key={i} className="flex h-11 items-center gap-3 border-b px-3 last:border-b-0">
-      <Skeleton className="size-4" />
-      <Skeleton className="h-3 flex-1" />
-      <Skeleton className="size-6 rounded-full" />
-    </div>
-  ))
 }

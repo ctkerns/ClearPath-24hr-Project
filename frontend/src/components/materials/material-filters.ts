@@ -1,38 +1,18 @@
-import type { ComponentType } from 'react'
-import { Building2, Package, Radio, UserRound, UsersRound } from 'lucide-react'
-import { StatusFieldIcon } from './material-meta'
-import { channelIcons, CHANNELS, LIVE_STATUSES, PRODUCTS, STATUSES, type Material } from './material-data'
+import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
+import type { Material } from './material-data'
 
-// Filter, group and sort state for the Materials list. All of it lives in the URL
-// (?status=in_review,approved&sort=expires), so a filtered list can be shared,
-// and later saved as a view.
+// Materials list configuration: filter keys, sorts and quick views. Labels and menus are in use-material-list.tsx.
 
-export const FILTER_KEYS = ['status', 'live', 'channel', 'product', 'group', 'owner', 'affiliate'] as const
-export type FilterKey = (typeof FILTER_KEYS)[number]
+export const MATERIAL_FILTER_KEYS = ['status', 'live', 'channel', 'product', 'group', 'owner', 'affiliate'] as const
+export type MaterialFilterKey = (typeof MATERIAL_FILTER_KEYS)[number]
 
-export const SORTS = ['updated', 'created', 'expires', 'title'] as const
-export type Sort = (typeof SORTS)[number]
+export const MATERIAL_SORTS = ['updated', 'created', 'expires', 'title'] as const
+export type MaterialSort = (typeof MATERIAL_SORTS)[number]
 
-export type MaterialsSearch = Partial<Record<FilterKey, string>> & { q?: string; sort?: Sort }
-
-const oneOf = <T extends string>(list: readonly T[], value: unknown) =>
-  list.includes(value as T) ? (value as T) : undefined
-const text = (value: unknown) => (typeof value === 'string' && value.trim() ? value : undefined)
-
-/** Keeps only known keys and values, so a bad link shows the plain list instead of an error. */
-export function validateMaterialsSearch(raw: Record<string, unknown>): MaterialsSearch {
-  const search: MaterialsSearch = {
-    q: text(raw.q),
-    sort: oneOf(SORTS, raw.sort),
-  }
-  for (const key of FILTER_KEYS) search[key] = text(raw[key])
-  return search
-}
-
-export const filterValues = (search: MaterialsSearch, key: FilterKey) => search[key]?.split(',').filter(Boolean) ?? []
+export const validateMaterialsSearch = (raw: Record<string, unknown>) => validateListSearch(raw, MATERIAL_FILTER_KEYS, MATERIAL_SORTS)
 
 /** The value of each filter field for one material. Group is many-valued. */
-export function fieldValues(m: Material, key: FilterKey): string[] {
+export function materialValues(m: Material, key: MaterialFilterKey): string[] {
   switch (key) {
     case 'status': return [m.status]
     case 'live': return [m.liveStatus]
@@ -44,46 +24,14 @@ export function fieldValues(m: Material, key: FilterKey): string[] {
   }
 }
 
-/** Fixed lists come from the PRD. People, groups and affiliates come from the data. */
-export function filterOptions(key: FilterKey, materials: Material[]): string[] {
-  switch (key) {
-    case 'status': return [...STATUSES]
-    case 'live': return [...LIVE_STATUSES]
-    case 'channel': return [...CHANNELS]
-    case 'product': return [...PRODUCTS]
-    default: return [...new Set(materials.flatMap((m) => fieldValues(m, key)))].sort()
-  }
-}
+export const materialSearchText = (m: Material) => [m.title, m.approvalId, m.affiliate, m.owner]
 
-type FieldIcon = ComponentType<{ className?: string; strokeWidth?: number; 'aria-hidden'?: boolean | 'true' }>
-
-export const filterIcons: Record<FilterKey, FieldIcon> = {
-  status: StatusFieldIcon,
-  live: Radio,
-  channel: channelIcons.meta,
-  product: Package,
-  group: UsersRound,
-  owner: UserRound,
-  affiliate: Building2,
-}
-
-export function applyFilters(materials: Material[], search: MaterialsSearch) {
-  const q = search.q?.trim().toLowerCase()
-  return materials.filter((m) => {
-    for (const key of FILTER_KEYS) {
-      const wanted = filterValues(search, key)
-      if (wanted.length && !fieldValues(m, key).some((v) => wanted.includes(v))) return false
-    }
-    if (q && ![m.title, m.approvalId, m.affiliate, m.owner].some((v) => v?.toLowerCase().includes(q))) return false
-    return true
-  })
-}
-
-export function sortMaterials(materials: Material[], sort: Sort) {
+export function sortMaterials(materials: Material[], search: ListSearch) {
   const list = [...materials]
-  switch (sort) {
+  switch ((search.sort ?? 'updated') as MaterialSort) {
     case 'updated': return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    // TODO: sort by createdAt when the API has it. IDs are UUIDv7, which starts with the creation time, so they sort in creation order.
+    // IDs are UUIDv7, which starts with the creation time, so they sort in creation order.
+    // TODO: sort by createdAt when the API has it.
     case 'created': return list.sort((a, b) => b.id.localeCompare(a.id))
     case 'title': return list.sort((a, b) => a.title.localeCompare(b.title))
     // Soonest expiry first; materials with no expiry go last.
@@ -91,17 +39,10 @@ export function sortMaterials(materials: Material[], sort: Sort) {
   }
 }
 
-/** Quick views above the list. Each one is only a set of filters. Saved views can replace these later. */
-export const PRESETS = [
+/** Quick views above the list. Saved views can replace these later. */
+export const MATERIAL_PRESETS = [
   { key: 'all', filters: {} },
   { key: 'review', filters: { status: 'submitted,in_review' } },
   { key: 'changes', filters: { status: 'changes_requested,rejected' } },
   { key: 'monitoring', filters: { live: 'unapproved,changed,condition_broken,expired_approval' } },
-] as const satisfies readonly { key: string; filters: Partial<Record<FilterKey, string>> }[]
-export type PresetKey = (typeof PRESETS)[number]['key']
-
-export function activePreset(search: MaterialsSearch): PresetKey | undefined {
-  return PRESETS.find((p) =>
-    FILTER_KEYS.every((k) => (search[k] ?? '') === ((p.filters as Partial<Record<FilterKey, string>>)[k] ?? '')),
-  )?.key
-}
+] as const

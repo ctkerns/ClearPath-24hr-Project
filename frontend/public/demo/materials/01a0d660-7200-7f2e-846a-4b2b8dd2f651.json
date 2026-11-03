@@ -229,7 +229,7 @@
   ],
   "issues": [
     {
-      "id": "ISS-0032",
+      "id": "01a1993a-f3e0-7668-886f-7df89511ac54",
       "title": "Live ad text differs from the approved version",
       "severity": "high",
       "status": "open",
