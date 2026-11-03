@@ -20,9 +20,9 @@ from fastapi import APIRouter, Query
 from sqlalchemy import ColumnElement, and_, case, func, literal_column, or_, select
 
 from app.api import APIModel, SignedIn
-from app.material_access import Db, visible
+from app.material_access import Db, issue_visible, visible
 from app.materials import expire_approvals
-from app.models import Affiliate, Role, User
+from app.models import Affiliate, Role
 from app.models.library import BlockKind, BuildingBlock, Disclosure, Rule
 from app.models.materials import Channel, Issue, Material, MaterialStatus
 
@@ -96,15 +96,6 @@ class Terms:
         )
 
 
-def issue_visible(viewer: User) -> ColumnElement[bool]:
-    """An issue is visible when its material is (PRD R4). An issue without a material is internal content:
-    never for affiliates. TODO: move this to material_access when issues.material_id becomes nullable."""
-    clause = Issue.material_id.in_(select(Material.id).where(*visible(viewer)).correlate(None))
-    if viewer.role is Role.AFFILIATE:
-        return clause
-    return or_(clause, Issue.material_id.is_(None))
-
-
 @router.get("", response_model_exclude_none=True)
 async def search(viewer: SignedIn, db: Db, q: str = Query("", max_length=200)) -> SearchResults:
     q = " ".join(q.split())
@@ -132,7 +123,7 @@ async def search(viewer: SignedIn, db: Db, q: str = Query("", max_length=200)) -
     issues = await db.execute(
         select(Issue.id, Issue.title, Material.title)
         .outerjoin(Material, Material.id == Issue.material_id)
-        .where(Issue.workspace_id == viewer.workspace_id, issue_visible(viewer), where)
+        .where(Issue.workspace_id == viewer.workspace_id, *issue_visible(viewer), where)
         .order_by(rank.desc(), Issue.opened_at.desc())
         .limit(LIMIT)
     )

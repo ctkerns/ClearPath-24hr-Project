@@ -2,9 +2,11 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Material } from '@/components/materials/material-data'
+import { useOptionLabel } from '@/components/materials/use-option-label'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
 import { SaveError } from '@/components/save-error'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useUsers } from '@/components/settings/user-data'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,7 +16,7 @@ import { SeverityLabel, type RiskLevel } from '@/components/ui/risk-tag'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { SEVERITIES } from './issue-data'
+import { ISSUE_KINDS, SEVERITIES, type IssueKind } from './issue-data'
 import { useRaiseIssue } from './issue-update'
 
 /** Default time to fix, by severity. TODO: let a Manager set these in Settings. */
@@ -57,6 +59,9 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [severity, setSeverity] = useState<RiskLevel>('medium')
+  const [kind, setKind] = useState<IssueKind | 'none'>('none')
+  const [presentAtApproval, setPresentAtApproval] = useState(false)
+  const label = useOptionLabel()
   // Active people can own it: internal users, and the affiliates of this material's company (PRD R4).
   const people = (users.data ?? []).filter(
     (u) => u.status === 'active' && (u.role !== 'affiliate' || (!!material.affiliate && u.affiliate === material.affiliate)),
@@ -75,7 +80,15 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
         e.preventDefault()
         if (!ready) return
         void run(async () => {
-          const id = await raise(material.id, { title: title.trim(), summary: summary.trim(), severity, ownerId: owner, dueDate })
+          const id = await raise(material.id, {
+            title: title.trim(),
+            summary: summary.trim(),
+            severity,
+            ownerId: owner,
+            dueDate,
+            kind: kind === 'none' ? undefined : kind,
+            presentAtApproval: !!material.approvalId && presentAtApproval,
+          })
           onClose()
           void navigate({ to: '/issues/$issueId', params: { issueId: id } })
         })
@@ -149,6 +162,25 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
           />
         </div>
       </div>
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="issue-kind">{t('issue.raise.kindLabel')}</Label>
+        <Select value={kind} onValueChange={(v) => setKind(v as IssueKind | 'none')}>
+          <SelectTrigger id="issue-kind" className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">{t('issue.raise.kindNone')}</SelectItem>
+            {ISSUE_KINDS.map((k) => <SelectItem key={k} value={k}>{label('live', k)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* PRD F5: for example when the reviewer disagrees with another person's approval */}
+      {material.approvalId && (
+        <Label className="flex items-center gap-2 font-normal">
+          <Checkbox checked={presentAtApproval} onCheckedChange={(c) => setPresentAtApproval(c === true)} />
+          {t('issue.raise.presentAtApproval')}
+        </Label>
+      )}
 
       <SaveError error={error} />
       <DialogFooter>

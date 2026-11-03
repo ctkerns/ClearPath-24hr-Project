@@ -17,6 +17,10 @@ export const SEVERITIES = ['high', 'medium', 'low'] as const satisfies readonly 
 export const ISSUE_SOURCES = ['monitoring', 'reviewer'] as const
 export type IssueSource = (typeof ISSUE_SOURCES)[number]
 
+/** What monitoring found on live content (PRD F10). An issue that is not a live problem has none. */
+export const ISSUE_KINDS = ['changed', 'unapproved', 'condition_broken', 'expired_approval'] as const
+export type IssueKind = (typeof ISSUE_KINDS)[number]
+
 /** Due date groups for the filter. Resolved issues are in none of them. */
 export const DUE_BUCKETS = ['overdue', 'week', 'later'] as const
 export type DueBucket = (typeof DUE_BUCKETS)[number]
@@ -27,8 +31,14 @@ export type Issue = {
   severity: RiskLevel
   status: IssueStatus
   source: IssueSource
-  /** A summary of the linked material, so the list does not need a second request. */
-  material: { id: string; title: string; channel: Channel }
+  kind?: IssueKind
+  /**
+   * A summary of the linked material, so the list does not need a second request. None for unapproved content
+   * that monitoring found live and that matches no material (PRD F10); only internal users see those issues.
+   */
+  material?: { id: string; title: string; channel: Channel }
+  /** The material's channel, or where monitoring found the content. */
+  channel: Channel
   affiliate?: string
   /** For affiliate content: the internal person who takes over the issue after its due date (PRD section 4). */
   affiliateManager?: string

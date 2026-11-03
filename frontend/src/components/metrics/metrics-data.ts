@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { CHANNELS, PRODUCTS, type Channel, type Material, type Product } from '@/components/materials/material-data'
 import type { ReviewerGroup } from '@/components/settings/group-data'
+import { api } from '@/lib/api'
 
-// Metrics dashboard data (PRD F14, the metrics in PRD section 2).
-// TODO: replace METRICS_URL with the real API. The server should send the numbers already counted for the filters.
-// The demo sends one record per final decision and per live violation, and the page counts them.
-const METRICS_URL = '/demo/metrics.json'
+// Metrics dashboard data (PRD F14, the metrics in PRD section 2). GET /api/metrics, for internal users.
+// The server makes one record per final decision and per live violation from the review tables, for the last
+// two years, and the page counts them for its filters. So every number on the page comes from the same records.
 
 /** One final decision on a material, with what happened on the way to it. */
 export type Decision = {
@@ -38,7 +38,8 @@ export type Decision = {
 export type Violation = {
   foundAt: string
   channel: Channel
-  product: Product
+  /** None for unapproved content that matches no material. */
+  product?: Product
   kind: 'changed' | 'unapproved' | 'condition_broken' | 'expired_approval'
   daysToFix?: number
 }
@@ -46,12 +47,7 @@ export type Violation = {
 export function useMetricsData() {
   return useQuery({
     queryKey: ['metrics'],
-    queryFn: async (): Promise<{ decisions: Decision[]; violations: Violation[] }> => {
-      const res = await fetch(METRICS_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    staleTime: Infinity,
+    queryFn: () => api<{ decisions: Decision[]; violations: Violation[] }>('GET', '/metrics'),
   })
 }
 
@@ -85,7 +81,7 @@ function inRange(at: string, start: number, end: number) {
   return time >= start && time < end
 }
 
-function matches(item: { channel: Channel; product: Product; groups?: string[] }, f: MetricsSearch) {
+function matches(item: { channel: Channel; product?: Product; groups?: string[] }, f: MetricsSearch) {
   return (!f.channel || item.channel === f.channel) && (!f.product || item.product === f.product) && (!f.group || !item.groups || item.groups.includes(f.group))
 }
 

@@ -358,7 +358,10 @@
       "compareTo": "Compare to",
       "none": "None",
       "swap": "Swap the two versions"
-    }
+    },
+    "commentOn": "On “{{text}}”",
+    "commentSelectHint": "Select text in the content to comment on it.",
+    "clearSelection": "Comment on the whole material"
   },
   "submit": {
     "intro": "Add the content and the facts about where it runs. Pre-review starts as soon as you submit.",
@@ -485,7 +488,8 @@
     "resolvedOn": "Resolved {{date}}",
     "resolvedShort": "Done {{date}}",
     "empty": "No issues match these filters.",
-    "loadError": "Issues did not load. Reload the page to try again."
+    "loadError": "Issues did not load. Reload the page to try again.",
+    "noMaterial": "Found live, no material"
   },
   "issue": {
     "notFound": "This issue does not exist, or you do not have access to it.",
@@ -540,7 +544,8 @@
       "opened": "Opened",
       "resolved": "Resolved",
       "material": "Material",
-      "rule": "Rule"
+      "rule": "Rule",
+      "noMaterial": "This live content matches no material. Ask the owner to submit it for review or take it down."
     },
     "log": {
       "status": "Changed the status to {{status}}.",
@@ -557,7 +562,10 @@
       "summaryLabel": "What is wrong?",
       "summaryPlaceholder": "Say what you saw, where, and which rule or approval it breaks.",
       "materialOwner": "material owner",
-      "submit": "Raise issue"
+      "submit": "Raise issue",
+      "kindLabel": "Live problem",
+      "kindNone": "None",
+      "presentAtApproval": "The problem was already in the approved version"
     }
   },
   "dashboard": {

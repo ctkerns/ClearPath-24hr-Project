@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import SignedIn, require_role
 from app.db import get_db
 from app.models import ReviewerGroup, Role, User, group_memberships
-from app.models.materials import Material
+from app.models.materials import Issue, Material
 
 Db = Annotated[AsyncSession, Depends(get_db)]
 Reviewer = Annotated[User, Depends(require_role(Role.REVIEWER))]
@@ -42,6 +42,16 @@ def visible(viewer: User) -> list[ColumnElement[bool]]:
     if viewer.role is Role.AFFILIATE:
         # An affiliate with no company sees nothing (never "affiliate_id IS NULL", which is internal content).
         clauses.append(Material.affiliate_id == viewer.affiliate_id if viewer.affiliate_id else false())
+    return clauses
+
+
+def issue_visible(viewer: User) -> list[ColumnElement[bool]]:
+    """WHERE clauses for the issues that the viewer may see: the issues of the materials they may see.
+    An issue with no material (unapproved content found live, PRD F10) is for internal users only (R4)."""
+    clauses: list[ColumnElement[bool]] = [Issue.workspace_id == viewer.workspace_id]
+    if viewer.role is Role.AFFILIATE:
+        # correlate(None): the subquery stands alone, also when the outer query joins Material (search does)
+        clauses.append(Issue.material_id.in_(select(Material.id).where(*visible(viewer)).correlate(None)))
     return clauses
 
 

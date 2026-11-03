@@ -2,7 +2,7 @@
 
 A material has versions. Its current version has findings, a checklist, and required reviewer groups.
 Comments and the history (audit log) belong to the material, so they stay when a new version comes.
-Issues (F12) also live here, because each one belongs to a material.
+Issues (F12) also live here. Most belong to a material; unapproved content found live may have none (F10).
 
 Rule IDs (for example "REGZ-1026.24") are plain text: the rules library is another area.
 Rule titles on a checklist or an issue are a copy made when the check ran, so they show what the reviewer saw.
@@ -248,6 +248,10 @@ class Comment(Base):
     at: Mapped[datetime] = now_default()
     body: Mapped[str] = mapped_column(Text)
     decision: Mapped[Decision | None] = mapped_column(str_enum(Decision, "decision"))
+    # A comment on selected text (PRD F5): the field label and the text, as they were on version_number.
+    # The AI miss rate counts these comments (PRD section 2).
+    anchor_field: Mapped[str | None] = mapped_column(String(100))
+    anchor_text: Mapped[str | None] = mapped_column(Text)
 
     author: Mapped[User] = relationship()
 
@@ -316,6 +320,15 @@ class IssueSource(enum.StrEnum):
     REVIEWER = "reviewer"
 
 
+class IssueKind(enum.StrEnum):
+    """What monitoring found on live content (PRD F10). Null for an issue that is not a live problem."""
+
+    CHANGED = "changed"
+    UNAPPROVED = "unapproved"
+    CONDITION_BROKEN = "condition_broken"
+    EXPIRED_APPROVAL = "expired_approval"
+
+
 class ActionKind(enum.StrEnum):
     PAUSE = "pause"
     RESTORE = "restore"
@@ -327,13 +340,17 @@ class ActionKind(enum.StrEnum):
 
 
 class Issue(Base):
-    """A tracked problem with a material (PRD F12)."""
+    """A tracked problem with a material, or with live content that matches no material (PRD F10, F12).
+    An issue with no material is for internal users only: no affiliate company owns it (R4)."""
 
     __tablename__ = "issues"
 
     id: Mapped[uuid.UUID] = uuid_pk()
     workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), index=True)
-    material_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("materials.id", ondelete="CASCADE"), index=True)
+    material_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("materials.id", ondelete="CASCADE"), index=True)
+    # Where the content was found, for an issue with no material. Otherwise null: the material has the channel.
+    channel: Mapped[Channel | None] = mapped_column(str_enum(Channel, "channel"))
+    kind: Mapped[IssueKind | None] = mapped_column(str_enum(IssueKind, "kind"))
     title: Mapped[str] = mapped_column(String(300))
     summary: Mapped[str] = mapped_column(Text, server_default="")
     severity: Mapped[Severity] = mapped_column(str_enum(Severity, "severity"))
@@ -355,9 +372,15 @@ class Issue(Base):
     approved: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     # The AI draft of the affiliate notice: {to, cc?, subject, body, sentAt?, sentBy?}
     notice: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # The approved version that the live content is compared with (PRD F10), and whether the problem was already
+    # in that version. Those issues give the post-approval violation rate (PRD section 2).
+    approved_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("material_versions.id", ondelete="SET NULL"), index=True
+    )
+    present_at_approval: Mapped[bool] = mapped_column(server_default=text("false"))
     seeded: Mapped[bool] = mapped_column(server_default=text("false"))
 
-    material: Mapped[Material] = relationship()
+    material: Mapped[Material | None] = relationship()
     owner: Mapped[User] = relationship(foreign_keys=[owner_id])
     opened_by: Mapped[User | None] = relationship(foreign_keys=[opened_by_id])
     actions: Mapped[list[IssueAction]] = relationship(order_by="IssueAction.position", cascade="all, delete-orphan")

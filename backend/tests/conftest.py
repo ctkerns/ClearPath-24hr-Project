@@ -27,6 +27,10 @@ from app.models import Base  # noqa: E402
 from app.seed import create_demo  # noqa: E402
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "history: also seed the year of past reviews (app/seed/history.py), which is slower")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def database():
     """Creates the test database if it is missing, and applies every migration (tests the migrations too)."""
@@ -37,13 +41,14 @@ def database():
 
 
 @pytest.fixture(autouse=True)
-async def demo_data(database):
-    """Each test starts with only the seeded demo workspace. Empties every table, so new areas need no change here."""
+async def demo_data(database, request):
+    """Each test starts with only the seeded demo workspace. Empties every table, so new areas need no change here.
+    Tests marked `history` also get the year of past reviews."""
     tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
     async with engine.begin() as conn:
         await conn.execute(text(f"TRUNCATE {tables} CASCADE"))
     async with SessionLocal() as db, db.begin():
-        await create_demo(db)
+        await create_demo(db, history=request.node.get_closest_marker("history") is not None)
     yield
 
 

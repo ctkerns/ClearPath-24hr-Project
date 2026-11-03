@@ -95,8 +95,8 @@ function IssueRow({ issue: i, sourceLabel }: { issue: Issue; sourceLabel: string
 
       {/* Plain text, not a link: the whole row is already one link. The issue page links to the material. */}
       <span className={cn(col.material, 'text-xs text-muted-foreground')}>
-        <ChannelIcon channel={i.material.channel} className="size-3.5 shrink-0" />
-        <span className="truncate">{i.material.title}</span>
+        <ChannelIcon channel={i.channel} className="size-3.5 shrink-0" />
+        <span className="truncate">{i.material?.title ?? t('issues.noMaterial')}</span>
       </span>
 
       <span className={cn(col.source, 'text-xs text-muted-foreground')}>{sourceLabel}</span>

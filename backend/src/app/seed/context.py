@@ -31,6 +31,8 @@ class SeedContext:
     The seed files refer to people and groups by name, so these are by name too."""
 
     db: AsyncSession
+    # Also add about a year of past reviews (seed/history.py). The CLI does; the tests do only for the metrics tests.
+    history: bool = False
     workspace: Workspace = None  # type: ignore[assignment]  # core.create sets it first
     users: dict[str, User] = field(default_factory=dict)
     groups: dict[str, ReviewerGroup] = field(default_factory=dict)

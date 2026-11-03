@@ -67,7 +67,7 @@ function IssuePage() {
         <IssuePanel
           issue={issue}
           detail={d}
-          material={materials.data?.find((m) => m.id === issue.material.id)}
+          material={issue.material && materials.data?.find((m) => m.id === issue.material?.id)}
           sourceLabel={label('source', issue.source)}
         />
       </div>
@@ -104,10 +104,14 @@ function Header({ issue: i, onResolve }: { issue: Issue; onResolve: () => void }
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <SeverityLabel level={i.severity} />
             <span>{t(`review.live.source.${i.source}`)} · {formatRelativeTime(i.openedAt)}</span>
-            <Link to="/materials/$materialId" params={{ materialId: i.material.id }} className="flex items-center gap-1.5 hover:text-foreground hover:underline">
-              <ChannelIcon channel={i.material.channel} className="size-3.5" />
-              {i.material.title}
-            </Link>
+            {i.material ? (
+              <Link to="/materials/$materialId" params={{ materialId: i.material.id }} className="flex items-center gap-1.5 hover:text-foreground hover:underline">
+                <ChannelIcon channel={i.channel} className="size-3.5" />
+                {i.material.title}
+              </Link>
+            ) : (
+              <span className="flex items-center gap-1.5"><ChannelIcon channel={i.channel} className="size-3.5" />{t('issues.noMaterial')}</span>
+            )}
           </p>
         </div>
 

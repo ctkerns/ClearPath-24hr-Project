@@ -26,6 +26,7 @@ from app.models.materials import (
     Issue,
     IssueAction,
     IssueEvent,
+    IssueKind,
     IssueSource,
     IssueStatus,
     LiveItem,
@@ -134,6 +135,7 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
         versions[version.number] = version
         db.add(version)
     await db.flush()
+    ctx.extra.setdefault("versions", {}).update({(material.id, n): v.id for n, v in versions.items()})
 
     current = d["version"]
     for i, f in enumerate(d["findings"]):
@@ -184,6 +186,8 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
                 at=parse_time(c["at"]),
                 body=c["body"],
                 decision=Decision(c["decision"]) if c.get("decision") else None,
+                anchor_field=c["anchor"]["field"] if c.get("anchor") else None,
+                anchor_text=c["anchor"]["text"] if c.get("anchor") else None,
             )
         )
     for e in d["history"]:
@@ -229,6 +233,7 @@ def add_issue(ctx: SeedContext, row: dict[str, Any], d: dict[str, Any] | None) -
         severity=Severity(row["severity"]),
         status=IssueStatus(row["status"]),
         source=source,
+        kind=IssueKind(row["kind"]) if row.get("kind") else None,
         owner_id=owner.id,
         opened_by_id=opened_by.id if opened_by else None,
         opened_at=parse_time(row["openedAt"]),
@@ -246,6 +251,8 @@ def add_issue(ctx: SeedContext, row: dict[str, Any], d: dict[str, Any] | None) -
         issue.condition = d.get("condition")
         issue.live_item = d.get("liveItem")
         issue.approved = d.get("approved")
+        if issue.approved:
+            issue.approved_version_id = ctx.extra["versions"].get((issue.material_id, issue.approved["version"]))
         issue.notice = d.get("notice")
         for i, a in enumerate(d["actions"]):
             done_by = person(ctx, a.get("doneBy"))

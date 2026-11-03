@@ -171,6 +171,13 @@ class DetailGroup(APIModel):
     escalated_by: str | None = None
 
 
+class CommentAnchor(APIModel):
+    """The selected text that a comment is about (PRD F5), in one field of the version."""
+
+    field: str = Field(min_length=1, max_length=100)
+    text: str = Field(min_length=1, max_length=2000)
+
+
 class CommentOut(APIModel):
     id: uuid.UUID
     author: str
@@ -178,6 +185,7 @@ class CommentOut(APIModel):
     at: datetime
     body: str
     decision: Decision | None = None
+    anchor: CommentAnchor | None = None
 
 
 class FieldText(APIModel):
@@ -357,7 +365,15 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
         groups=[group_out(r) for r in m.reviews],
         conditions="\n".join(conditions) or None,
         comments=[
-            CommentOut(id=c.id, author=c.author.name, role=c.role, at=c.at, body=c.body, decision=c.decision)
+            CommentOut(
+                id=c.id,
+                author=c.author.name,
+                role=c.role,
+                at=c.at,
+                body=c.body,
+                decision=c.decision,
+                anchor=CommentAnchor(field=c.anchor_field or "", text=c.anchor_text) if c.anchor_text else None,
+            )
             for c in comments
         ],
         versions=[
@@ -785,6 +801,7 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
 
 class CommentInput(APIModel):
     body: str = Field(min_length=1, max_length=5000)
+    anchor: CommentAnchor | None = None  # a comment on selected text of the current version
 
 
 @items.post("/{material_id}/comments", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
@@ -795,6 +812,12 @@ async def add_comment(material_id: uuid.UUID, body: CommentInput, viewer: Submit
     if not text:
         raise bad_request("Write a comment")
     number = m.versions[-1].number if m.versions else None
+    anchor = body.anchor
+    if anchor:
+        # The selected text must be in that field of the current version.
+        fields = {f.label: f.text for f in plain(m.versions[-1].fields)} if m.versions else {}
+        if anchor.text not in fields.get(anchor.field, ""):
+            raise bad_request("The selected text is not in the current version")
     groups = await group_names_of(db, viewer)
     db.add(
         Comment(
@@ -805,6 +828,8 @@ async def add_comment(material_id: uuid.UUID, body: CommentInput, viewer: Submit
             role=", ".join(groups.values()) or (viewer.title or ""),
             at=now(),
             body=text,
+            anchor_field=anchor.field if anchor else None,
+            anchor_text=anchor.text if anchor else None,
         )
     )
     db.add(event(m, viewer, EventType.COMMENT, f"Commented on version {number}." if number else "Commented."))

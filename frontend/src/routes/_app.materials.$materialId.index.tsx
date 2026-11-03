@@ -10,7 +10,7 @@ import { DecisionDialog } from '@/components/review/decision-dialog'
 import { HistoryTab } from '@/components/review/history-tab'
 import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
-import { fileUrl, useMaterialDetail, versionFields, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { fileUrl, useMaterialDetail, versionFields, type CommentAnchor, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
 import { SaveError } from '@/components/save-error'
 import { hasRole } from '@/components/settings/user-data'
 import { api } from '@/lib/api'
@@ -224,6 +224,8 @@ function ReviewView({ material, detail, version, onVersion }: {
   onVersion: (v: number) => void
 }) {
   const [active, setActive] = useState<string | null>(null)
+  // Text selected in the content, for the next comment (PRD F5: comments link to a text section)
+  const [anchor, setAnchor] = useState<CommentAnchor | null>(null)
   const open = detail.findings.filter((f) => f.status === 'open')
   const numbers = new Map(open.map((f, i) => [f.id, i + 1]))
   const isCurrent = version === detail.version
@@ -247,8 +249,9 @@ function ReviewView({ material, detail, version, onVersion }: {
             numbers={numbers}
             active={active}
             onMark={(id) => focus(id, 'finding')}
+            onSelectText={setAnchor}
           />
-          <Conversation detail={detail} />
+          <Conversation detail={detail} anchor={anchor} onClearAnchor={() => setAnchor(null)} />
         </div>
         <FindingsColumn findings={detail.findings} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
       </div>
@@ -282,7 +285,7 @@ function SectionHeading({ children, className }: { children: React.ReactNode; cl
  * like version history in Google Docs. "Show changes" marks what changed since the version before it.
  * Finding marks show only on the current version, because findings belong to it.
  */
-function ContentPanel({ material, detail, version, onVersion, numbers, active, onMark }: {
+function ContentPanel({ material, detail, version, onVersion, numbers, active, onMark, onSelectText }: {
   material: Material
   detail: MaterialDetail
   version: number
@@ -290,6 +293,7 @@ function ContentPanel({ material, detail, version, onVersion, numbers, active, o
   numbers: Map<string, number>
   active: string | null
   onMark: (id: string) => void
+  onSelectText: (anchor: CommentAnchor) => void
 }) {
   const { t } = useTranslation()
   const label = useOptionLabel()
@@ -377,7 +381,8 @@ function ContentPanel({ material, detail, version, onVersion, numbers, active, o
         </p>
       )}
 
-      <dl className="grid gap-4 p-4">
+      {/* Selecting text in one field of the current version makes the next comment about that text. */}
+      <dl className="grid gap-4 p-4" onMouseUp={() => !tracking && isCurrent && selectedText(onSelectText)} onKeyUp={() => !tracking && isCurrent && selectedText(onSelectText)}>
         {fields.map((field) => {
           const isImage = kinds.get(field.label) === 'image'
           const segments = detail.fields.find((f) => f.label === field.label)?.segments
@@ -395,29 +400,31 @@ function ContentPanel({ material, detail, version, onVersion, numbers, active, o
                   </div>
                 )}
                 {isImage && <span className="mr-1 text-xs text-muted-foreground">{t('review.textInImage')}</span>}
-                {tracking ? (
-                  <TrackedText before={prevText} after={field.text} />
-                ) : isCurrent && segments ? (
-                  segments.map((s, i) =>
-                    typeof s === 'string' ? (
-                      <span key={i}>{s}</span>
-                    ) : (
-                      <FlaggedText
-                        key={i}
-                        id={`mark-${s.finding}`}
-                        severity={severity.get(s.finding) ?? 'medium'}
-                        number={numbers.get(s.finding)}
-                        active={active === s.finding}
-                        onClick={() => onMark(s.finding)}
-                        className="cursor-pointer scroll-mt-32"
-                      >
-                        {s.text}
-                      </FlaggedText>
-                    ),
-                  )
-                ) : (
-                  field.text
-                )}
+                <span data-field={field.label}>
+                  {tracking ? (
+                    <TrackedText before={prevText} after={field.text} />
+                  ) : isCurrent && segments ? (
+                    segments.map((s, i) =>
+                      typeof s === 'string' ? (
+                        <span key={i}>{s}</span>
+                      ) : (
+                        <FlaggedText
+                          key={i}
+                          id={`mark-${s.finding}`}
+                          severity={severity.get(s.finding) ?? 'medium'}
+                          number={numbers.get(s.finding)}
+                          active={active === s.finding}
+                          onClick={() => onMark(s.finding)}
+                          className="cursor-pointer scroll-mt-32"
+                        >
+                          {s.text}
+                        </FlaggedText>
+                      ),
+                    )
+                  ) : (
+                    field.text
+                  )}
+                </span>
               </dd>
             </div>
           )
@@ -425,6 +432,20 @@ function ContentPanel({ material, detail, version, onVersion, numbers, active, o
       </dl>
     </section>
   )
+}
+
+/** The text selected inside one field of the content, if any. A selection across fields counts as none. */
+function selectedText(onSelect: (anchor: CommentAnchor) => void) {
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed || !selection.rangeCount) return
+  const range = selection.getRangeAt(0)
+  const fieldOf = (node: Node) => (node instanceof Element ? node : node.parentElement)?.closest('[data-field]')
+  const field = fieldOf(range.startContainer)
+  // Without the finding numbers that the marks show
+  const fragment = range.cloneContents()
+  fragment.querySelectorAll('sup').forEach((sup) => sup.remove())
+  const text = (fragment.textContent ?? '').trim()
+  if (field && field === fieldOf(range.endContainer) && text) onSelect({ field: field.getAttribute('data-field') ?? '', text: text.slice(0, 2000) })
 }
 
 function FindingsColumn({ findings, numbers, active, onFinding }: {
@@ -471,16 +492,19 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
  * Comments from people, oldest first, like a pull request conversation.
  * Reviewers comment, Submitters and affiliates reply; Viewers only read (PRD section 4). TODO: threaded replies.
  */
-function Conversation({ detail }: { detail: MaterialDetail }) {
+function Conversation({ detail, anchor, onClearAnchor }: { detail: MaterialDetail; anchor: CommentAnchor | null; onClearAnchor: () => void }) {
   const viewer = useViewer()
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [body, setBody] = useState('')
-  const save = useSave(() => setBody(''))
+  const save = useSave(() => {
+    setBody('')
+    onClearAnchor()
+  })
   const canComment = viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')
   const post = () =>
     save.run(async () => {
-      const saved = await api<MaterialDetail>('POST', `/materials/${detail.id}/comments`, { body })
+      const saved = await api<MaterialDetail>('POST', `/materials/${detail.id}/comments`, { body, anchor: anchor ?? undefined })
       queryClient.setQueryData(['material-detail', detail.id], saved)
     })
   return (
@@ -501,6 +525,11 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
                   {t(`review.decided.${c.decision}`)}
                 </p>
               )}
+              {c.anchor && (
+                <blockquote className="w-fit border-l-2 pl-2 text-xs text-muted-foreground">
+                  <span className="font-medium">{c.anchor.field}:</span> {c.anchor.text}
+                </blockquote>
+              )}
               {c.body && <p className="whitespace-pre-line">{c.body}</p>}
             </div>
           </li>
@@ -510,6 +539,16 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
         <form className="flex gap-2.5" onSubmit={(e) => { e.preventDefault(); void post() }}>
           <PersonAvatar name={viewer.name} />
           <div className="grid flex-1 justify-items-end gap-2">
+            {anchor ? (
+              <p className="flex w-full items-start gap-2 rounded-md border-l-2 border-primary bg-muted px-2 py-1 text-xs">
+                <span className="line-clamp-2 min-w-0 flex-1">{t('review.commentOn', { text: anchor.text })}</span>
+                <button type="button" onClick={onClearAnchor} aria-label={t('review.clearSelection')} title={t('review.clearSelection')} className="text-muted-foreground hover:text-foreground">
+                  <X className="size-3.5" />
+                </button>
+              </p>
+            ) : (
+              <p className="w-full text-xs text-muted-foreground">{t('review.commentSelectHint')}</p>
+            )}
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={5000} placeholder={t('review.commentPlaceholder')} aria-label={t('review.commentPlaceholder')} className="min-h-16" />
             <div className="w-full"><SaveError error={save.error} /></div>
             <Button type="submit" variant="outline" size="sm" disabled={!body.trim() || save.pending}>{t('review.comment')}</Button>

@@ -17,13 +17,13 @@ export function issueValues(issue: Issue, key: IssueFilterKey): string[] {
     case 'severity': return [issue.severity]
     case 'due': { const b = dueBucket(issue); return b ? [b] : [] }
     case 'source': return [issue.source]
-    case 'channel': return [issue.material.channel]
+    case 'channel': return [issue.channel]
     case 'owner': return [issue.owner]
     case 'affiliate': return issue.affiliate ? [issue.affiliate] : []
   }
 }
 
-export const issueSearchText = (i: Issue) => [i.title, i.material.title, i.affiliate, i.owner]
+export const issueSearchText = (i: Issue) => [i.title, i.material?.title, i.affiliate, i.owner]
 
 const severityRank = { high: 0, medium: 1, low: 2 }
 /** Resolved issues always go last, so the work to do stays at the top. */
