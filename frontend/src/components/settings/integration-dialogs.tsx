@@ -1,11 +1,13 @@
 import { ExternalLink, Info } from 'lucide-react'
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useSave } from '@/lib/use-save'
 import { useWorkspace } from '@/lib/workspace'
 import { providerInfo, useIntegrationUpdate, type Integration } from './integration-data'
 import { PurposeList } from './integration-meta'
@@ -37,6 +39,7 @@ function ConnectFlow({ integration: i, owners, onClose }: { integration: Integra
   const { t } = useTranslation()
   const { isDemo } = useWorkspace()
   const { connect } = useIntegrationUpdate()
+  const save = useSave(onClose)
   const info = providerInfo[i.provider]
   const name = t(`settingsIntegrations.provider.${i.provider}.name`)
   const [step, setStep] = useState<'access' | 'accounts'>(info.needsAuth ? 'access' : 'accounts')
@@ -73,9 +76,8 @@ function ConnectFlow({ integration: i, owners, onClose }: { integration: Integra
       className="grid gap-4"
       onSubmit={(e) => {
         e.preventDefault()
-        if (!ready) return
-        connect(i.id, picked, info.ownsContent ? ownerId : undefined)
-        onClose()
+        if (!ready || save.pending) return
+        void save.run(() => connect(i.id, picked, info.ownsContent ? ownerId : undefined))
       }}
     >
       <DialogHeader>
@@ -117,9 +119,11 @@ function ConnectFlow({ integration: i, owners, onClose }: { integration: Integra
 
       {isDemo && <DemoNote text={t('settingsIntegrations.connect.demoAccounts')} />}
 
+      <SaveError error={save.error} />
+
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsIntegrations.cancel')}</Button>
-        <Button type="submit" disabled={!ready}>{t('settingsIntegrations.connect.submit', { count: picked.length })}</Button>
+        <Button type="submit" disabled={!ready || save.pending}>{t('settingsIntegrations.connect.submit', { count: picked.length })}</Button>
       </DialogFooter>
     </form>
   )
@@ -138,6 +142,7 @@ function DemoNote({ text }: { text: string }) {
 export function DisconnectDialog({ integration: i, open, onClose }: { integration: Integration; open: boolean; onClose: () => void }) {
   const { t } = useTranslation()
   const { disconnect } = useIntegrationUpdate()
+  const save = useSave(onClose)
   const name = t(`settingsIntegrations.provider.${i.provider}.name`)
   const info = providerInfo[i.provider]
   return (
@@ -148,15 +153,14 @@ export function DisconnectDialog({ integration: i, open, onClose }: { integratio
           <DialogDescription>{t(`settingsIntegrations.disconnect.stops.${info.group}`, { name })}</DialogDescription>
         </DialogHeader>
         <p className="text-sm">{t('settingsIntegrations.disconnect.stays')}</p>
+        <SaveError error={save.error} />
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>{t('settingsIntegrations.cancel')}</Button>
           <Button
             type="button"
             variant="destructive"
-            onClick={() => {
-              disconnect(i.id)
-              onClose()
-            }}
+            disabled={save.pending}
+            onClick={() => void save.run(() => disconnect(i.id))}
           >
             {t('settingsIntegrations.disconnect.confirm')}
           </Button>

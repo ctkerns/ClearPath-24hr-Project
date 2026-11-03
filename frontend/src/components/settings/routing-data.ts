@@ -1,17 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Channel, Product } from '@/components/materials/material-data'
-import { useViewer } from '@/lib/session'
 import i18n from '@/i18n'
-import { uuidv7 } from '@/lib/uuid'
-import type { ReviewerGroup } from './group-data'
+import { api } from '@/lib/api'
 import { hasRole } from './user-data'
 import type { Role } from '@/components/review/material-detail-data'
 
 // Review routing (PRD F6, screen 9): routing rules, the lighter path, and the no-material-change types.
-// The default group is a flag on the reviewer group itself (ReviewerGroup.isDefault), so this tab writes it there.
-// TODO: replace ROUTING_URL with the real API (Managers and higher for changes; the server checks the role
-// and evaluates the rules on every new version).
-const ROUTING_URL = '/demo/routing.json'
+// GET /api/routing: every internal role reads it, because the submit form previews routing. Managers and higher change it.
+// The default group is a flag on the reviewer group itself (ReviewerGroup.isDefault); PUT /api/routing/default-group moves it.
+// TODO: the server evaluates the rules on every new version.
 
 export type RuleSource = 'internal' | 'affiliate'
 
@@ -19,7 +16,8 @@ export type RuleSource = 'internal' | 'affiliate'
 export type RuleConditions = {
   products: Product[]
   channels: Channel[]
-  source?: RuleSource
+  /** Null or missing means any source. */
+  source?: RuleSource | null
   /** The affiliate has an open issue, or a rejected version, in the last 90 days. Only for affiliate content. */
   affiliateHistory?: boolean
   /** Matches nationwide content. */
@@ -34,8 +32,8 @@ export type RoutingRule = {
   enabled: boolean
   conditions: RuleConditions
   requiredGroupIds: string[]
-  note?: string
-  updatedBy: string
+  note?: string | null
+  updatedBy: string | null
   updatedAt: string
 }
 
@@ -50,17 +48,10 @@ export type RoutingSettings = {
   noMaterialChangeTypes: Record<NoMaterialChangeType, boolean>
 }
 
+const KEY = ['routing']
+
 export function useRouting() {
-  return useQuery({
-    queryKey: ['routing'],
-    queryFn: async (): Promise<RoutingSettings> => {
-      const res = await fetch(ROUTING_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    // Demo changes live only in this cache (setQueryData), so never refetch over them. TODO: remove with the real API.
-    staleTime: Infinity,
-  })
+  return useQuery({ queryKey: KEY, queryFn: () => api<RoutingSettings>('GET', '/routing') })
 }
 
 /** Only Managers and higher change routing (PRD section 4). */
@@ -71,53 +62,38 @@ export type RuleInput = Pick<RoutingRule, 'name' | 'conditions' | 'requiredGroup
 export const emptyRule: RuleInput = { name: '', conditions: { products: [], channels: [], states: [] }, requiredGroupIds: [] }
 
 /**
- * Demo changes to routing, written to the query cache.
- * TODO: replace with API calls. The server records each change in the audit log; open reviews keep their groups.
+ * Manager changes to routing. Each one calls the API, then reloads routing from the server.
+ * Each function returns a promise that rejects with an ApiError, so a dialog can show what went wrong.
+ * TODO: the server records each change in the audit log; open reviews keep their groups.
  */
 export function useRoutingUpdate() {
-  const viewer = useViewer()
   const queryClient = useQueryClient()
-  const stamp = () => ({ updatedBy: viewer.name, updatedAt: new Date().toISOString() })
-
-  const set = (change: (s: RoutingSettings) => RoutingSettings) =>
-    queryClient.setQueryData<RoutingSettings>(['routing'], (s) => (s ? change(s) : s))
-  const setRules = (change: (rules: RoutingRule[]) => RoutingRule[]) => set((s) => ({ ...s, rules: change(s.rules) }))
+  const after = <T,>(call: Promise<T>) =>
+    call.then(async (result) => {
+      await queryClient.invalidateQueries({ queryKey: KEY })
+      return result
+    })
+  /** These calls answer with the whole routing settings, so the cache takes them as they are. */
+  const store = (call: Promise<RoutingSettings>) =>
+    call.then((saved) => {
+      queryClient.setQueryData(KEY, saved)
+    })
+  // JSON leaves out undefined, so send null to clear the note.
+  const body = (input: RuleInput) => ({ ...input, note: input.note ?? null })
 
   return {
-    create(input: RuleInput) {
-      setRules((rules) => [...rules, { id: uuidv7(), enabled: true, ...input, ...stamp() }])
-    },
-    edit(id: string, input: RuleInput) {
-      setRules((rules) => rules.map((r) => (r.id === id ? { ...r, ...input, ...stamp() } : r)))
-    },
-    remove(id: string) {
-      setRules((rules) => rules.filter((r) => r.id !== id))
-    },
-    setEnabled(id: string, enabled: boolean) {
-      setRules((rules) => rules.map((r) => (r.id === id ? { ...r, enabled, ...stamp() } : r)))
-    },
+    create: (input: RuleInput) => after(api<RoutingRule>('POST', '/routing/rules', body(input))),
+    edit: (id: string, input: RuleInput) => after(api<RoutingRule>('PATCH', `/routing/rules/${id}`, body(input))),
+    remove: (id: string) => after(api('DELETE', `/routing/rules/${id}`)),
+    setEnabled: (id: string, enabled: boolean) => after(api<RoutingRule>('PATCH', `/routing/rules/${id}`, { enabled })),
     /** Moves a rule one place up (-1) or down (1). Order is for reading only: every matching rule applies. */
-    move(id: string, by: -1 | 1) {
-      setRules((rules) => {
-        const i = rules.findIndex((r) => r.id === id)
-        const j = i + by
-        if (i < 0 || j < 0 || j >= rules.length) return rules
-        const next = [...rules]
-        ;[next[i], next[j]] = [next[j], next[i]]
-        return next
-      })
-    },
-    setLighterPathGroup(groupId: string | null) {
-      set((s) => ({ ...s, lighterPathGroupId: groupId }))
-    },
-    setChangeType(type: NoMaterialChangeType, on: boolean) {
-      set((s) => ({ ...s, noMaterialChangeTypes: { ...s.noMaterialChangeTypes, [type]: on } }))
-    },
-    /** The default group is required, so this always moves the flag; it never clears it.
-     * TODO: local only. The next reload of the groups from the API undoes it, until routing moves to the server. */
-    setDefaultGroup(groupId: string) {
-      queryClient.setQueryData<ReviewerGroup[]>(['reviewer-groups'], (list) => list?.map((g) => ({ ...g, isDefault: g.id === groupId })))
-    },
+    move: (id: string, by: -1 | 1) => store(api<RoutingSettings>('POST', `/routing/rules/${id}/move`, { by })),
+    setLighterPathGroup: (groupId: string | null) => store(api<RoutingSettings>('PATCH', '/routing', { lighterPathGroupId: groupId })),
+    setChangeType: (type: NoMaterialChangeType, on: boolean) =>
+      store(api<RoutingSettings>('PATCH', '/routing', { noMaterialChangeTypes: { [type]: on } })),
+    /** The default group is required, so this always moves the flag; it never clears it. The server does it in one transaction. */
+    setDefaultGroup: (groupId: string) =>
+      api('PUT', '/routing/default-group', { groupId }).then(() => queryClient.invalidateQueries({ queryKey: ['reviewer-groups'] })),
   }
 }
 

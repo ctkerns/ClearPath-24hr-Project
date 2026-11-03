@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import SessionLocal
 from app.models import Workspace
-from app.seed import core, library
+from app.seed import core, library, routing_integrations
 from app.seed.context import DEMO_PASSWORD, DEMO_WORKSPACE_NAME, SeedContext
 
 __all__ = ["AREAS", "DEMO_PASSWORD", "DEMO_WORKSPACE_NAME", "create_demo", "delete_demo", "seed"]
@@ -26,6 +26,7 @@ __all__ = ["AREAS", "DEMO_PASSWORD", "DEMO_WORKSPACE_NAME", "create_demo", "dele
 AREAS: list[ModuleType] = [
     core,
     library,
+    routing_integrations,
 ]
 
 

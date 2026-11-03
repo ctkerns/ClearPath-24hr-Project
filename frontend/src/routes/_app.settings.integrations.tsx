@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_app/settings/integrations')({
 
 /**
  * Connectors (PRD F11): status, Verified or Unverified, last sync and Sync now, grouped by what each one does.
- * Only Admins connect, disconnect, sync or set default owners. Everyone else sees the same list, read-only.
+ * Only Admins see the tab and connect, disconnect, sync or set default owners; the server checks the role (PRD section 4).
  */
 function IntegrationsTab() {
   const viewer = useViewer()

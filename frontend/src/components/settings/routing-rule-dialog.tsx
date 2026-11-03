@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
 import { useTranslation } from 'react-i18next'
 import { CHANNELS, PRODUCTS } from '@/components/materials/material-data'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDateTime } from '@/i18n/format'
+import { useSave } from '@/lib/use-save'
 import type { ReviewerGroup } from './group-data'
 import { emptyRule, matchesEverything, useRoutingUpdate, type RoutingRule, type RuleConditions, type RuleInput } from './routing-data'
 import { FieldLabel, Segmented, StatePicker, ToggleChip } from './routing-fields'
@@ -35,6 +37,7 @@ type SourceChoice = 'any' | 'internal' | 'affiliate'
 function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: ReviewerGroup[]; onClose: () => void }) {
   const { t } = useTranslation()
   const update = useRoutingUpdate()
+  const save = useSave(onClose)
   const [value, setValue] = useState<RuleInput>(() =>
     rule ? { name: rule.name, conditions: rule.conditions, requiredGroupIds: rule.requiredGroupIds, note: rule.note } : emptyRule,
   )
@@ -54,11 +57,9 @@ function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: Revie
       onSubmit={(e) => {
         e.preventDefault()
         setTried(true)
-        if (nameMissing || groupsMissing) return
+        if (nameMissing || groupsMissing || save.pending) return
         const input = { ...value, name: value.name.trim(), note: value.note?.trim() || undefined }
-        if (rule) update.edit(rule.id, input)
-        else update.create(input)
-        onClose()
+        void save.run(() => (rule ? update.edit(rule.id, input) : update.create(input)))
       }}
     >
       <DialogHeader>
@@ -162,13 +163,15 @@ function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: Revie
         {matchesEverything(c) && <p className="text-xs text-muted-foreground">{t('settingsRouting.editor.everyWarning')}</p>}
       </div>
 
+      <SaveError error={save.error} />
+
       <DialogFooter className="items-center sm:justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {rule && (
             confirmDelete ? (
               <>
                 <span>{t('settingsRouting.editor.deleteConfirm')}</span>
-                <Button type="button" size="sm" variant="destructive" onClick={() => { update.remove(rule.id); onClose() }}>{t('settingsRouting.editor.deleteYes')}</Button>
+                <Button type="button" size="sm" variant="destructive" disabled={save.pending} onClick={() => void save.run(() => update.remove(rule.id))}>{t('settingsRouting.editor.deleteYes')}</Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>{t('settingsRouting.cancel')}</Button>
               </>
             ) : (
@@ -181,7 +184,7 @@ function RuleForm({ rule, groups, onClose }: { rule?: RoutingRule; groups: Revie
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t('settingsRouting.cancel')}</Button>
-          <Button type="submit">{rule ? t('settingsRouting.editor.save') : t('settingsRouting.editor.add')}</Button>
+          <Button type="submit" disabled={save.pending}>{rule ? t('settingsRouting.editor.save') : t('settingsRouting.editor.add')}</Button>
         </div>
       </DialogFooter>
     </form>
