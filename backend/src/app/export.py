@@ -45,10 +45,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import material_list
 from app.api import APIModel, InternalUser
 from app.audit import actor_name, history, record
 from app.config import settings
 from app.material_access import Db, now, visible
+from app.material_list import MaterialMatch
 from app.materials import HISTORY_TYPE, EventOut, expire_approvals, name_of, plain
 from app.models import Workspace
 from app.models.audit import AuditEvent
@@ -80,7 +82,9 @@ FORMAT_VERSION = 1
 
 
 class ExportFilters(APIModel):
-    """The body of an export. JSON: {dateFrom, dateTo, channel?, product?, status?, materialIds?}."""
+    """The body of an export. JSON: {dateFrom, dateTo, channel?, product?, status?, materialIds?, listFilters?}.
+    `listFilters` is the Materials list's search and filters (its URL search params, app.material_list), for
+    "only the materials that match the list's filters": every page of the list, not only the loaded one."""
 
     date_from: date
     date_to: date
@@ -88,6 +92,7 @@ class ExportFilters(APIModel):
     product: Product | None = None
     status: MaterialStatus | None = None  # the material's status now
     material_ids: list[uuid.UUID] = Field(default=[], max_length=MAX_MATERIAL_IDS)
+    list_filters: MaterialMatch | None = None
 
     @model_validator(mode="after")
     def check(self) -> ExportFilters:
@@ -534,6 +539,8 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
         query = query.where(Material.status == body.status)
     if body.material_ids:
         query = query.where(Material.id.in_(body.material_ids))
+    if body.list_filters:
+        query = query.where(Material.id.in_(material_list.filtered(viewer, body.list_filters, Material.id)))
     ids = list(await db.scalars(query.with_only_columns(Material.id).order_by(Material.created_at, Material.id)))
 
     spool = tempfile.SpooledTemporaryFile(SPOOL_BYTES)
@@ -580,6 +587,8 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
             "missingFiles": len(missing),
         }
         filters = body.model_dump(mode="json", by_alias=True, exclude_none=True)
+        if body.list_filters:  # only the list filters that are set
+            filters["listFilters"] = body.list_filters.model_dump(mode="json", by_alias=True, exclude_defaults=True)
         workspace = await db.get_one(Workspace, ws)
         manifest = {
             "format": "clearpath-regulator-export",

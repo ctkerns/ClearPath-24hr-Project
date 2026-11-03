@@ -136,7 +136,7 @@ async def test_approval_writes_id_and_expiry(client):
     before = await entries("material", SUMMER)
     d = (await decide(client, SUMMER, "approve_conditions", "Only with D-7 under the image.")).json()
     [e] = await new_entries("material", SUMMER, before)
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert e.action == "approved_with_conditions" and e.data["conditions"] == "Only with D-7 under the image."
     assert (e.data["approvalId"], e.data["expiresAt"]) == (row["approvalId"], row["expiresAt"])
     assert d["history"][-1]["text"].startswith("Approved with conditions for Compliance on version 2: Only with D-7 under the image.")

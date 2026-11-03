@@ -1,15 +1,16 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { isOverdue, useIssues, type Issue } from '@/components/issues/issue-data'
-import { issueSearchText, sortIssues, validateIssuesSearch } from '@/components/issues/issue-filters'
+import { isOverdue, useIssuePage, type Issue } from '@/components/issues/issue-data'
+import { ISSUE_FILTER_KEYS, validateIssuesSearch } from '@/components/issues/issue-filters'
 import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { useIssueList } from '@/components/issues/use-issue-list'
-import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { ListFrame, ListHeader, ListPager } from '@/components/list/list-frame'
+import { listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { formatDate } from '@/i18n/format'
+import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/issues/')({
@@ -21,21 +22,26 @@ function IssuesPage() {
   const { t } = useTranslation()
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const issues = useIssues()
+  // The server filters, searches, sorts and pages. The text search waits for a pause in typing.
+  const q = useDebounced(search.q, 200)
+  const params = serverParams({ ...search, q }, ISSUE_FILTER_KEYS)
+  const issues = useIssuePage(params)
   const { label, ...list } = useIssueList()
 
-  // Filters change often, so they replace the history entry instead of adding one.
-  const setSearch = (update: (prev: ListSearch) => ListSearch) => void navigate({ search: update, replace: true })
+  // Filters change often, so they replace the history entry instead of adding one. A new filter starts at the first page.
+  const setSearch = (update: (prev: ListSearch) => ListSearch) =>
+    void navigate({ search: (prev) => ({ ...update(prev), offset: undefined }), replace: true })
+  const setOffset = (offset: number) => void navigate({ search: (prev) => ({ ...prev, offset: offset || undefined }) })
 
-  const all = issues.data ?? []
-  const shown = sortIssues(applyFilters(all, search, list.fields, issueSearchText), search)
+  const shown = issues.data?.items ?? []
+  const total = issues.data?.total ?? 0
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
       <h1 className="sr-only">{t('page.issues')}</h1>
 
       {/* No "New issue" button: monitoring opens issues, or a reviewer raises one from a material page. */}
-      <ListToolbar items={all} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('issues.searchPlaceholder')} />
+      <ListToolbar facets={issues.data?.facets} {...list} search={search} setSearch={setSearch} searchPlaceholder={t('issues.searchPlaceholder')} />
 
       <ListFrame
         status={issues.status}
@@ -55,7 +61,8 @@ function IssuesPage() {
             { className: col.owner },
           ]}
         />
-        <ul>
+        {/* Dimmed while the next page or filter loads; the last one stays until then. */}
+        <ul className={cn(issues.isPlaceholderData && 'opacity-60 transition-opacity')}>
           {shown.map((issue) => (
             <li key={issue.id} className="border-b">
               <IssueRow issue={issue} sourceLabel={label('source', issue.source)} />
@@ -63,6 +70,9 @@ function IssuesPage() {
           ))}
         </ul>
       </ListFrame>
+      {issues.data && (
+        <ListPager total={total} offset={search.offset ?? 0} pageSize={PAGE_SIZE} countText={t('issues.count', { count: total })} onOffset={setOffset} />
+      )}
     </div>
   )
 }

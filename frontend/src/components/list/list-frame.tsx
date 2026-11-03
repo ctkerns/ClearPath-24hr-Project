@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,39 @@ export function ListHeader({ columns }: { columns: { label?: string; className: 
   return (
     <div aria-hidden="true" className="flex h-8 items-center gap-3 border-b bg-muted px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
       {columns.map((c, i) => <span key={i} className={c.className}>{c.label}</span>)}
+    </div>
+  )
+}
+
+/**
+ * Below a list that pages on the server: how many items match ("132 materials"), which rows show, and
+ * Previous and Next. `countText` is the translated count, for example t('materials.count', { count }).
+ */
+export function ListPager({ total, offset, pageSize, countText, onOffset }: {
+  total: number
+  offset: number
+  pageSize: number
+  countText: string
+  onOffset: (offset: number) => void
+}) {
+  const { t } = useTranslation()
+  const last = Math.min(offset + pageSize, total)
+  return (
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span aria-live="polite">{countText}</span>
+      {total > pageSize && (
+        <nav aria-label={t('list.pages')} className="ml-auto flex items-center gap-1">
+          <span className="mr-1 tabular-nums">{t('list.range', { from: offset + 1, to: last, total })}</span>
+          <Button variant="outline" size="icon" className="size-7" disabled={offset === 0} onClick={() => onOffset(Math.max(0, offset - pageSize))}>
+            <ChevronLeft className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">{t('list.previous')}</span>
+          </Button>
+          <Button variant="outline" size="icon" className="size-7" disabled={last >= total} onClick={() => onOffset(offset + pageSize)}>
+            <ChevronRight className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">{t('list.next')}</span>
+          </Button>
+        </nav>
+      )}
     </div>
   )
 }

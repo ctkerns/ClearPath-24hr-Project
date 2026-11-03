@@ -4,20 +4,13 @@ Each group returns a few results. A result shows only what the viewer could open
 follow material_access.visible (affiliates see only their own company), and the library is for
 internal users only, like the library API.
 
-Matching, in Postgres:
-- Full-text search on titles with the `english` configuration, so "loans" finds "loan" and
-  "approved" finds "approval". websearch_to_tsquery accepts any user text without errors.
-- Substring matching (ILIKE) for each word, so IDs like "REGZ-1026" or "CP-2026-0118" and half-typed
-  words like "summ" also match. Full-text search alone does not match parts of words or IDs.
-- No indexes: a workspace has hundreds of rows, so a scan is fast. TODO: GIN indexes (to_tsvector and
-  pg_trgm) if workspaces grow to many thousands of materials.
+Matching is in app.text_match, shared with the Materials and Issues lists.
 """
 
 import uuid
-from typing import Any
 
 from fastapi import APIRouter, Query
-from sqlalchemy import ColumnElement, and_, case, func, literal_column, or_, select
+from sqlalchemy import func, select
 
 from app.api import APIModel, SignedIn
 from app.material_access import Db, issue_visible, visible
@@ -25,12 +18,11 @@ from app.materials import expire_approvals
 from app.models import Affiliate, Role
 from app.models.library import BlockKind, BuildingBlock, Disclosure, Rule
 from app.models.materials import Channel, Issue, Material, MaterialStatus
+from app.text_match import Terms
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 LIMIT = 6  # results per group
-MAX_WORDS = 8
-CONFIG = literal_column("'english'::regconfig")
 
 
 class SearchMaterial(APIModel):
@@ -65,35 +57,6 @@ class SearchResults(APIModel):
     rules: list[SearchRef] = []
     disclosures: list[SearchRef] = []
     building_blocks: list[SearchBlock] = []
-
-
-def like_escape(value: str) -> str:
-    """So that % and _ in the query are plain characters in a LIKE pattern."""
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-
-
-class Terms:
-    """The query, ready for SQL."""
-
-    def __init__(self, q: str):
-        self.q = q
-        self.words = q.split()[:MAX_WORDS]
-        self.tsquery = func.websearch_to_tsquery(CONFIG, q)
-
-    def match(self, doc: ColumnElement[Any], *fields: ColumnElement[Any]) -> tuple[ColumnElement[bool], ColumnElement[Any]]:
-        """WHERE clause and rank: the full-text search on `doc`, or every word inside one of `fields`."""
-        vector = func.to_tsvector(CONFIG, doc)
-        haystack = func.concat_ws(" ", *fields)  # skips nulls
-        words = and_(*(haystack.ilike(f"%{like_escape(w)}%", escape="\\") for w in self.words))
-        return or_(vector.op("@@")(self.tsquery), words), func.ts_rank(vector, self.tsquery)
-
-    def id_rank(self, column: ColumnElement[Any]) -> ColumnElement[int]:
-        """2 for the exact ID, 1 for an ID that starts with the query, else 0."""
-        return case(
-            (func.lower(column) == self.q.lower(), 2),
-            (column.ilike(f"{like_escape(self.q)}%", escape="\\"), 1),
-            else_=0,
-        )
 
 
 @router.get("", response_model_exclude_none=True)

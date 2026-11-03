@@ -2,11 +2,11 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { FileArchive, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ListFrame, ListHeader } from '@/components/list/list-frame'
-import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
+import { ListFrame, ListHeader, ListPager } from '@/components/list/list-frame'
+import { listFilters, listRowClass, PAGE_SIZE, serverParams, withoutFilters, type ListSearch } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
-import { daysUntil, useMaterials, type Material } from '@/components/materials/material-data'
-import { materialSearchText, sortMaterials, validateMaterialsSearch } from '@/components/materials/material-filters'
+import { daysUntil, useMaterialPage, type Material } from '@/components/materials/material-data'
+import { MATERIAL_FILTER_KEYS, validateMaterialsSearch } from '@/components/materials/material-filters'
 import { RegulatorExportDialog } from '@/components/materials/regulator-export-dialog'
 import { ChannelIcon, GroupApprovals, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useMaterialList } from '@/components/materials/use-material-list'
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
 import { useViewer } from '@/lib/session'
+import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/materials/')({
@@ -26,18 +27,23 @@ function MaterialsPage() {
   const { t } = useTranslation()
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const materials = useMaterials()
+  // The server filters, searches, sorts and pages. The text search waits for a pause in typing.
+  const q = useDebounced(search.q, 200)
+  const params = serverParams({ ...search, q }, MATERIAL_FILTER_KEYS)
+  const materials = useMaterialPage(params)
   const list = useMaterialList()
   const viewer = useViewer()
   // PRD section 4: Viewers (auditors) and higher run regulator exports; affiliates do not.
   const canExport = viewer.role !== 'affiliate'
   const [exporting, setExporting] = useState(false)
 
-  // Filters change often, so they replace the history entry instead of adding one.
-  const setSearch = (update: (prev: ListSearch) => ListSearch) => void navigate({ search: update, replace: true })
+  // Filters change often, so they replace the history entry instead of adding one. A new filter starts at the first page.
+  const setSearch = (update: (prev: ListSearch) => ListSearch) =>
+    void navigate({ search: (prev) => ({ ...update(prev), offset: undefined }), replace: true })
+  const setOffset = (offset: number) => void navigate({ search: (prev) => ({ ...prev, offset: offset || undefined }) })
 
-  const all = materials.data ?? []
-  const shown = sortMaterials(applyFilters(all, search, list.fields, materialSearchText), search)
+  const shown = materials.data?.items ?? []
+  const total = materials.data?.total ?? 0
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
@@ -45,7 +51,7 @@ function MaterialsPage() {
       <h1 className="sr-only">{t('page.materials')}</h1>
 
       <ListToolbar
-        items={all}
+        facets={materials.data?.facets}
         {...list}
         search={search}
         setSearch={setSearch}
@@ -64,7 +70,13 @@ function MaterialsPage() {
           </>
         }
       />
-      {canExport && <RegulatorExportDialog shownIds={shown.map((m) => m.id)} open={exporting} onClose={() => setExporting(false)} />}
+      {canExport && (
+        <RegulatorExportDialog
+          shown={{ filters: listFilters(search, MATERIAL_FILTER_KEYS), count: total }}
+          open={exporting}
+          onClose={() => setExporting(false)}
+        />
+      )}
 
       <ListFrame
         status={materials.status}
@@ -86,8 +98,20 @@ function MaterialsPage() {
             { className: col.owner },
           ]}
         />
-        <Rows materials={shown} />
+        {/* Dimmed while the next page or filter loads; the last one stays until then. */}
+        <div className={cn(materials.isPlaceholderData && 'opacity-60 transition-opacity')}>
+          <Rows materials={shown} />
+        </div>
       </ListFrame>
+      {materials.data && (
+        <ListPager
+          total={total}
+          offset={search.offset ?? 0}
+          pageSize={PAGE_SIZE}
+          countText={t('materials.count', { count: total })}
+          onOffset={setOffset}
+        />
+      )}
     </div>
   )
 }

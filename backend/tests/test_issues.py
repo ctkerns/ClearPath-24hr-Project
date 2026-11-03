@@ -34,7 +34,7 @@ def due(days=3):
 
 async def test_list(client):
     await as_user(client, VIEWER)
-    rows = (await client.get("/api/issues")).json()
+    rows = (await client.get("/api/issues")).json()["items"]
     assert len(rows) == 11
     notice = next(i for i in rows if i["id"] == NOTICE_ISSUE)
     assert notice["material"] == {"id": LENDWISE_POST, "title": "Cash back card, affiliate post", "channel": "affiliate"}
@@ -45,11 +45,11 @@ async def test_list(client):
 
 async def test_affiliate_sees_only_own_issues(client):
     await as_user(client, AFFILIATE)
-    rows = (await client.get("/api/issues")).json()
+    rows = (await client.get("/api/issues")).json()["items"]
     assert {i["affiliate"] for i in rows} == {"LendWise"} and len(rows) == 2
     assert (await client.get(f"/api/issues/{DEBT_ISSUE}")).status_code == 404
     await as_user(client, OTHER_AFFILIATE)
-    assert (await client.get("/api/issues")).json() == []
+    assert (await client.get("/api/issues")).json()["items"] == []
 
 
 async def test_detail(client):
@@ -129,11 +129,11 @@ async def test_owner_changes_status(client):
     assert (await client.patch(f"/api/issues/{DEBT_ISSUE}", json={"status": "resolved"})).status_code == 400  # needs a note
     res = await client.patch(f"/api/issues/{DEBT_ISSUE}", json={"status": "resolved", "note": "Restored the approved text."})
     assert res.json()["activity"][-1] == {"at": res.json()["activity"][-1]["at"], "actor": "Sam Rivera", "text": "Restored the approved text.", "comment": True}
-    row = next(i for i in (await client.get("/api/issues")).json() if i["id"] == DEBT_ISSUE)
+    row = next(i for i in (await client.get("/api/issues")).json()["items"] if i["id"] == DEBT_ISSUE)
     assert row["status"] == "resolved" and row["resolvedAt"]
     res = await client.patch(f"/api/issues/{DEBT_ISSUE}", json={"status": "open"})
     assert res.status_code == 200
-    row = next(i for i in (await client.get("/api/issues")).json() if i["id"] == DEBT_ISSUE)
+    row = next(i for i in (await client.get("/api/issues")).json()["items"] if i["id"] == DEBT_ISSUE)
     assert "resolvedAt" not in row
 
 
@@ -195,7 +195,7 @@ async def test_other_workspace_sees_no_issues(client):
         await db.flush()
         db.add(User(workspace_id=other.id, email="boss@real.example", name="Boss", role=Role.ADMIN, password_hash=hash_password(DEMO_PASSWORD)))
     await as_user(client, "boss@real.example")
-    assert (await client.get("/api/issues")).json() == []
+    assert (await client.get("/api/issues")).json()["items"] == []
     assert (await client.get(f"/api/issues/{DEBT_ISSUE}")).status_code == 404
     assert (await client.patch(f"/api/issues/{DEBT_ISSUE}", json={"status": "in_progress"})).status_code == 404
     # A demo user cannot own an issue in another workspace, and the other way round.

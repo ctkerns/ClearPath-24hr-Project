@@ -48,7 +48,7 @@ async def test_list_for_internal_roles(client):
     await as_user(client, VIEWER)
     res = await client.get("/api/materials")
     assert res.status_code == 200
-    rows = res.json()
+    rows = res.json()["items"]
     assert len(rows) == 18
     summer = next(m for m in rows if m["id"] == SUMMER)
     assert summer["status"] == "in_review"
@@ -63,13 +63,13 @@ async def test_list_for_internal_roles(client):
 
 async def test_affiliate_sees_only_own_company(client):
     await as_user(client, AFFILIATE)
-    rows = (await client.get("/api/materials")).json()
+    rows = (await client.get("/api/materials")).json()["items"]
     assert {m["id"] for m in rows} == {LENDWISE_POST, LENDWISE_REVIEW}
     assert (await client.get(f"/api/materials/{RATERADAR}")).status_code == 404
     assert (await client.get(f"/api/materials/{SUMMER}")).status_code == 404
 
     await as_user(client, OTHER_AFFILIATE)
-    assert {m["id"] for m in (await client.get("/api/materials")).json()} == {RATERADAR}
+    assert {m["id"] for m in (await client.get("/api/materials")).json()["items"]} == {RATERADAR}
 
 
 async def test_signed_out_cannot_read(client):
@@ -126,7 +126,7 @@ async def test_submit_new_material(client):
     assert [(g["name"], g["reason"]) for g in d["groups"]] == [("Compliance", "Compliance reviews everything")]
     assert d["fields"][0] == {"label": "Subject line", "segments": ["Save more this winter"]}
     assert [e["type"] for e in d["history"]] == ["submitted", "routed", "prereview"]
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == d["id"])
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == d["id"])
     assert (row["status"], row["owner"], row["title"]) == ("in_review", "Priya Shah", "Winter savings email")
 
 
@@ -158,7 +158,7 @@ async def test_affiliate_submits_for_own_company(client):
     res = await client.post("/api/materials", json=submission(channel="affiliate", fields=[{"label": "Page text", "text": "Hi"}]))
     assert res.status_code == 201, res.text
     new_id = res.json()["id"]
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == new_id)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == new_id)
     assert (row["affiliate"], row["owner"]) == ("LendWise", "Erin Walsh")
     await as_user(client, OTHER_AFFILIATE)
     assert (await client.get(f"/api/materials/{new_id}")).status_code == 404
@@ -327,7 +327,7 @@ async def test_approve_completes_the_approval(client):
     assert d["comments"][-1]["decision"] == "approve" and "Override:" in d["comments"][-1]["body"]
     assert d["versions"][-1]["outcome"] == "approved"
     assert "Override reason" in d["history"][-1]["text"]
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["status"] == "approved"
     assert row["approvalId"] == f"CP-{datetime.now(UTC).year}-0139-v2"  # after the highest seeded number, 0138
     assert row["expiresAt"] == (datetime.now(UTC).date() + timedelta(days=90)).isoformat()
@@ -339,7 +339,7 @@ async def test_approval_uses_workspace_days(client):
     assert (await client.patch("/api/workspace", json={"approvalDays": 120})).status_code == 200
     await as_user(client, REVIEWER)
     await decide(client, SUMMER, "approve", override="ok")
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["expiresAt"] == (datetime.now(UTC).date() + timedelta(days=120)).isoformat()
 
 
@@ -367,7 +367,7 @@ async def test_request_changes_and_reject(client):
     res = await decide(client, SUMMER, "request_changes", "Add the APR disclosure.")
     assert res.status_code == 200
     assert res.json()["groups"][0]["state"] == "changes"
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["status"] == "changes_requested"
     # Not in review any more
     assert (await decide(client, SUMMER, "reject", "no")).status_code == 409
@@ -398,7 +398,7 @@ async def test_escalate(client):
     assert (await decide(client, SUMMER, "escalate", "x", group="Nobody")).status_code == 400
     # Now Mortgage waits too, so Compliance alone does not approve the item.
     await decide(client, SUMMER, "approve", override="ok")
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["status"] == "in_review"
 
 
@@ -409,7 +409,7 @@ async def test_retract_own_approval_only(client):
     res = await decide(client, SUMMER, "retract", "I missed the image text.")
     assert res.status_code == 200
     assert res.json()["groups"][0]["state"] == "waiting"
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == SUMMER)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["status"] == "in_review" and "approvalId" not in row
 
     # A Manager or Admin cannot retract someone else's approval either.
@@ -421,7 +421,7 @@ async def test_retract_live_approval(client):
     await as_user(client, MANAGER)  # Alex Chen approved the live debt ad
     res = await decide(client, DEBT, "retract", "The rate is wrong.")
     assert res.status_code == 200, res.text
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == DEBT)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == DEBT)
     assert (row["status"], row["liveStatus"]) == ("in_review", "unapproved")
     assert "approvalId" not in row
 
@@ -451,7 +451,7 @@ async def test_approval_expires_on_its_date(client):
     async with SessionLocal() as db, db.begin():
         await db.execute(update(Material).where(Material.id == APPROVED).values(expires_at=datetime.now(UTC).date()))
     await as_user(client, VIEWER)
-    row = next(m for m in (await client.get("/api/materials")).json() if m["id"] == APPROVED)
+    row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == APPROVED)
     assert row["status"] == "expired"
 
 
@@ -513,7 +513,7 @@ async def test_other_workspace_sees_nothing(client):
             )
         )
     await as_user(client, "admin@real.example")
-    assert (await client.get("/api/materials")).json() == []
+    assert (await client.get("/api/materials")).json()["items"] == []
     assert (await client.get(f"/api/materials/{SUMMER}")).status_code == 404
     assert (await decide(client, SUMMER, "reject", "x")).status_code == 404
     assert (await client.post(f"/api/materials/{SUMMER}/comments", json={"body": "x"})).status_code == 404

@@ -16,13 +16,28 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { activePreset, filterValues, withoutFilters, type FilterField, type ListSearch, type Preset, type SortOption } from './list-filters'
+import {
+  activePreset,
+  countFacets,
+  countItems,
+  filterValues,
+  withoutFilters,
+  type FacetField,
+  type Facets,
+  type FilterField,
+  type ListField,
+  type ListSearch,
+  type OptionCount,
+  type Preset,
+  type SortOption,
+} from './list-filters'
 
 type SetSearch = (update: (prev: ListSearch) => ListSearch) => void
 
-type ToolbarProps<T> = {
-  items: T[]
-  fields: FilterField<T>[]
+/** The menu counts: from the items, for a list that filters in the browser, or from the server's facets. */
+type Counted<T> = { items: T[]; fields: FilterField<T>[]; facets?: never } | { facets: Facets | undefined; fields: FacetField[]; items?: never }
+
+type ToolbarProps<T> = Counted<T> & {
   presets: Preset[]
   sorts: SortOption[]
   defaultSort: string
@@ -34,9 +49,12 @@ type ToolbarProps<T> = {
 }
 
 /** Quick views, text filter, Filter menu, Sort menu, and the active filter chips. Same on every list screen. */
-export function ListToolbar<T>({ items, fields, presets, sorts, defaultSort, search, setSearch, searchPlaceholder, action }: ToolbarProps<T>) {
+export function ListToolbar<T>(props: ToolbarProps<T>) {
+  const { fields, presets, sorts, defaultSort, search, setSearch, searchPlaceholder, action } = props
   const { t } = useTranslation()
   const keys = fields.map((f) => f.key)
+  const optionsOf = (field: ListField): OptionCount[] =>
+    props.items ? countItems(field as FilterField<T>, props.items) : countFacets(field, props.facets, filterValues(search, field.key))
   const preset = activePreset(search, presets, keys)
   const sort = search.sort ?? defaultSort
 
@@ -87,7 +105,7 @@ export function ListToolbar<T>({ items, fields, presets, sorts, defaultSort, sea
                     {field.label}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="max-h-80 min-w-52 overflow-y-auto">
-                    <FilterOptionItems field={field} items={items} search={search} setSearch={setSearch} />
+                    <FilterOptionItems field={field} options={optionsOf(field)} search={search} setSearch={setSearch} />
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               ))}
@@ -112,13 +130,13 @@ export function ListToolbar<T>({ items, fields, presets, sorts, defaultSort, sea
         </div>
       </div>
 
-      <ActiveFilters fields={fields} items={items} search={search} setSearch={setSearch} />
+      <ActiveFilters fields={fields} optionsOf={optionsOf} search={search} setSearch={setSearch} />
     </div>
   )
 }
 
 /** Checkbox list of the values for one field, with a count of matching items beside each. */
-function FilterOptionItems<T>({ field, items, search, setSearch }: { field: FilterField<T>; items: T[]; search: ListSearch; setSearch: SetSearch }) {
+function FilterOptionItems({ field, options, search, setSearch }: { field: ListField; options: OptionCount[]; search: ListSearch; setSearch: SetSearch }) {
   const selected = filterValues(search, field.key)
   const toggle = (value: string) =>
     setSearch((prev) => {
@@ -126,7 +144,7 @@ function FilterOptionItems<T>({ field, items, search, setSearch }: { field: Filt
       const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
       return { ...prev, [field.key]: next.length ? next.join(',') : undefined }
     })
-  return field.options(items).map((value) => (
+  return options.map(({ value, count }) => (
     <DropdownMenuCheckboxItem
       key={value}
       checked={selected.includes(value)}
@@ -137,14 +155,19 @@ function FilterOptionItems<T>({ field, items, search, setSearch }: { field: Filt
     >
       {field.renderOption ? field.renderOption(value) : field.optionLabel(value)}
       <span className="ml-auto pl-3 text-xs text-muted-foreground tabular-nums">
-        {items.filter((item) => field.values(item).includes(value)).length}
+        {count}
       </span>
     </DropdownMenuCheckboxItem>
   ))
 }
 
 /** One chip per filtered field: "Status | is any of | Open, In progress | ×". Click the values to change them. */
-function ActiveFilters<T>({ fields, items, search, setSearch }: { fields: FilterField<T>[]; items: T[]; search: ListSearch; setSearch: SetSearch }) {
+function ActiveFilters({ fields, optionsOf, search, setSearch }: {
+  fields: ListField[]
+  optionsOf: (field: ListField) => OptionCount[]
+  search: ListSearch
+  setSearch: SetSearch
+}) {
   const { t } = useTranslation()
   const active = fields.filter((f) => filterValues(search, f.key).length)
   if (!active.length) return null
@@ -168,7 +191,7 @@ function ActiveFilters<T>({ fields, items, search, setSearch }: { fields: Filter
                 {summary}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="max-h-80 min-w-52 overflow-y-auto">
-                <FilterOptionItems field={field} items={items} search={search} setSearch={setSearch} />
+                <FilterOptionItems field={field} options={optionsOf(field)} search={search} setSearch={setSearch} />
               </DropdownMenuContent>
             </DropdownMenu>
             <button

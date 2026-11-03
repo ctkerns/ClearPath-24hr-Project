@@ -1,11 +1,11 @@
 import { Building2, CalendarClock, Megaphone, ScanEye, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { FilterField, Preset, SortOption } from '@/components/list/list-filters'
-import { CHANNELS, type Channel } from '@/components/materials/material-data'
+import type { FacetField, Preset, SortOption } from '@/components/list/list-filters'
+import type { Channel } from '@/components/materials/material-data'
 import { ChannelIcon, PersonAvatar, StatusFieldIcon } from '@/components/materials/material-meta'
 import { SeverityLabel, type RiskLevel } from '@/components/ui/risk-tag'
-import { DUE_BUCKETS, ISSUE_SOURCES, ISSUE_STATUSES, SEVERITIES, type DueBucket, type Issue, type IssueSource, type IssueStatus } from './issue-data'
-import { ISSUE_FILTER_KEYS, ISSUE_PRESETS, ISSUE_SORTS, issueValues, type IssueFilterKey } from './issue-filters'
+import type { DueBucket, IssueSource, IssueStatus } from './issue-data'
+import { ISSUE_FILTER_KEYS, ISSUE_FIXED, ISSUE_PRESETS, ISSUE_SORTS, type IssueFilterKey } from './issue-filters'
 import { IssueStatusPill, SeverityFieldIcon } from './issue-meta'
 
 const icons = {
@@ -32,9 +32,6 @@ export function useIssueList() {
       default: return v
     }
   }
-  const fixed: Partial<Record<IssueFilterKey, readonly string[]>> = {
-    status: ISSUE_STATUSES, severity: SEVERITIES, due: DUE_BUCKETS, source: ISSUE_SOURCES, channel: CHANNELS,
-  }
   const render: Partial<Record<IssueFilterKey, (v: string) => React.ReactNode>> = {
     status: (v) => <IssueStatusPill status={v as IssueStatus} />,
     severity: (v) => <SeverityLabel level={v as RiskLevel} />,
@@ -42,12 +39,11 @@ export function useIssueList() {
     owner: (v) => <><PersonAvatar name={v} className="size-5 text-[9px]" />{v}</>,
   }
 
-  const fields: FilterField<Issue>[] = ISSUE_FILTER_KEYS.map((key) => ({
+  const fields: FacetField[] = ISSUE_FILTER_KEYS.map((key) => ({
     key,
     label: t(`issues.field.${key}`),
     icon: icons[key],
-    values: (i) => issueValues(i, key),
-    options: (items) => [...(fixed[key] ?? [...new Set(items.flatMap((i) => issueValues(i, key)))].sort())],
+    fixed: ISSUE_FIXED[key],
     optionLabel: (v) => label(key, v),
     renderOption: render[key],
   }))

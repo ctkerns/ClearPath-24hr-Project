@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import type { ListPage } from '@/components/list/list-filters'
 import type { Channel } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 import { hasRole } from '@/components/settings/user-data'
@@ -21,7 +22,7 @@ export type IssueSource = (typeof ISSUE_SOURCES)[number]
 export const ISSUE_KINDS = ['changed', 'unapproved', 'condition_broken', 'expired_approval'] as const
 export type IssueKind = (typeof ISSUE_KINDS)[number]
 
-/** Due date groups for the filter. Resolved issues are in none of them. */
+/** Due date groups for the filter, counted on the server: past due, due within 7 days, later. Resolved issues are in none. */
 export const DUE_BUCKETS = ['overdue', 'week', 'later'] as const
 export type DueBucket = (typeof DUE_BUCKETS)[number]
 
@@ -55,21 +56,26 @@ export type Issue = {
 export const canManageIssue = (viewer: SessionUser, issue: Issue) =>
   hasRole(viewer.role, 'manager') || (viewer.id === issue.ownerId && (viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')))
 
+/** Every issue the viewer may see, unfiltered, for the dashboard and the issue page. The Issues list uses useIssuePage. */
 export function useIssues() {
   return useQuery({
     queryKey: ['issues'],
-    queryFn: () => api<Issue[]>('GET', '/issues'),
+    queryFn: () => api<ListPage<Issue>>('GET', '/issues'),
+    select: (page) => page.items,
+  })
+}
+
+/** One page of the Issues list, filtered, searched and sorted on the server. `params` is from serverParams. */
+export function useIssuePage(params: string) {
+  return useQuery({
+    queryKey: ['issues', 'page', params],
+    queryFn: () => api<ListPage<Issue>>('GET', `/issues?${params}`),
+    placeholderData: keepPreviousData,
   })
 }
 
 /** True when an unresolved issue is past its due date. */
 export const isOverdue = (issue: Issue) => issue.status !== 'resolved' && Date.parse(issue.dueAt) < Date.now()
-
-export function dueBucket(issue: Issue): DueBucket | undefined {
-  if (issue.status === 'resolved') return undefined
-  if (isOverdue(issue)) return 'overdue'
-  return Date.parse(issue.dueAt) - Date.now() <= 7 * 86_400_000 ? 'week' : 'later'
-}
 
 /** One remediation step (PRD F12). The kind decides which button the step offers. */
 export type IssueAction = {

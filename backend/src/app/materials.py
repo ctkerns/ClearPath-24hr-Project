@@ -7,19 +7,20 @@ never on a version they submitted (R1). Issues are in issues.py; this module's r
 
 import uuid
 from datetime import date, datetime, timedelta
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import issues, prereview
+from app import issues, material_list, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
 from app.config import settings
+from app.listing import Facets, total_of
 from app.material_access import (
     Db,
     Reviewer,
@@ -29,6 +30,7 @@ from app.material_access import (
     now,
     visible,
 )
+from app.material_list import MaterialFilters
 from app.models import ReviewerGroup, Role, User, UserStatus, Workspace
 from app.models.audit import AuditEvent
 from app.models.materials import (
@@ -144,13 +146,26 @@ async def expire_approvals(db: AsyncSession, viewer: User) -> None:
         await db.commit()
 
 
+class MaterialPage(APIModel):
+    """One page of the list, the number of materials that match, and the counts for the filter menus."""
+
+    items: list[MaterialOut]
+    total: int
+    facets: Facets | None = None
+
+
 @items.get("", response_model_exclude_none=True)
-async def list_materials(viewer: SignedIn, db: Db) -> list[MaterialOut]:
+async def list_materials(viewer: SignedIn, db: Db, p: Annotated[MaterialFilters, Query()]) -> MaterialPage:
+    """Filters, search, sort and paging are in app.material_list; the parameters are in app.listing."""
     await expire_approvals(db, viewer)
-    rows = await db.scalars(
-        select(Material).where(*visible(viewer)).options(*LIST_LOAD).order_by(Material.updated_at.desc())
+    query = material_list.page_query(viewer, p)
+    rows = list(await db.scalars(query.options(*LIST_LOAD)))
+    unpaged = p.offset == 0 and (p.limit is None or len(rows) < p.limit)
+    return MaterialPage(
+        items=[MaterialOut.of(m) for m in rows],
+        total=len(rows) if unpaged else await total_of(db, query.limit(None).offset(None)),
+        facets=await material_list.facets_of(db, viewer, p) if p.facets else None,
     )
-    return [MaterialOut.of(m) for m in rows]
 
 
 class FindingOut(APIModel):
