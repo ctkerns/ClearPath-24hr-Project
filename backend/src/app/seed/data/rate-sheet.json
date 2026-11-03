@@ -20,7 +20,7 @@
         {
           "key": "credit_card.intro",
           "product": "credit_card",
-          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers. Balance transfers up to 80% of the credit limit",
           "rate": "apr",
           "min": 0,
           "max": 0,
@@ -29,7 +29,7 @@
         {
           "key": "credit_card.ongoing",
           "product": "credit_card",
-          "offer": "Ongoing APR after the intro period, variable",
+          "offer": "Ongoing APR after the intro period, variable. Rewards: 1.5% cash back on every purchase, 3% on groceries",
           "rate": "apr",
           "min": 0.1724,
           "max": 0.2824,
@@ -119,7 +119,7 @@
         {
           "key": "credit_card.intro",
           "product": "credit_card",
-          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers. Balance transfers up to 80% of the credit limit",
           "rate": "apr",
           "min": 0,
           "max": 0,
@@ -128,7 +128,7 @@
         {
           "key": "credit_card.ongoing",
           "product": "credit_card",
-          "offer": "Ongoing APR after the intro period, variable",
+          "offer": "Ongoing APR after the intro period, variable. Rewards: 1.5% cash back on every purchase, 3% on groceries",
           "rate": "apr",
           "min": 0.1749,
           "max": 0.2849,
@@ -218,7 +218,7 @@
         {
           "key": "credit_card.intro",
           "product": "credit_card",
-          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers. Balance transfers up to 80% of the credit limit",
           "rate": "apr",
           "min": 0,
           "max": 0,
@@ -227,7 +227,7 @@
         {
           "key": "credit_card.ongoing",
           "product": "credit_card",
-          "offer": "Ongoing APR after the intro period, variable",
+          "offer": "Ongoing APR after the intro period, variable. Rewards: 1.5% cash back on every purchase, 3% on groceries",
           "rate": "apr",
           "min": 0.1749,
           "max": 0.2849,
@@ -317,7 +317,7 @@
         {
           "key": "credit_card.intro",
           "product": "credit_card",
-          "offer": "Intro APR, first 12 months on purchases and balance transfers",
+          "offer": "Intro APR, first 12 months on purchases and balance transfers. Balance transfers up to 80% of the credit limit",
           "rate": "apr",
           "min": 0,
           "max": 0,
@@ -326,7 +326,7 @@
         {
           "key": "credit_card.ongoing",
           "product": "credit_card",
-          "offer": "Ongoing APR after the intro period, variable",
+          "offer": "Ongoing APR after the intro period, variable. Rewards: 1.5% cash back on every purchase, 3% on groceries",
           "rate": "apr",
           "min": 0.1749,
           "max": 0.2849,

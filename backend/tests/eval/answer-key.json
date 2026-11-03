@@ -235,6 +235,29 @@
         "text": "Free money",
         "layer": "code"
       }
+    ],
+    "offer-cash-bonus-card": [
+      {
+        "ruleId": "OFFER-01",
+        "text": "$500 cash bonus",
+        "layer": "ai"
+      }
+    ],
+    "offer-on-sheet-card": [],
+    "offer-term-not-on-sheet-loan": [
+      {
+        "ruleId": "OFFER-01",
+        "text": "up to 84 months",
+        "layer": "ai"
+      }
+    ],
+    "earlier-change-made": [],
+    "earlier-change-not-made": [
+      {
+        "ruleId": "UDAAP-03",
+        "text": "every member qualifies",
+        "layer": "ai"
+      }
     ]
   }
 }
