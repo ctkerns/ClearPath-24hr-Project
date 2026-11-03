@@ -83,5 +83,22 @@
     "demoLabel": "Demo workspace",
     "demoNote": "Seeded data. Integrations are off, so nothing here reaches a real platform.",
     "label": "Workspace"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "openUnread": "Notifications, {{count}} unread",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet.",
+    "loadError": "Notifications did not load. Reload the page to try again.",
+    "unread": "Unread",
+    "type": {
+      "assignment": "<0>{{material}}</0> is waiting for your review.",
+      "comment": "<0>{{actor}}</0> commented on <0>{{material}}</0>.",
+      "escalation": "<0>{{material}}</0> was escalated. {{group}} must now approve it.",
+      "issue": "New issue on <0>{{material}}</0>: {{summary}}.",
+      "decision_approved": "<0>{{actor}}</0> approved <0>{{material}}</0>.",
+      "decision_changes_requested": "<0>{{actor}}</0> requested changes on <0>{{material}}</0>.",
+      "decision_rejected": "<0>{{actor}}</0> rejected <0>{{material}}</0>."
+    }
   }
 }

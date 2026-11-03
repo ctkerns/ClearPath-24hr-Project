@@ -1,0 +1,8 @@
+[
+  { "id": "n-106", "type": "assignment", "materialId": "MAT-0142", "material": "Summer personal loan, Meta feed ad", "createdAt": "2026-11-02T18:40:00Z", "read": false },
+  { "id": "n-105", "type": "comment", "actor": "Dana Ortiz", "materialId": "MAT-0142", "material": "Summer personal loan, Meta feed ad", "createdAt": "2026-11-02T16:05:00Z", "read": false },
+  { "id": "n-104", "type": "issue", "issueId": "ISS-0031", "material": "Cash back card, affiliate post", "summary": "live page is missing disclosure D-4", "createdAt": "2026-11-02T09:12:00Z", "read": false },
+  { "id": "n-103", "type": "escalation", "materialId": "MAT-0139", "material": "Mortgage prequal landing page", "group": "Legal", "createdAt": "2026-11-01T21:30:00Z", "read": true },
+  { "id": "n-102", "type": "decision_changes_requested", "actor": "Maya Ruiz", "materialId": "MAT-0137", "material": "Balance transfer email", "createdAt": "2026-10-31T15:00:00Z", "read": true },
+  { "id": "n-101", "type": "decision_approved", "actor": "Sam Lee", "materialId": "MAT-0131", "material": "Cash back card, affiliate post", "createdAt": "2026-10-29T13:45:00Z", "read": true }
+]

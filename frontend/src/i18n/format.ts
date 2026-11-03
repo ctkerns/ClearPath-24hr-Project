@@ -25,3 +25,18 @@ export function formatDate(value: Date | string | number, options: Intl.DateTime
 export function formatDateTime(value: Date | string | number) {
   return formatDate(value, { dateStyle: 'medium', timeStyle: 'short' })
 }
+
+/** "5 minutes ago", "yesterday", "3 days ago": for recent events such as notifications. */
+export function formatRelativeTime(value: Date | string | number, now: number = Date.now()) {
+  const seconds = Math.round((new Date(value).getTime() - now) / 1000)
+  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' })
+  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['second', 60], ['minute', 60], ['hour', 24], ['day', 7], ['week', 4.35], ['month', 12], ['year', Infinity],
+  ]
+  let amount = seconds
+  for (const [unit, size] of steps) {
+    if (Math.abs(amount) < size) return rtf.format(Math.round(amount), unit)
+    amount /= size
+  }
+  return rtf.format(Math.round(amount), 'year')
+}
