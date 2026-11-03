@@ -1,9 +1,10 @@
-import { createFileRoute, Link, Outlet, type LinkProps } from '@tanstack/react-router'
-import { ChartColumn, CircleDot, Files, House, LibraryBig, type LucideIcon } from 'lucide-react'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { activeIndicatorClass, useActiveIndicator } from '@/lib/use-active-indicator'
 import { AppLogo } from '@/components/app-logo'
 import { GlobalSearch } from '@/components/global-search'
+import { useMainNavLinks } from '@/components/main-nav-links'
+import { MobileNav } from '@/components/mobile-nav'
 import { NotificationsMenu } from '@/components/notifications-menu'
 import { UserMenu } from '@/components/user-menu'
 import { WorkspaceBand } from '@/components/workspace-band'
@@ -20,26 +21,23 @@ const navLinkClass =
   'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring ' +
   '[&.active]:font-medium [&.active]:text-foreground'
 
+// Widths: lg (1024px) and up shows the links in the bar. Below lg they move into MobileNav,
+// and below lg the search box becomes an icon (see GlobalSearch).
 function AppLayout() {
   const { t } = useTranslation()
   const { containerRef, indicatorRef } = useActiveIndicator<HTMLElement>()
-  const mainLinks: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
-    { to: '/home', label: t('nav.home'), icon: House },
-    { to: '/materials', label: t('nav.materials'), icon: Files },
-    { to: '/issues', label: t('nav.issues'), icon: CircleDot },
-    { to: '/library', label: t('nav.library'), icon: LibraryBig },
-    { to: '/metrics', label: t('nav.metrics'), icon: ChartColumn },
-  ]
+  const mainLinks = useMainNavLinks()
 
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background">
         <WorkspaceBand />
-        <div className="flex h-12 items-center gap-6 px-4 sm:px-6">
+        <div className="flex h-12 items-center gap-2 px-3 sm:px-6 lg:gap-6">
+          <MobileNav />
           <Link to="/home" aria-label={t('nav.home')} className="rounded-md focus-visible:outline-2 focus-visible:outline-ring">
             <AppLogo />
           </Link>
-          <nav ref={containerRef} aria-label={t('nav.main')} className="relative flex h-full min-w-0 flex-1 overflow-x-auto">
+          <nav ref={containerRef} aria-label={t('nav.main')} className="relative hidden h-full min-w-0 flex-1 lg:flex">
             {mainLinks.map((link) => (
               <Link key={link.to} to={link.to} className={navLinkClass}>
                 <link.icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
@@ -48,7 +46,7 @@ function AppLayout() {
             ))}
             <span ref={indicatorRef} aria-hidden="true" className={activeIndicatorClass} />
           </nav>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <GlobalSearch />
             <NotificationsMenu />
             <UserMenu />

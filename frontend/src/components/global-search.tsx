@@ -106,12 +106,12 @@ export function GlobalSearch() {
         className={cn(
           'flex h-8 items-center gap-2 rounded-md border border-input bg-muted px-2.5 text-muted-foreground transition-colors',
           'hover:border-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring',
-          'max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0 md:w-56',
+          'max-lg:size-8 max-lg:justify-center max-lg:border-transparent max-lg:bg-transparent max-lg:px-0 lg:w-56',
         )}
       >
         <Search className="size-4 shrink-0" strokeWidth={1.75} />
-        <span className="flex-1 text-left max-md:hidden">{t('search.placeholderShort')}</span>
-        <kbd className="rounded-sm border bg-background px-1 font-mono text-[10.5px] leading-4 max-md:hidden">{shortcut}</kbd>
+        <span className="flex-1 text-left max-lg:hidden">{t('search.placeholderShort')}</span>
+        <kbd className="rounded-sm border bg-background px-1 font-mono text-[10.5px] leading-4 max-lg:hidden">{shortcut}</kbd>
       </button>
 
       <CommandDialog

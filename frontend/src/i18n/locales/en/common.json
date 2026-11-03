@@ -14,7 +14,8 @@
     "settings": "Settings",
     "designSystem": "Design system",
     "signOut": "Sign out",
-    "account": "Account"
+    "account": "Account",
+    "openMenu": "Open menu"
   },
   "status": {
     "draft": "Draft",
