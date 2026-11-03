@@ -106,6 +106,7 @@
     "placeholder": "Search materials, issues, rules, disclosures…",
     "placeholderShort": "Search…",
     "empty": "No results.",
+    "loading": "Searching…",
     "loadError": "Search did not load. Close it and try again.",
     "groups": {
       "actions": "Actions",

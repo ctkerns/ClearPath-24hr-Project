@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate, type LinkProps } from '@tanstack/react-router'
 import {
   BookText,
@@ -18,7 +18,10 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { api } from '@/lib/api'
 import { useViewer } from '@/lib/session'
+import type { Channel } from '@/components/materials/material-data'
+import type { BlockKind } from '@/components/library/block-data'
 import { settingsTabsFor } from '@/components/settings/settings-tabs'
 import {
   CommandDialog,
@@ -33,17 +36,29 @@ import { StatusPill, type MaterialStatus } from '@/components/ui/status-pill'
 import { cn } from '@/lib/utils'
 
 // Global search and jump-to palette (Cmd+K on Mac, Ctrl+K on Windows and Linux).
-// TODO: replace SEARCH_URL with a server search endpoint that takes the query and the user's role,
-// so results respect permissions (affiliates see only their own items, PRD R4).
-// Until then it loads a small seeded index and filters it in the browser.
-const SEARCH_URL = '/demo/search.json'
+// The server searches (GET /api/search), so results show only what the viewer may open (PRD R4):
+// affiliates see only their own company's materials and issues, and no library.
 
-type SearchIndex = {
-  materials: { id: string; title: string; channel: string; status: MaterialStatus; approvalId?: string }[]
-  issues: { id: string; title: string; material: string }[]
+type SearchResults = {
+  materials: { id: string; title: string; channel: Channel; affiliate?: string; status: MaterialStatus; approvalId?: string }[]
+  /** material is absent when the issue has no material (unapproved content found live). */
+  issues: { id: string; title: string; material?: string }[]
   rules: { id: string; title: string }[]
   disclosures: { id: string; title: string }[]
-  buildingBlocks: { id: string; title: string }[]
+  buildingBlocks: { id: string; title: string; kind: BlockKind }[]
+}
+
+/** The server ignores shorter queries. */
+const MIN_QUERY = 2
+
+/** `value`, after it has not changed for `ms`, so search does not run on every key press. */
+function useDebounced<T>(value: T, ms: number) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), ms)
+    return () => clearTimeout(id)
+  }, [value, ms])
+  return debounced
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
@@ -67,22 +82,21 @@ export function GlobalSearch() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const index = useQuery({
-    queryKey: ['search-index'],
-    queryFn: async (): Promise<SearchIndex> => {
-      const res = await fetch(SEARCH_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    enabled: open,
-    staleTime: 5 * 60_000,
+  const term = query.trim().replace(/\s+/g, ' ')
+  const debounced = useDebounced(term, 200)
+  const results = useQuery({
+    queryKey: ['search', debounced],
+    queryFn: () => api<SearchResults>('GET', `/search?q=${encodeURIComponent(debounced)}`),
+    enabled: open && debounced.length >= MIN_QUERY,
+    placeholderData: keepPreviousData, // keep the last results while the next ones load
+    staleTime: 30_000,
   })
 
-  const go = (to: LinkProps['to'], params?: Record<string, string>) => {
+  const go = (to: LinkProps['to'], params?: Record<string, string>, search?: Record<string, string>) => {
     setOpen(false)
     setQuery('')
     // Each call site passes params that match its route.
-    void navigate({ to, params } as Parameters<typeof navigate>[0])
+    void navigate({ to, params, search } as Parameters<typeof navigate>[0])
   }
 
   const pages: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
@@ -96,8 +110,11 @@ export function GlobalSearch() {
   ]
 
   const shortcut = isMac ? '⌘K' : 'Ctrl K'
-  const typing = query.trim().length > 0
-  const data = index.data
+  const typing = term.length > 0
+  // The palette does not filter by itself (shouldFilter={false}): the server filters the results, and pages are filtered here.
+  const shownPages = typing ? pages.filter((p) => `page ${p.label}`.toLowerCase().includes(term.toLowerCase())) : pages
+  const data = term.length >= MIN_QUERY ? results.data : undefined
+  const library = data ? [...data.rules, ...data.disclosures, ...data.buildingBlocks] : []
 
   return (
     <>
@@ -126,11 +143,14 @@ export function GlobalSearch() {
         title={t('search.title')}
         description={t('search.description')}
         showCloseButton={false}
+        shouldFilter={false}
         className="top-[12%] translate-y-0 sm:max-w-xl"
       >
         <CommandInput value={query} onValueChange={setQuery} placeholder={t('search.placeholder')} />
         <CommandList className="max-h-[min(60vh,26rem)]">
-          <CommandEmpty>{index.isError ? t('search.loadError') : t('search.empty')}</CommandEmpty>
+          <CommandEmpty>
+            {results.isError ? t('search.loadError') : term.length >= MIN_QUERY && !results.data ? t('search.loading') : t('search.empty')}
+          </CommandEmpty>
 
           {!typing && (
             <CommandGroup heading={t('search.groups.actions')}>
@@ -143,61 +163,63 @@ export function GlobalSearch() {
 
           {typing && data && (
             <>
-              <CommandGroup heading={t('search.groups.materials')}>
+              {data.materials.length > 0 && <CommandGroup heading={t('search.groups.materials')}>
                 {data.materials.map((m) => (
                   <CommandItem
                     key={m.id}
-                    value={`${m.title} ${m.channel} ${m.approvalId ?? ''} ${m.id}`}
+                    value={`material ${m.id}`}
                     onSelect={() => go('/materials/$materialId', { materialId: m.id })}
                   >
                     <FileText />
                     <span className="grid min-w-0 flex-1">
                       <span className="truncate">{m.title}</span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {m.approvalId && <><code>{m.approvalId}</code> · </>}{m.channel}
+                        {m.approvalId && <><code>{m.approvalId}</code> · </>}
+                        {t(`materials.channel.${m.channel}`)}{m.affiliate && ` · ${m.affiliate}`}
                       </span>
                     </span>
                     <StatusPill status={m.status} />
                   </CommandItem>
                 ))}
-              </CommandGroup>
-              <CommandGroup heading={t('search.groups.issues')}>
+              </CommandGroup>}
+              {data.issues.length > 0 && <CommandGroup heading={t('search.groups.issues')}>
                 {data.issues.map((i) => (
                   <CommandItem
                     key={i.id}
-                    value={`${i.id} ${i.title} ${i.material}`}
+                    value={`issue ${i.id}`}
                     onSelect={() => go('/issues/$issueId', { issueId: i.id })}
                   >
                     <Flag />
                     <span className="grid min-w-0 flex-1">
                       <span className="truncate">{i.title}</span>
-                      <span className="truncate text-xs text-muted-foreground"><code>{i.id}</code> · {i.material}</span>
+                      <span className="truncate text-xs text-muted-foreground"><code>{i.id}</code>{i.material && <> · {i.material}</>}</span>
                     </span>
                   </CommandItem>
                 ))}
-              </CommandGroup>
-              <CommandGroup heading={t('search.groups.library')}>
+              </CommandGroup>}
+              {library.length > 0 && <CommandGroup heading={t('search.groups.library')}>
+                {/* Each opens its library list, filtered to it. */}
                 {data.rules.map((r) => (
-                  <LibraryItem key={r.id} icon={Scale} id={r.id} title={r.title} onSelect={() => go('/library/rules')} />
+                  <LibraryItem key={r.id} value={`rule ${r.id}`} icon={Scale} title={r.title} tag={r.id} onSelect={() => go('/library/rules', undefined, { q: r.id })} />
                 ))}
                 {data.disclosures.map((d) => (
-                  <LibraryItem key={d.id} icon={BookText} id={d.id} title={d.title} onSelect={() => go('/library/disclosures')} />
+                  <LibraryItem key={d.id} value={`disclosure ${d.id}`} icon={BookText} title={d.title} tag={d.id} onSelect={() => go('/library/disclosures', undefined, { q: d.title })} />
                 ))}
                 {data.buildingBlocks.map((b) => (
-                  <LibraryItem key={b.id} icon={Puzzle} id={b.id} title={b.title} onSelect={() => go('/library/building-blocks')} />
+                  <LibraryItem key={b.id} value={`block ${b.id}`} icon={Puzzle} title={b.title} tag={t(`blocks.kind.${b.kind}`)} onSelect={() => go('/library/building-blocks', undefined, { q: b.title })} />
                 ))}
-              </CommandGroup>
+              </CommandGroup>}
             </>
           )}
 
-          <CommandGroup heading={t('search.groups.pages')}>
-            {pages.map((p) => (
+          {shownPages.length > 0 && <CommandGroup heading={t('search.groups.pages')}>
+            {shownPages.map((p) => (
               <CommandItem key={p.to} value={`page ${p.label}`} onSelect={() => go(p.to)}>
                 <p.icon />
                 {p.label}
               </CommandItem>
             ))}
-          </CommandGroup>
+          </CommandGroup>}
         </CommandList>
         <div className="flex items-center gap-3 border-t px-3 py-2 text-xs text-muted-foreground">
           <span><kbd className="font-mono">↑↓</kbd> {t('search.hints.move')}</span>
@@ -210,12 +232,12 @@ export function GlobalSearch() {
   )
 }
 
-function LibraryItem({ icon: Icon, id, title, onSelect }: { icon: LucideIcon; id: string; title: string; onSelect: () => void }) {
+function LibraryItem({ value, icon: Icon, title, tag, onSelect }: { value: string; icon: LucideIcon; title: string; tag: string; onSelect: () => void }) {
   return (
-    <CommandItem value={`${id} ${title}`} onSelect={onSelect}>
+    <CommandItem value={value} onSelect={onSelect}>
       <Icon />
       <span className="min-w-0 flex-1 truncate">{title}</span>
-      <code className="text-xs text-muted-foreground">{id}</code>
+      <code className="text-xs text-muted-foreground">{tag}</code>
     </CommandItem>
   )
 }
