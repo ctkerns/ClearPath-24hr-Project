@@ -90,6 +90,7 @@ function FixRow({ fix, numbers, state, present }: {
           )}
         </span>
       </div>
+      {fix.byAi && <AiRewriteLabel />}
       <p className="text-sm">
         {fix.op === 'replace' ? (
           <TrackedText before={fix.from} after={fix.to} />
@@ -102,6 +103,16 @@ function FixRow({ fix, numbers, state, present }: {
       </p>
       {stuck && <p role="status" className="text-xs text-risk-medium">{t('fixes.stuck', { field: fix.field })}</p>}
     </li>
+  )
+}
+
+/** A rule check found the problem; the AI wrote the new wording. */
+function AiRewriteLabel() {
+  const { t } = useTranslation()
+  return (
+    <span className="justify-self-start rounded-sm border border-dashed px-1.5 text-[10.5px] text-muted-foreground" title={t('fixes.aiRewriteHint')}>
+      {t('fixes.aiRewrite')}
+    </span>
   )
 }
 

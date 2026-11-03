@@ -19,6 +19,8 @@ export type ReviewFix = {
   to: string
   /** Where `from` starts in the field text of the current version. */
   at: number
+  /** The AI wrote this new wording for a code finding, so the panel labels it. */
+  byAi?: boolean
 }
 
 export type ReviewFixes = {
@@ -55,7 +57,7 @@ export function reviewFixes(detail: MaterialDetail, channelFields: ChannelField[
   for (const f of open) {
     const mark = marks.get(f.id)
     if (f.edit?.op === 'replace' && mark) {
-      fixes.push({ id: f.id, findings: [f], field: mark.field, op: 'replace', from: f.text, to: f.edit.text, at: mark.at })
+      fixes.push({ id: f.id, findings: [f], field: mark.field, op: 'replace', from: f.text, to: f.edit.text, at: mark.at, byAi: f.source === 'code' && f.edit.by === 'ai' })
     } else if (f.edit?.op === 'append' && appendTo) {
       const same = fixes.find((x) => x.op === 'append' && x.to === f.edit?.text)
       if (same) same.findings.push(f)

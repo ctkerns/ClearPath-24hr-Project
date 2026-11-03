@@ -179,6 +179,7 @@ class FindingEdit(APIModel):
 
     op: Literal["replace", "append"]
     text: str
+    by: Literal["ai"] | None = None  # the AI review wrote this fix for a code finding
 
 
 class FindingOut(APIModel):
