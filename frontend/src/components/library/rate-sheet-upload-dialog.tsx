@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useSave } from '@/lib/use-save'
+import { FlagPreview } from './affected-materials'
+import { useRateSheetPreview } from './impact-data'
 import { RATE_CSV_COLUMNS, useUploadRateSheet, type RateSheet } from './rate-sheet-data'
 
 /**
@@ -36,6 +38,8 @@ function UploadForm({ onClose, onUploaded }: { onClose: () => void; onUploaded: 
   const [effectiveDate, setEffectiveDate] = useState('')
   const [readError, setReadError] = useState<string>()
   const ready = file && effectiveDate
+  // The server previews which approved materials state a rate that this sheet no longer covers (F7, F8).
+  const preview = useRateSheetPreview(file && effectiveDate ? { effectiveDate, file: file.name, csv: file.csv } : undefined)
 
   const pick = async (picked: File | undefined) => {
     setFile(undefined)
@@ -73,6 +77,7 @@ function UploadForm({ onClose, onUploaded }: { onClose: () => void; onUploaded: 
         <Input id="rate-effective" type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className="w-44" />
       </div>
 
+      <FlagPreview preview={preview} />
       <SaveError error={readError ?? save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('rateSheet.upload.cancel')}</Button>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { FileArchive, Plus } from 'lucide-react'
+import { FileArchive, Flag, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
@@ -138,6 +138,14 @@ function MaterialRow({ material: m }: { material: Material }) {
       <span title={label('channel', m.channel)} className={col.channel}><ChannelIcon channel={m.channel} /></span>
       <span className={cn(col.title, 'flex items-center gap-2')}>
         <span className="truncate font-medium">{m.title}</span>
+        {/* A library change that the approval depends on asks for a re-review (PRD F7). */}
+        {!!m.openFlags && (
+          <span title={t('flags.listTitle', { count: m.openFlags })} className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-risk-medium">
+            <Flag className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">{t('flags.listTitle', { count: m.openFlags })}</span>
+            {m.openFlags > 1 && <span aria-hidden="true">{m.openFlags}</span>}
+          </span>
+        )}
         {m.affiliate && (
           <span className="shrink-0 rounded-sm border px-1 text-[11px] text-muted-foreground max-md:hidden">{m.affiliate}</span>
         )}

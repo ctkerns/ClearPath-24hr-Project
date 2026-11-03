@@ -2,17 +2,17 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, ExternalLink, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { affectedRules, flaggedMaterials, isUndecided, useRegChanges, type RegChange, type RegChangeDecision } from '@/components/library/reg-change-data'
+import { affectedRules, isUndecided, useRegChanges, type RegChange, type RegChangeDecision } from '@/components/library/reg-change-data'
 import { RegChangeDecisionDialog } from '@/components/library/reg-change-decision-dialog'
 import { RegChangeStatusPill } from '@/components/library/reg-change-meta'
 import { useRules, type Rule } from '@/components/library/rule-data'
-import { useMaterials } from '@/components/materials/material-data'
-import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
+import { AffectedList } from '@/components/library/affected-materials'
+import { useRegChangeImpact } from '@/components/library/impact-data'
+import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { TrackedText } from '@/components/review/tracked-text'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate } from '@/i18n/format'
 
 // Not nested under the list route (the trailing _ in the file name), so the list does not need an Outlet.
@@ -28,7 +28,8 @@ function RegChangePage() {
   const { changeId } = Route.useParams()
   const changes = useRegChanges()
   const rules = useRules()
-  const materials = useMaterials()
+  // Undecided: what applying flags. Applied: what it flagged (the server's flags, F7).
+  const flagged = useRegChangeImpact(changeId)
   const change = changes.data?.find((c) => c.id === changeId)
   // R3: only Managers and Admins change the library, so only they apply or dismiss a change.
   const canDecide = viewer.role === 'manager' || viewer.role === 'admin'
@@ -44,7 +45,6 @@ function RegChangePage() {
   }
   const ruleList = rules.data ?? []
   const affected = affectedRules(change, ruleList)
-  const flagged = flaggedMaterials(change, ruleList, materials.data ?? [])
   const open = isUndecided(change)
 
   return (
@@ -123,21 +123,13 @@ function RegChangePage() {
           </section>
 
           <section className="grid gap-2">
-            <SectionHeading>{t('regChanges.flagged.heading', { count: flagged.length })}</SectionHeading>
-            <p className="text-xs text-muted-foreground">{t(`regChanges.flagged.${change.status}`)}</p>
-            {flagged.length > 0 && change.status !== 'dismissed' && (
-              <ul className="overflow-hidden rounded-lg border">
-                {flagged.map((m) => (
-                  <li key={m.id} className="border-b last:border-b-0">
-                    <Link to="/materials/$materialId" params={{ materialId: m.id }} className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/60">
-                      <ChannelIcon channel={m.channel} className="size-3.5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">{m.title}</span>
-                      <StatusPill status={m.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {flagged.data ? (
+              <>
+                <SectionHeading>{t('regChanges.flagged.heading', { count: flagged.data.length })}</SectionHeading>
+                <p className="text-xs text-muted-foreground">{t(`regChanges.flagged.${change.status}`)}</p>
+                <AffectedList materials={flagged.data} />
+              </>
+            ) : <Skeleton className="h-16 w-full" />}
           </section>
         </aside>
       </div>

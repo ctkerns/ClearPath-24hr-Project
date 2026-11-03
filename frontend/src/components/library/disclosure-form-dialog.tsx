@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useSave } from '@/lib/use-save'
+import { FlagPreview } from './affected-materials'
+import { useDisclosureDependents } from './impact-data'
 import { disclosureIdTaken, useDisclosureUpdate, useDisclosures, type Disclosure, type DisclosureInput } from './disclosure-data'
 import { dateFromToday, focusFirstInvalid, MAX_LONG, MAX_NOTE, MAX_SHORT, TEXT_ID } from './form-utils'
 import { FieldError, FieldHint, ProductChips, StatesField } from './library-fields'
@@ -51,6 +53,8 @@ function DisclosureForm({ disclosure: old, onClose, onCreated }: {
   const [effectiveDate, setEffectiveDate] = useState(old?.effectiveDate ?? dateFromToday(0))
   const [note, setNote] = useState('')
   const [tried, setTried] = useState(false)
+  // A new version flags the approved materials that use this disclosure (F7, F15). The server previews them.
+  const preview = useDisclosureDependents(old?.id, effectiveDate || undefined)
 
   const required = t('rules.editor.required')
   const errors = {
@@ -194,6 +198,7 @@ function DisclosureForm({ disclosure: old, onClose, onCreated }: {
         {show('note') ? <FieldError id="disclosure-note-hint">{show('note')}</FieldError> : <FieldHint id="disclosure-note-hint">{t('rules.editor.noteHint')}</FieldHint>}
       </div>
 
+      {old && <FlagPreview preview={preview} />}
       <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('rules.editor.cancel')}</Button>

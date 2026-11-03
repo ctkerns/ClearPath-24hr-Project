@@ -1047,6 +1047,11 @@
       "statesHint": "Every licensed state follows the Workspace settings, so a newly licensed state is included.",
       "statesMissing": "Choose at least one state, or every licensed state.",
       "create": "Add disclosure"
+    },
+    "dependents": {
+      "heading_one": "{{count}} approved material uses it",
+      "heading_other": "{{count}} approved materials use it",
+      "note": "When this disclosure changes, these materials are flagged for re-review."
     }
   },
   "metrics": {
@@ -1834,6 +1839,38 @@
       "stays": "You stay signed in. The real ClearPath workspace is not affected.",
       "confirm": "Reset demo data",
       "done": "Demo data reset at {{time}}."
+    }
+  },
+  "flags": {
+    "heading_one": "Flagged for re-review",
+    "heading_other": "{{count}} flags for re-review",
+    "meta": "Version {{version}} · flagged {{time}}",
+    "by": "by {{name}}",
+    "resolve": "Resolve",
+    "reviewerOnly": "The approval stays valid. A Reviewer checks the material again and resolves the flag, or a new version replaces it.",
+    "listTitle_one": "Flagged for re-review",
+    "listTitle_other": "{{count}} flags for re-review",
+    "open": {
+      "rule": "Open rule",
+      "disclosure": "Open disclosure",
+      "rateSheet": "Open rate sheet",
+      "regChange": "Open change"
+    },
+    "dialog": {
+      "title": "Resolve this flag?",
+      "description": "You read version {{version}} again against the changed library, and it needs no change. The approval stays, and the History tab records your note.",
+      "note": "Note",
+      "notePlaceholder": "For example: the ad already uses the new disclosure text.",
+      "cancel": "Cancel",
+      "confirm": "Resolve: no change needed"
+    },
+    "preview": {
+      "heading_one": "Saving flags {{count}} approved material for re-review",
+      "heading_other": "Saving flags {{count}} approved materials for re-review",
+      "heading_zero": "Saving flags no approved materials",
+      "version": "v{{version}}",
+      "note": "The server checks each approved version: its checklist, product, channel, target states and content.",
+      "error": "The materials this change flags could not be loaded. Saving still flags them."
     }
   }
 }

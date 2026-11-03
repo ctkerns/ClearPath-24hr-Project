@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Product } from '@/components/materials/material-data'
+import { useAfterFlagging } from './impact-data'
 
 // Rate sheet (PRD F8). Rule RATE-01 (F7) checks every rate in a material against the current sheet.
 // Managers upload a CSV; each upload is a full sheet that replaces the one before it (R3).
@@ -52,14 +53,16 @@ export const RATE_CSV_COLUMNS = ['key', 'product', 'offer', 'rate', 'min', 'max'
 export type RateSheetUpload = { effectiveDate: string; file: string; csv: string }
 
 /**
- * Managers only; the server checks the role and every row of the CSV.
+ * Managers only; the server checks the role and every row of the CSV. It also flags the approved materials that
+ * state a rate the new sheet no longer covers (F7, F8), so those reload too.
  * Resolves with the new sheet. Rejects with an ApiError, so the dialog can show what went wrong.
  */
 export function useUploadRateSheet() {
   const queryClient = useQueryClient()
+  const afterFlagging = useAfterFlagging()
   return async (upload: RateSheetUpload) => {
     const sheet = await api<RateSheet>('POST', '/library/rate-sheets', upload)
-    await queryClient.invalidateQueries({ queryKey: ['rate-sheets'] })
+    await Promise.all([queryClient.invalidateQueries({ queryKey: ['rate-sheets'] }), afterFlagging()])
     return sheet
   }
 }

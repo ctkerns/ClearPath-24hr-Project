@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { RaiseIssueDialog } from '@/components/issues/raise-issue-dialog'
 import { FindingCard } from '@/components/review/finding-card'
 import { FlaggedText } from '@/components/review/flagged-text'
+import { FlagsPanel } from '@/components/review/flags-panel'
 import { approvedByViewer, groupsForViewer } from '@/components/review/decide'
 import { DecisionDialog } from '@/components/review/decision-dialog'
 import { HistoryTab } from '@/components/review/history-tab'
@@ -74,6 +75,8 @@ function MaterialPage() {
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
       <Header material={material} detail={detail.data ?? null} onDecide={setDecision} onRaiseIssue={() => setRaising(true)} />
+      {/* Above the tabs, so a flag for re-review shows on every tab (PRD F7). */}
+      {detail.data && <FlagsPanel detail={detail.data} />}
       <RaiseIssueDialog
         material={material}
         open={raising}

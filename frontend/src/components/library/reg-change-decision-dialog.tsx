@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useSave } from '@/lib/use-save'
+import { FlagPreview } from './affected-materials'
+import { useRegChangeImpact } from './impact-data'
 import { useDecideRegChange, type RegChange, type RegChangeDecision } from './reg-change-data'
 
 /**
@@ -34,6 +36,8 @@ function DecisionForm({ change, decision, onClose }: { change: RegChange; decisi
   const save = useSave(onClose)
   const [note, setNote] = useState('')
   const dismissing = decision === 'dismiss'
+  // Applying flags the approved materials that depend on the edited rules (F7). The server previews them.
+  const preview = useRegChangeImpact(change.id)
   const ready = !dismissing || note.trim().length > 0
 
   return (
@@ -65,6 +69,7 @@ function DecisionForm({ change, decision, onClose }: { change: RegChange; decisi
         />
       </div>
 
+      {!dismissing && <FlagPreview preview={preview} />}
       <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('regChanges.decide.cancel')}</Button>

@@ -1,0 +1,24 @@
+{
+  "_note": "Demo flags for re-review (PRD F7). Applying the regulatory change cfpb-udaap-instant-approval-circular (seeded as applied on 2026-06-20) flagged the debt payoff search ad, whose version 2 was approved then; a Reviewer resolved it. To see an open flag in the demo, apply the waiting change cfpb-regz-trigger-terms-commentary as a Manager: it flags the same ad. version is the material version number; createdBy and resolvedBy are user names.",
+  "flags": [
+    {
+      "id": "01a1b2c0-5e00-7f07-9a11-6c0d2f1e0a01",
+      "material": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+      "version": 2,
+      "kind": "regulatory_change",
+      "sourceId": "cfpb-udaap-instant-approval-circular",
+      "summary": "Regulatory change \"CFPB circular: \"pre-approved\" and \"instant decision\" claims\" changed rule UDAAP-03.",
+      "data": {
+        "rules": [
+          "UDAAP-03"
+        ]
+      },
+      "createdBy": "Maya Ruiz",
+      "createdAt": "2026-06-20T15:00:00Z",
+      "resolvedBy": "Jordan Kim",
+      "resolvedAt": "2026-06-23T10:15:00Z",
+      "resolution": "no_change",
+      "note": "Read the ad again against the new UDAAP-03 text. \"Check your rate in minutes\" is about the rate check, not the credit decision, and the ad makes no pre-approval claim. The approval stands."
+    }
+  ]
+}

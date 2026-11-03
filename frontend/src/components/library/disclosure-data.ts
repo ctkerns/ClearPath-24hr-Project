@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Product } from '@/components/materials/material-data'
+import { useAfterFlagging } from './impact-data'
 import type { Rule } from './rule-data'
 
 // Disclosure library (PRD F8): approved disclosure texts, versioned, with the products and states they apply to.
@@ -41,13 +42,14 @@ export type DisclosureInput = Pick<Disclosure, 'title' | 'text' | 'products' | '
 
 /**
  * Managers only (R3); the server checks. Create makes version 1; each edit makes the next version and keeps the old text.
- * TODO (F7, F15): the server will flag approvals that used the old text, when approvals are in the database.
+ * An edit also flags the approved materials that depend on the old version for re-review (F7, F15), so those reload too.
  * Each resolves with the saved disclosure, or rejects with an ApiError, so the dialog can show what went wrong.
  */
 export function useDisclosureUpdate() {
   const queryClient = useQueryClient()
+  const afterFlagging = useAfterFlagging()
   const after = async (d: Disclosure) => {
-    await queryClient.invalidateQueries({ queryKey: ['disclosures'] })
+    await Promise.all([queryClient.invalidateQueries({ queryKey: ['disclosures'] }), afterFlagging()])
     return d
   }
   return {

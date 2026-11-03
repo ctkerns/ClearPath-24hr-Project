@@ -12,7 +12,9 @@ import type { RiskLevel } from '@/components/ui/risk-tag'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useSave } from '@/lib/use-save'
+import { FlagPreview } from './affected-materials'
 import { useDisclosures } from './disclosure-data'
+import { useRuleEditPreview } from './impact-data'
 import { dateFromToday, focusFirstInvalid, isWebUrl, MAX_LIST, MAX_LONG, MAX_NOTE, MAX_SHORT, MAX_URL, splitLines, TEXT_ID } from './form-utils'
 import { ChannelChips, FieldError, FieldHint, ProductChips } from './library-fields'
 import {
@@ -127,6 +129,12 @@ function RuleForm({ rule, onClose, onCreated }: { rule?: Rule; onClose: () => vo
   // Federal, every state (company rules), then the licensed states. A rule's own state stays even if no longer licensed.
   const jurisdictions = ['federal', 'all', ...licensed, ...(d.jurisdiction.length === 2 && !licensed.includes(d.jurisdiction) ? [d.jurisdiction] : [])]
   const jurisdictionLabel = (j: string) => (j === 'federal' ? t('rules.federal') : j === 'all' ? t('rules.allStates') : j)
+
+  // An edit flags the approved materials that depend on the rule before or after it (F7). The server previews them.
+  const preview = useRuleEditPreview(
+    rule?.id,
+    d.effectiveDate ? { jurisdiction: d.jurisdiction, products: d.products, channels: d.channels, effectiveDate: d.effectiveDate } : undefined,
+  )
 
   const check = checkOf(d)
   const list = check.type === 'trigger_terms' ? check.terms : check.type === 'phrase_required' || check.type === 'phrase_banned' ? check.phrases : undefined
@@ -410,6 +418,7 @@ function RuleForm({ rule, onClose, onCreated }: { rule?: Rule; onClose: () => vo
         {show('note') ? <FieldError id="rule-note-hint">{show('note')}</FieldError> : <FieldHint id="rule-note-hint">{t('rules.editor.noteHint')}</FieldHint>}
       </div>
 
+      {rule && <FlagPreview preview={preview} />}
       <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('rules.editor.cancel')}</Button>

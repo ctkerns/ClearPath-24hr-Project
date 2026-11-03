@@ -3,17 +3,17 @@ import { Bot, ChevronLeft, ExternalLink, Lock, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDisclosures } from '@/components/library/disclosure-data'
-import { canEditLibrary, dependentMaterials, useRules, type RuleCheck } from '@/components/library/rule-data'
+import { AffectedList } from '@/components/library/affected-materials'
+import { useRuleDependents } from '@/components/library/impact-data'
+import { canEditLibrary, useRules, type RuleCheck } from '@/components/library/rule-data'
 import { RuleFormDialog } from '@/components/library/rule-form-dialog'
 import { CheckLayerTag, PendingChangeTag } from '@/components/library/rule-meta'
 import { useRuleList } from '@/components/library/use-rule-list'
-import { useMaterials } from '@/components/materials/material-data'
-import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
+import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
-import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate } from '@/i18n/format'
 
 // Not nested under the Rules list route (the trailing _ in the file name), so the list does not need an Outlet.
@@ -28,7 +28,8 @@ function RulePage() {
   const { t } = useTranslation()
   const { ruleId } = Route.useParams()
   const rules = useRules()
-  const materials = useMaterials()
+  // The server works out which approved materials depend on the rule (F7): checklist, product, channel, states.
+  const dependents = useRuleDependents(ruleId)
   const { label } = useRuleList()
   const rule = rules.data?.find((r) => r.id === ruleId)
   // R3: only Managers and Admins change the library. The server checks too.
@@ -44,8 +45,6 @@ function RulePage() {
       </div>
     )
   }
-  const dependents = dependentMaterials(rule, materials.data ?? [])
-
   return (
     <div className="grid gap-6">
       <header className="grid gap-2">
@@ -124,21 +123,13 @@ function RulePage() {
           </dl>
 
           <section className="grid gap-2">
-            <SectionHeading>{t('rules.dependents.heading', { count: dependents.length })}</SectionHeading>
-            <p className="text-xs text-muted-foreground">{t('rules.dependents.note')}</p>
-            {dependents.length > 0 && (
-              <ul className="overflow-hidden rounded-lg border">
-                {dependents.map((m) => (
-                  <li key={m.id} className="border-b last:border-b-0">
-                    <Link to="/materials/$materialId" params={{ materialId: m.id }} className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/60">
-                      <ChannelIcon channel={m.channel} className="size-3.5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">{m.title}</span>
-                      <StatusPill status={m.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {dependents.data ? (
+              <>
+                <SectionHeading>{t('rules.dependents.heading', { count: dependents.data.length })}</SectionHeading>
+                <p className="text-xs text-muted-foreground">{t('rules.dependents.note')}</p>
+                <AffectedList materials={dependents.data} />
+              </>
+            ) : <Skeleton className="h-16 w-full" />}
           </section>
         </aside>
       </div>

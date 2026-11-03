@@ -16,10 +16,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import issues, prereview
+from app import flags, issues, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
 from app.config import settings
+from app.flags import FlagOut
 from app.material_access import (
     Db,
     Reviewer,
@@ -90,9 +91,10 @@ class MaterialOut(APIModel):
     expires_at: date | None = None
     submitted_at: datetime | None = None  # only while the current version waits for review
     updated_at: datetime
+    open_flags: int | None = None  # flags for re-review that no one resolved yet (PRD F7); none: left out
 
     @classmethod
-    def of(cls, m: Material) -> MaterialOut:
+    def of(cls, m: Material, open_flags: int = 0) -> MaterialOut:
         return cls(
             id=m.id,
             title=m.title,
@@ -108,6 +110,7 @@ class MaterialOut(APIModel):
             expires_at=m.expires_at,
             submitted_at=m.submitted_at if m.status in WAITING else None,
             updated_at=m.updated_at,
+            open_flags=open_flags or None,
         )
 
 
@@ -120,8 +123,8 @@ LIST_LOAD = (
 
 async def expire_approvals(db: AsyncSession, viewer: User) -> None:
     """PRD F15: an approval ends on its expiry date, and the material becomes Expired.
-    Runs before each read, so no background job is needed. TODO (F9): also end an approval early
-    when a rule, disclosure, or rate it depends on changes."""
+    Runs before each read, so no background job is needed. A rule, disclosure, or rate that the approval
+    depends on does not end it early: app.flags flags the material for re-review instead (see there)."""
     today = now().date()
     due = list(
         await db.scalars(
@@ -150,7 +153,8 @@ async def list_materials(viewer: SignedIn, db: Db) -> list[MaterialOut]:
     rows = await db.scalars(
         select(Material).where(*visible(viewer)).options(*LIST_LOAD).order_by(Material.updated_at.desc())
     )
-    return [MaterialOut.of(m) for m in rows]
+    counts = await flags.open_flag_counts(db, viewer)
+    return [MaterialOut.of(m, counts.get(m.id, 0)) for m in rows]
 
 
 class FindingOut(APIModel):
@@ -207,7 +211,7 @@ class VersionOut(APIModel):
     fields: list[FieldText] | None = None  # older versions only; the current one is in MaterialDetail.fields
 
 
-HistoryType = Literal["submitted", "prereview", "routed", "decision", "comment", "live", "issue"]
+HistoryType = Literal["submitted", "prereview", "routed", "decision", "comment", "live", "issue", "flag"]
 
 # The audit actions on a material (entity "material"), and the kind of line the History tab shows for each.
 HISTORY_TYPE: dict[str, HistoryType] = {
@@ -225,6 +229,8 @@ HISTORY_TYPE: dict[str, HistoryType] = {
     "commented": "comment",
     "live_checked": "live",
     "issue_raised": "issue",
+    "flagged": "flag",  # a library change flagged the approved version for re-review (PRD F7, app.flags)
+    "flag_resolved": "flag",
 }
 
 
@@ -310,6 +316,7 @@ class MaterialDetail(APIModel):
     live: list[LiveItemOut]
     issues: list[MaterialIssueOut]
     files: list[FileOut]
+    flags: list[FlagOut]  # open flags for re-review (PRD F7)
 
 
 def plain(fields: list[dict[str, Any]]) -> list[FieldText]:
@@ -460,6 +467,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
             for i in material_issues
         ],
         files=[FileOut(id=f.id, name=f.name, content_type=f.content_type, size=f.size) for f in files],
+        flags=await flags.open_flags(db, m.id),
     )
 
 
@@ -603,6 +611,7 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     m.submitted_at = version.submitted_at
     m.updated_at = version.submitted_at
     record(db, viewer, "material", m.id, "submitted", {"version": number, "text": f"Submitted version {number} by manual upload."})
+    await flags.resolve_for_new_version(db, viewer, m, number)  # the flagged approval is no longer current
     routed = {"version": number, **routing.audit(), "text": routing.history_text()}
     record(db, OtherActor(m.workspace_id, "Routing"), "material", m.id, "routed", routed)  # PRD F6
     await prereview.run(db, m, version)  # code checks; marks old findings outdated (PRD F4)
