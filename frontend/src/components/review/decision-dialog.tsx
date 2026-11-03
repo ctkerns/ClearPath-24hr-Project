@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { approvedByViewer, groupsForViewer, useDecide } from './decide'
+import { checkState } from './check-state'
 import type { Decision, MaterialDetail } from './material-detail-data'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
@@ -61,6 +62,9 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
 
   const mine = decision === 'retract' ? approvedByViewer(detail, viewer) : groupsForViewer(detail, viewer)
   const openFindings = detail.findings.filter((f) => f.status === 'open').length
+  // Approving while the checks are running, did not run, or had no rules: say that "no findings" is not a clean result.
+  const checks = checkState(detail.checklist).kind
+  const checksWarning = ({ running: 'review.dialog.checksRunning', ai_not_run: 'review.dialog.checksNotRun', no_rules: 'review.dialog.checksNoRules', done: null } as const)[checks]
   const othersWaiting = detail.groups.filter((g) => g.state !== 'approved' && !mine.includes(g.name)).map((g) => g.name)
   const isApprove = decision === 'approve' || decision === 'approve_conditions'
   // An open High finding blocks approval unless the Reviewer writes an override reason (PRD F6).
@@ -93,6 +97,12 @@ function DecisionForm({ decision, detail, materialId, onDone }: { decision: Deci
           {othersWaiting.length
             ? t('review.dialog.stillWaiting', { groups: othersWaiting.join(', ') })
             : t('review.dialog.lastGroup')}
+        </p>
+      )}
+      {isApprove && checksWarning && (
+        <p className="flex gap-2 rounded-md bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
+          <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+          {t(checksWarning)}
         </p>
       )}
       {isApprove && openFindings > 0 && !needsOverride && (

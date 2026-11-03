@@ -634,6 +634,9 @@ async def prepare(db: AsyncSession, m: Material, version: MaterialVersion, licen
     """Called by prereview.run after the code checks, in the same transaction: adds the AI rules to the
     checklist, as pending when the AI review will run, or as not run with a history entry when no AI is set up."""
     rules = checklist_rules(await ai_rules(db, m.workspace_id), m, version, licensed)
+    if not rules:  # nothing for the model to check: it is not called, and the history does not read as a pass
+        skipped(db, m, version)
+        return
     if get_client() is None:
         reason = "no AI service is set up"
         rows = [ai_row(r, "not_run", note=unavailable_note(reason)) for r in rules]
@@ -658,9 +661,16 @@ def unavailable(db: AsyncSession, m: Material, version: MaterialVersion, reason:
     record(db, OtherActor(m.workspace_id, AUTHOR), "material", m.id, "ai_review_unavailable", data)  # PRD F4
 
 
+def skipped(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
+    text = "No AI rules apply to this material, so the AI review did not run."
+    data = {"version": version.number, "text": text}
+    record(db, OtherActor(m.workspace_id, AUTHOR), "material", m.id, "ai_review_skipped", data)  # PRD F4
+
+
 def schedule(tasks: BackgroundTasks, version: MaterialVersion) -> None:
-    """After the endpoint has committed the version: runs the AI review once the response is sent."""
-    if get_client() is not None:
+    """After the endpoint has committed the version: runs the AI review once the response is sent,
+    only when AI rules wait for it."""
+    if get_client() is not None and any(r.get("layer") == "ai" and r.get("result") == "pending" for r in version.checklist):
         tasks.add_task(review_version, version.id)
 
 
@@ -801,8 +811,8 @@ async def review_version(version_id: uuid.UUID) -> None:
     try:
         async with SessionLocal() as db:
             snap = await snapshot(db, version_id)
-        if snap is None:
-            return
+        if snap is None or not snap.checklist:
+            return  # no AI rule applies: the model is not called (prepare wrote the history entry)
         client = get_client()
         outcome = (
             await review_content(
@@ -910,7 +920,12 @@ async def store(db: AsyncSession, version_id: uuid.UUID, outcome: Outcome) -> No
 
     ids = list(dict.fromkeys(f.rule_id for f in added))
     n = len(added)
-    text = f"AI review found {n} problem{'s' if n != 1 else ''}: {', '.join(ids)}." if n else "AI review found no problems."
+    checked = len(pending)
+    text = (
+        f"AI review found {n} problem{'s' if n != 1 else ''}: {', '.join(ids)}."
+        if n
+        else f"AI review found no problems in {checked} rule{'s' if checked != 1 else ''}."
+    )
     if outcome.rejected:
         k = outcome.rejected
         text += f" Dropped {k} finding{'s' if k != 1 else ''} that did not quote the content or named a rule not on the checklist."
@@ -919,6 +934,7 @@ async def store(db: AsyncSession, version_id: uuid.UUID, outcome: Outcome) -> No
         "model": settings.ai_review_model,
         "problems": n,
         "rules": ids,
+        "checked": checked,
         "rejected": outcome.rejected,
         "duplicates": outcome.duplicates,
         "attempts": outcome.attempts,

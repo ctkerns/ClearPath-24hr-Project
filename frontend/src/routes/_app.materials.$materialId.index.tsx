@@ -9,6 +9,7 @@ import { FlaggedText } from '@/components/review/flagged-text'
 import { FlagsPanel } from '@/components/review/flags-panel'
 import { approvedByViewer, groupsForViewer } from '@/components/review/decide'
 import { DecisionDialog } from '@/components/review/decision-dialog'
+import { checkState, type CheckState } from '@/components/review/check-state'
 import { HistoryTab } from '@/components/review/history-tab'
 import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
@@ -281,7 +282,7 @@ function ReviewView({ material, detail, version, onVersion }: {
           />
           <Conversation detail={detail} anchor={anchor} onClearAnchor={() => setAnchor(null)} />
         </div>
-        <FindingsColumn materialId={material.id} findings={detail.findings} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
+        <FindingsColumn materialId={material.id} findings={detail.findings} checks={checkState(detail.checklist)} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
       </div>
       <ReviewPanel material={material} detail={detail} onFinding={(id) => focus(id, 'finding')} />
     </div>
@@ -476,9 +477,10 @@ function selectedText(onSelect: (anchor: CommentAnchor) => void) {
   if (field && field === fieldOf(range.endContainer) && text) onSelect({ field: field.getAttribute('data-field') ?? '', text: text.slice(0, 2000) })
 }
 
-function FindingsColumn({ materialId, findings, numbers, active, onFinding }: {
+function FindingsColumn({ materialId, findings, checks, numbers, active, onFinding }: {
   materialId: string
   findings: Finding[]
+  checks: CheckState
   numbers: Map<string, number>
   active: string | null
   onFinding: (id: string) => void
@@ -495,7 +497,9 @@ function FindingsColumn({ materialId, findings, numbers, active, onFinding }: {
 
   return (
     <section className="grid gap-2">
-      <SectionHeading>{t('review.findings', { count: open.length })}</SectionHeading>
+      {/* Never a bare "0 open findings": say whether the checks are still running, did not run, or had no rules. */}
+      <SectionHeading>{open.length > 0 ? t('review.findings', { count: open.length }) : t('review.findingsHeading')}</SectionHeading>
+      <ChecksStatus checks={checks} open={open.length} />
       {canSubmit && exact > 0 && (
         <Button asChild size="sm" variant="outline" className="justify-self-start">
           <Link to="/materials/$materialId/new-version" params={{ materialId }} search={{ fixes: 'all' }}>
@@ -529,6 +533,48 @@ function FindingsColumn({ materialId, findings, numbers, active, onFinding }: {
         </>
       )}
     </section>
+  )
+}
+
+/** What the checks did, above the findings. Nothing for a finished review that has findings. */
+function ChecksStatus({ checks, open }: { checks: CheckState; open: number }) {
+  const { t } = useTranslation()
+  if (checks.kind === 'running') {
+    return (
+      <div role="status" className="grid gap-0.5 rounded-md border bg-muted px-3 py-2 text-xs">
+        <p className="flex items-center gap-2 font-medium">
+          <LoaderCircle className="size-3.5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+          {t('review.checks.running')}
+        </p>
+        <p className="pl-5.5 text-muted-foreground">{t('review.checks.runningHelp')}</p>
+      </div>
+    )
+  }
+  if (checks.kind === 'ai_not_run') {
+    return (
+      <p role="status" className="flex gap-2 rounded-md bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
+        <CircleSlash className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+        {checks.reason ? t('review.checks.aiNotRun', { reason: checks.reason }) : t('review.checks.aiNotRunNoReason')}
+      </p>
+    )
+  }
+  if (checks.kind === 'no_rules') {
+    return (
+      <div role="alert" className="grid gap-0.5 rounded-md border border-risk-medium/40 bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
+        <p className="flex items-center gap-2 font-semibold">
+          <CircleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+          {t('review.checks.noRules')}
+        </p>
+        <p className="pl-5.5">{t('review.checks.noRulesHelp')}</p>
+      </div>
+    )
+  }
+  if (open > 0) return null
+  return (
+    <p className="flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
+      <Check className="size-3.5 shrink-0 text-risk-low" strokeWidth={2.5} aria-hidden="true" />
+      {t('review.checks.clean', { count: checks.checked })}
+    </p>
   )
 }
 
@@ -670,40 +716,52 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
       )}
 
       <section className="grid gap-2">
-        <SectionHeading>{t('review.checklist', { failed, passed })}{open > 0 && t('review.checklistOpen', { count: open })}</SectionHeading>
-        <ul className="grid gap-px overflow-hidden rounded-lg border bg-border">
-          {detail.checklist.map((r) => {
-            const fail = r.result === 'fail'
-            const row = (
-              <>
-                {fail ? <X className="mt-0.5 size-3.5 shrink-0 text-risk-high" strokeWidth={2.5} aria-label={t('review.fail')} />
-                  : r.result === 'pending' ? <LoaderCircle className="mt-0.5 size-3.5 shrink-0 animate-spin text-muted-foreground" strokeWidth={2.5} aria-label={t('review.pending')} />
-                  : r.result === 'not_run' ? <CircleSlash className="mt-0.5 size-3.5 shrink-0 text-risk-medium" strokeWidth={2.5} aria-label={t('review.notRun')} />
-                  : <Check className="mt-0.5 size-3.5 shrink-0 text-risk-low" strokeWidth={2.5} aria-label={t('review.pass')} />}
-                <span className="grid min-w-0 flex-1 gap-0.5">
-                  <span className="text-xs">{r.title}</span>
-                  <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <code>{r.ruleId}</code>
-                    <span>·</span>
-                    <span>{t(`review.layer.${r.layer}`)}</span>
-                    {(r.result === 'pending' || r.result === 'not_run') && <><span>·</span><span>{t(r.result === 'pending' ? 'review.pending' : 'review.notRun')}</span></>}
+        {detail.checklist.length === 0 ? (
+          <>
+            <SectionHeading>{t('review.checklistHeading')}</SectionHeading>
+            <p className="flex gap-2 rounded-md bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
+              <CircleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+              {t('review.checklistEmpty')}
+            </p>
+          </>
+        ) : (
+          <SectionHeading>{t('review.checklist', { failed, passed })}{open > 0 && t('review.checklistOpen', { count: open })}</SectionHeading>
+        )}
+        {detail.checklist.length > 0 && (
+          <ul className="grid gap-px overflow-hidden rounded-lg border bg-border">
+            {detail.checklist.map((r) => {
+              const fail = r.result === 'fail'
+              const row = (
+                <>
+                  {fail ? <X className="mt-0.5 size-3.5 shrink-0 text-risk-high" strokeWidth={2.5} aria-label={t('review.fail')} />
+                    : r.result === 'pending' ? <LoaderCircle className="mt-0.5 size-3.5 shrink-0 animate-spin text-muted-foreground" strokeWidth={2.5} aria-label={t('review.pending')} />
+                    : r.result === 'not_run' ? <CircleSlash className="mt-0.5 size-3.5 shrink-0 text-risk-medium" strokeWidth={2.5} aria-label={t('review.notRun')} />
+                    : <Check className="mt-0.5 size-3.5 shrink-0 text-risk-low" strokeWidth={2.5} aria-label={t('review.pass')} />}
+                  <span className="grid min-w-0 flex-1 gap-0.5">
+                    <span className="text-xs">{r.title}</span>
+                    <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <code>{r.ruleId}</code>
+                      <span>·</span>
+                      <span>{t(`review.layer.${r.layer}`)}</span>
+                      {(r.result === 'pending' || r.result === 'not_run') && <><span>·</span><span>{t(r.result === 'pending' ? 'review.pending' : 'review.notRun')}</span></>}
+                    </span>
                   </span>
-                </span>
-              </>
-            )
-            return (
-              <li key={r.ruleId} className="bg-background">
-                {fail && r.finding ? (
-                  <button type="button" onClick={() => onFinding(r.finding!)} className="flex w-full gap-2 px-2.5 py-2 text-left hover:bg-muted">
-                    {row}
-                  </button>
-                ) : (
-                  <div className="flex gap-2 px-2.5 py-2" title={r.note}>{row}</div>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+                </>
+              )
+              return (
+                <li key={r.ruleId} className="bg-background">
+                  {fail && r.finding ? (
+                    <button type="button" onClick={() => onFinding(r.finding!)} className="flex w-full gap-2 px-2.5 py-2 text-left hover:bg-muted">
+                      {row}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 px-2.5 py-2" title={r.note}>{row}</div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </section>
 
       <section className="grid gap-2">

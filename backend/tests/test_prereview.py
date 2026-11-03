@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 from sqlalchemy import select, update
 
+from app import prereview
 from app.db import SessionLocal
 from app.models import User
 from app.models.library import CheckLayer, Rule, RuleKind, Severity
@@ -405,8 +406,19 @@ async def test_clean_submission_passes(client):
     await as_user(client, SUBMITTER)
     d = await submit(client, "Pay off debt faster with ClearPath.", "Federally insured by NCUA.")
     assert d["findings"] == []
-    assert all(r["result"] == "pass" for r in d["checklist"] if r["layer"] == "code")
-    assert d["history"][-2]["text"] == "Code checks passed."
+    code = [r for r in d["checklist"] if r["layer"] == "code"]
+    assert code and all(r["result"] == "pass" for r in code)
+    assert d["history"][-2]["text"] == f"Code checks passed: {len(code)} rules."
+
+
+async def test_no_code_rules_is_not_a_pass(client, monkeypatch):
+    """When no code rule applies, nothing was checked: the history must not say the checks passed."""
+    monkeypatch.setattr(prereview, "check_content", lambda *args: [])
+    await as_user(client, SUBMITTER)
+    d = await submit(client, "Pay off debt faster with ClearPath.", "Federally insured by NCUA.")
+    assert [r for r in d["checklist"] if r["layer"] == "code"] == []
+    texts = [e["text"] for e in d["history"] if e["actor"] == "Rule check"]
+    assert texts[-1] == "No code rules apply to this material, so nothing was checked."
 
 
 async def test_jurisdiction_uses_target_states(client):

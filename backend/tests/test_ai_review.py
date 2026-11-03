@@ -193,6 +193,35 @@ async def test_valid_findings_are_saved(client, fake):
     assert "Approval in minutes, every time." not in call["system"][0]["text"]
 
 
+async def test_no_problems_says_how_many_rules_were_checked(client, fake):
+    fake(reply())
+    await as_user(client, SUBMITTER)
+    posted = await submit(client, "Pay off debt faster with ClearPath.", "Federally insured by NCUA.")
+    n = len([r for r in posted["checklist"] if r["layer"] == "ai"])
+    assert n > 1
+    d = await detail(client, posted["id"])
+    assert all(r["result"] == "pass" for r in d["checklist"] if r["layer"] == "ai")
+    assert d["history"][-1] == {**d["history"][-1], "actor": "AI reviewer", "type": "prereview", "text": f"AI review found no problems in {n} rules."}
+
+
+async def test_no_ai_rules_means_no_call(client, fake, monkeypatch):
+    """When no AI rule applies, the model is not called and the history says the AI review did not run."""
+    ai = fake(reply())
+    monkeypatch.setattr(ai_review, "checklist_rules", lambda *args: [])
+    await as_user(client, SUBMITTER)
+    posted = await submit(client, "Pay off debt faster with ClearPath.", "Federally insured by NCUA.")
+    assert [r for r in posted["checklist"] if r["layer"] == "ai"] == []
+    d = await detail(client, posted["id"])
+    assert ai.calls == []
+    assert d["history"][-1] == {
+        **d["history"][-1],
+        "actor": "AI reviewer",
+        "type": "prereview",
+        "text": "No AI rules apply to this material, so the AI review did not run.",
+    }
+    assert not any(e["text"].startswith("AI review found") for e in d["history"])
+
+
 async def test_invented_quote_and_unknown_rule_are_not_stored(client, fake):
     fake(
         reply(

@@ -232,7 +232,8 @@ async def test_new_version(client):
     # New decisions: Legal approved version 2, but waits again (a nationwide loan needs Legal, PRD F6).
     assert [(g["name"], g["state"]) for g in d["groups"]] == [("Compliance", "waiting"), ("Legal", "waiting")]
     assert d["versions"][1]["fields"][1] == {"label": "Headline", "text": "Personal loans from 8.99% APR"}
-    assert d["history"][-2] == {**d["history"][-2], "actor": "Rule check", "text": "Code checks passed. Marked 2 findings outdated."}
+    code = sum(r["layer"] == "code" for r in d["checklist"])
+    assert d["history"][-2] == {**d["history"][-2], "actor": "Rule check", "text": f"Code checks passed: {code} rules. Marked 2 findings outdated."}
     assert d["details"]["platformId"] == "23851204417730592"  # kept, for monitoring
     assert d["comments"][0]["author"] == "Maya Ruiz"  # comments stay
 
