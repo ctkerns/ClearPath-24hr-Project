@@ -61,7 +61,10 @@ export function useViewer(): SessionUser {
   return appRoute.useRouteContext({ select: (c) => c.viewer })
 }
 
-/** Rejects with 'invalid_credentials' for every wrong email or password, so the page never says whether the email exists. */
+/**
+ * Rejects with 'invalid_credentials' for every wrong email or password, so the page never says whether the email exists.
+ * Rejects with 'rate_limited' after too many failed sign-ins (429): then even the right password waits until the server's window passes.
+ */
 export async function signIn(email: string, password: string): Promise<void> {
   const res = await fetch('/api/auth/sign-in', {
     method: 'POST',
@@ -69,6 +72,35 @@ export async function signIn(email: string, password: string): Promise<void> {
     body: JSON.stringify({ email, password }),
   })
   if (res.status === 401 || res.status === 422) throw new Error('invalid_credentials')
+  if (res.status === 429) throw new Error('rate_limited')
+  if (!res.ok) throw new Error('unavailable')
+}
+
+/** Who an invite link is for (PRD F16). The token is the one in the link of the invite email. */
+export type InviteInfo = { name: string; email: string; workspaceName: string }
+
+/** Must match password_min_length in backend/src/app/config.py. */
+export const PASSWORD_MIN_LENGTH = 12
+
+/** Rejects with 'invalid' (unknown or used link), 'expired', or 'unavailable'. */
+export async function getInvite(token: string): Promise<InviteInfo> {
+  const res = await fetch(`/api/auth/invite/${encodeURIComponent(token)}`)
+  if (res.status === 404) throw new Error('invalid')
+  if (res.status === 410) throw new Error('expired')
+  if (!res.ok) throw new Error('unavailable')
+  return (await res.json()) as InviteInfo
+}
+
+/** Sets the password and starts a session, like signIn. The caller then reloads the page. */
+export async function acceptInvite(token: string, password: string, name: string): Promise<void> {
+  const res = await fetch('/api/auth/accept-invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, password, name }),
+  })
+  if (res.status === 404) throw new Error('invalid')
+  if (res.status === 410) throw new Error('expired')
+  if (res.status === 422) throw new Error('short_password')
   if (!res.ok) throw new Error('unavailable')
 }
 

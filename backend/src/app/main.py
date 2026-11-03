@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import auth, groups, integrations, library, routing, users, workspace
+from app import auth, groups, integrations, invites, library, routing, users, workspace
 from app.db import engine, get_db
 
 
@@ -42,6 +42,7 @@ async def same_origin_only(request: Request, call_next):
 # One router per area, one per line. A new area adds its module here.
 ROUTERS = [
     auth.router,
+    invites.router,
     users.router,
     groups.router,
     workspace.router,

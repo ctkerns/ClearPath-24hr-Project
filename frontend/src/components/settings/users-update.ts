@@ -8,7 +8,7 @@ export type NewInvite = { emails: string[]; role: Role; groups: string[]; affili
  * Admin changes to workspace users (PRD section 4, F16). Each one calls the API, then reloads the user list.
  * The server checks that the caller is an Admin, ends the sessions of a deactivated user,
  * and removes the groups of a user whose role goes below Reviewer.
- * TODO: the server sends the invite emails (F16) and records every change in the audit log.
+ * The server emails the invite links (F16). TODO: it records every change in the audit log.
  * Each function returns a promise that rejects with an ApiError, so a dialog can show what went wrong.
  */
 export function useUserUpdate() {

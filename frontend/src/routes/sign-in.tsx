@@ -43,7 +43,8 @@ function SignInPage() {
       // A full page load, so the app starts clean with this user's session.
       window.location.assign(safeRedirect(next))
     } catch (err) {
-      setError(t(err instanceof Error && err.message === 'invalid_credentials' ? 'signIn.error.invalid' : 'signIn.error.unavailable'))
+      const reason = err instanceof Error ? err.message : undefined
+      setError(t(reason === 'invalid_credentials' ? 'signIn.error.invalid' : reason === 'rate_limited' ? 'signIn.error.tooMany' : 'signIn.error.unavailable'))
       setPending(undefined)
     }
   }

@@ -13,6 +13,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import invites
 from app.api import Admin, APIModel, InternalUser, bad_request, conflict, not_found
 from app.db import get_db
 from app.models import Affiliate, ReviewerGroup, Role, Session, User, UserStatus
@@ -170,7 +171,7 @@ def name_from_email(email: str) -> str:
 
 @router.post("/invites", status_code=status.HTTP_201_CREATED)
 async def invite(body: Invite, viewer: Admin, db: Db) -> list[WorkspaceUser]:
-    """Adds invited users. They cannot sign in until they set a password. TODO (F16): send the invite emails."""
+    """Adds invited users and emails each one a link to set a password (F16). Until then they cannot sign in."""
     emails = sorted({e.lower() for e in body.emails})
     taken = list(await db.scalars(select(User.email).where(func.lower(User.email).in_(emails))))
     if taken:
@@ -212,8 +213,11 @@ async def invite(body: Invite, viewer: Admin, db: Db) -> list[WorkspaceUser]:
     ]
     db.add_all(added)
     await db.flush()
+    tokens = [await invites.new_token(db, u) for u in added]
     ids = [u.id for u in added]
     await db.commit()
+    for user, token in zip(added, tokens, strict=True):
+        await invites.send_invite(db, user.email, viewer, token)
     return [WorkspaceUser.of(await load_user(db, viewer, i)) for i in ids]
 
 
@@ -224,12 +228,16 @@ async def resend_invite(user_id: uuid.UUID, viewer: Admin, db: Db) -> WorkspaceU
         raise bad_request("This user is not invited")
     user.invited_at = datetime.now(UTC)
     user.invited_by_id = viewer.id
+    token = await invites.new_token(db, user)  # the old link stops working
+    await db.commit()
+    await invites.send_invite(db, user.email, viewer, token)
     return await reload(db, viewer, user.id)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def cancel_invite(user_id: uuid.UUID, viewer: Admin, db: Db) -> None:
-    """Only an invite that nobody accepted can be removed: it has no history. Deactivate everyone else."""
+    """Only an invite that nobody accepted can be removed: it has no history. Deactivate everyone else.
+    The invite link goes with the user (ON DELETE CASCADE)."""
     user = await load_user(db, viewer, user_id)
     if user.status is not UserStatus.INVITED:
         raise bad_request("Only an invited user can be removed. Deactivate this user instead.")
