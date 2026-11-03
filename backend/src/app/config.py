@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     # SecretStr: the key never shows in repr, logs or API responses. Locally, backend/scripts/dev.sh reads it
     # from the macOS Keychain into the process environment only.
     anthropic_api_key: SecretStr | None = None
-    ai_review_model: str = "claude-opus-5-5"
+    ai_review_model: str = "claude-sonnet-5-5"
     ai_review_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     # Seconds for the whole AI review of one version, retries included (PRD section 11: under 60 seconds)
     ai_review_timeout: float = 60.0
