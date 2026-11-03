@@ -109,6 +109,7 @@ class Hit:
     field: int | None = None
     start: int = 0
     end: int = 0
+    edit: dict[str, str] | None = None  # the exact fix, when there is one (Finding.edit)
 
 
 class ConfigError(Exception):
@@ -257,9 +258,11 @@ class Content:
     def contains(self, pattern: re.Pattern[str]) -> bool:
         return any(pattern.search(t.norm) for t in self.texts) or bool(pattern.search(self.joined))
 
-    def hit(self, rule: RuleSpec, where: tuple[int, int, int], explanation: str, suggestion: str | None = None) -> Hit:
+    def hit(
+        self, rule: RuleSpec, where: tuple[int, int, int], explanation: str, suggestion: str | None = None, edit: dict[str, str] | None = None
+    ) -> Hit:
         i, s, e = where
-        return Hit(rule.id, rule.severity, self.fields[i][1][s:e], explanation, suggestion, i, s, e)
+        return Hit(rule.id, rule.severity, self.fields[i][1][s:e], explanation, suggestion, i, s, e, edit)
 
 
 # ---- Applicability (F7: the checklist) ----
@@ -319,6 +322,16 @@ def add_text(d: DisclosureSpec) -> str:
     return f'Add disclosure {d.id} v{d.version}: "{d.text}"'
 
 
+def replace_with(text: str) -> dict[str, str]:
+    """The edit that puts `text` in place of the quote ("" removes the quote)."""
+    return {"op": "replace", "text": text}
+
+
+def append(d: DisclosureSpec) -> dict[str, str]:
+    """The edit that adds the current wording of a disclosure at the end of the content."""
+    return {"op": "append", "text": d.text}
+
+
 def missing_disclosure(rule: RuleSpec, content: Content, d: DisclosureSpec) -> Hit | None:
     """None when the current wording is present. An older wording is quoted, so the fix is clear."""
     pattern = literal_pattern(d.text)
@@ -336,8 +349,9 @@ def missing_disclosure(rule: RuleSpec, content: Content, d: DisclosureSpec) -> H
                 (i, s, e),
                 f"is an old wording of disclosure {d.id} (version {version}). Use the current version {d.version}.",
                 f'Replace it with disclosure {d.id} v{d.version}: "{d.text}"',
+                replace_with(d.text),
             )
-    return Hit(rule.id, rule.severity, "", f'Disclosure {d.id} "{d.title}" is missing. {rule.text}', add_text(d))
+    return Hit(rule.id, rule.severity, "", f'Disclosure {d.id} "{d.title}" is missing. {rule.text}', add_text(d), edit=append(d))
 
 
 def check_phrase_banned(rule: RuleSpec, content: Content, lib: Library, product: str, states: Sequence[str]) -> list[Hit]:
@@ -388,7 +402,7 @@ def check_trigger_terms(rule: RuleSpec, content: Content, lib: Library, product:
     if hit is None or hit.field is not None:  # present, or an old wording (quoted)
         return [hit] if hit else []
     first = min(found)
-    return [content.hit(rule, first, f'is a trigger term. The content must also include disclosure {d.id} "{d.title}". {rule.text}', add_text(d))]
+    return [content.hit(rule, first, f'is a trigger term. The content must also include disclosure {d.id} "{d.title}". {rule.text}', add_text(d), append(d))]
 
 
 # Rates in normalised text. A percent counts as a rate only when it is labeled: "8.99% APR", "0% intro APR",
@@ -622,8 +636,17 @@ def check_hidden_text(rule: RuleSpec, content: Content, lib: Library, product: s
         for s, e, why, fix in spans:
             if e > s and all(e <= ks or s >= ke for ks, ke, _, _ in kept):
                 kept.append((s, e, why, fix))
-        hits += [content.hit(rule, (i, s, e), why, fix) for s, e, why, fix in sorted(kept)]
+        # Hidden text and instructions are removed; a word with invisible characters keeps its visible letters.
+        hits += [
+            content.hit(rule, (i, s, e), why, fix, replace_with(visible_part(raw, s, e) if fix == FIX_INVISIBLE else ""))
+            for s, e, why, fix in sorted(kept)
+        ]
     return hits
+
+
+def visible_part(raw: str, s: int, e: int) -> str:
+    """The span without the characters that `suspicious` finds, so emoji keep their joiners."""
+    return "".join(raw[k] for k in range(s, e) if not suspicious(raw, k))
 
 
 def suspicious(raw: str, k: int) -> bool:
@@ -852,6 +875,7 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
             f.severity = Severity(h.severity)  # from the rule, never computed (PRD F4)
             f.explanation = h.explanation
             f.suggestion = h.suggestion
+            f.edit = h.edit
             db.add(f)
             where = (h.field, h.start, h.end) if h.field is not None else None
             current.append(((h.field, h.start) if h.field is not None else (len(texts), 0), f, where))

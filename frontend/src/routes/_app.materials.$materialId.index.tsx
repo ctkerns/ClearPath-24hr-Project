@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, CircleAlert, CircleSlash, Clock, Ellipsis, ImageIcon, LoaderCircle, Upload, X } from 'lucide-react'
+import { ArrowRightLeft, Check, ChevronDown, ChevronLeft, CircleAlert, CircleSlash, Clock, Ellipsis, ImageIcon, LoaderCircle, Upload, X, Wand2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeadlineLabel } from '@/components/dashboard/deadline-label'
@@ -14,12 +14,12 @@ import { LiveTab } from '@/components/review/live-tab'
 import { TrackedText } from '@/components/review/tracked-text'
 import { fileUrl, useMaterialDetail, versionFields, type CommentAnchor, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
 import { LoadError } from '@/components/load-error'
-import { SaveError } from '@/components/save-error'
+import { InlineSaveError, SaveError } from '@/components/save-error'
 import { hasRole } from '@/components/settings/user-data'
 import { api } from '@/lib/api'
 import { notFoundError } from '@/lib/load-error'
 import { useViewer } from '@/lib/session'
-import { useSave } from '@/lib/use-save'
+import { useInlineSave, useSave } from '@/lib/use-save'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
@@ -148,6 +148,18 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
   // PRD section 4: Submitters and affiliates send new versions; Reviewers and higher raise issues (F12).
   const canSubmit = viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')
   const canRaise = hasRole(viewer.role, 'reviewer')
+  // POST /api/materials/<id>/prereview runs the code checks and the AI review again on the current version,
+  // for example after a rule changed. Reviewers and higher, while the version waits for review (the server checks too).
+  const canRerun = !!detail && hasRole(viewer.role, 'reviewer') && (m.status === 'submitted' || m.status === 'in_review')
+  const queryClient = useQueryClient()
+  const rerun = useInlineSave()
+  const runChecks = () =>
+    rerun.run(async () => {
+      const fresh = await api<MaterialDetail>('POST', `/materials/${m.id}/prereview`)
+      // The AI rules come back as pending; the detail query polls until they finish.
+      queryClient.setQueryData(['material-detail', m.id], fresh)
+      await queryClient.invalidateQueries({ queryKey: ['materials'] })
+    })
 
   return (
     <header className="grid gap-2">
@@ -174,7 +186,7 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
               <Link to="/materials/$materialId/new-version" params={{ materialId: m.id }}><Upload />{t('page.newVersion')}</Link>
             </Button>
           )}
-          {(canDecide || canRetract || canRaise) && <DropdownMenu>
+          {(canDecide || canRetract || canRaise || canRerun) && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" aria-label={t('review.moreActions')}><Ellipsis /></Button>
             </DropdownMenuTrigger>
@@ -182,6 +194,11 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
               {canDecide && <DropdownMenuItem onSelect={() => onDecide('escalate')}>{t('review.decision.escalate')}</DropdownMenuItem>}
               {canRetract && <DropdownMenuItem onSelect={() => onDecide('retract')}>{t('review.decision.retract')}</DropdownMenuItem>}
               {canRaise && <DropdownMenuItem onSelect={onRaiseIssue}>{t('review.raiseIssue')}</DropdownMenuItem>}
+              {canRerun && (
+                <DropdownMenuItem disabled={rerun.pending} onSelect={runChecks}>
+                  {rerun.pending ? t('review.rerunning') : t('review.rerun')}
+                </DropdownMenuItem>
+              )}
               {canDecide && (
                 <>
                   <DropdownMenuSeparator />
@@ -194,6 +211,7 @@ function Header({ material: m, detail, onDecide, onRaiseIssue }: {
           </DropdownMenu>}
         </div>
       </div>
+      <InlineSaveError error={rerun.error} />
     </header>
   )
 }
@@ -263,7 +281,7 @@ function ReviewView({ material, detail, version, onVersion }: {
           />
           <Conversation detail={detail} anchor={anchor} onClearAnchor={() => setAnchor(null)} />
         </div>
-        <FindingsColumn findings={detail.findings} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
+        <FindingsColumn materialId={material.id} findings={detail.findings} numbers={numbers} active={active} onFinding={(id) => focus(id, 'mark')} />
       </div>
       <ReviewPanel material={material} detail={detail} onFinding={(id) => focus(id, 'finding')} />
     </div>
@@ -458,7 +476,8 @@ function selectedText(onSelect: (anchor: CommentAnchor) => void) {
   if (field && field === fieldOf(range.endContainer) && text) onSelect({ field: field.getAttribute('data-field') ?? '', text: text.slice(0, 2000) })
 }
 
-function FindingsColumn({ findings, numbers, active, onFinding }: {
+function FindingsColumn({ materialId, findings, numbers, active, onFinding }: {
+  materialId: string
   findings: Finding[]
   numbers: Map<string, number>
   active: string | null
@@ -466,13 +485,25 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
 }) {
   const { t } = useTranslation()
   // Affiliates cannot open the library (R4), so the rule ids are not links for them.
-  const ruleLink = useViewer().role !== 'affiliate'
+  const viewer = useViewer()
+  const ruleLink = viewer.role !== 'affiliate'
   const open = findings.filter((f) => f.status === 'open')
+  // Exact fixes open the new-version form with them applied. Two findings that add the same disclosure are one fix.
+  const exact = new Set(open.flatMap((f) => (f.edit ? [f.edit.op === 'append' ? `append:${f.edit.text}` : f.id] : []))).size
+  const canSubmit = viewer.role === 'affiliate' || hasRole(viewer.role, 'submitter')
   const outdated = findings.filter((f) => f.status === 'outdated')
 
   return (
     <section className="grid gap-2">
       <SectionHeading>{t('review.findings', { count: open.length })}</SectionHeading>
+      {canSubmit && exact > 0 && (
+        <Button asChild size="sm" variant="outline" className="justify-self-start">
+          <Link to="/materials/$materialId/new-version" params={{ materialId }} search={{ fixes: 'all' }}>
+            <Wand2 aria-hidden="true" />
+            {t('review.fixInNewVersion', { count: exact })}
+          </Link>
+        </Button>
+      )}
       {open.map((f) => (
         <FindingCard
           key={f.id}

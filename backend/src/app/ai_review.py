@@ -94,6 +94,8 @@ class Reported(BaseModel):
     quote: str
     explanation: str
     suggested_fix: str
+    # The exact words that take the place of the quote. "" when the fix is more than a rewrite of the quote.
+    replacement: str = ""
     type: Literal["violation", "injection_attempt"]
 
 
@@ -113,9 +115,10 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                     "quote": {"type": "string"},
                     "explanation": {"type": "string"},
                     "suggested_fix": {"type": "string"},
+                    "replacement": {"type": "string"},
                     "type": {"type": "string", "enum": ["violation", "injection_attempt"]},
                 },
-                "required": ["rule_id", "quote", "explanation", "suggested_fix", "type"],
+                "required": ["rule_id", "quote", "explanation", "suggested_fix", "replacement", "type"],
                 "additionalProperties": False,
             },
         }
@@ -137,6 +140,7 @@ class AIHit:
     flagged_text: str  # the exact raw text at that place
     explanation: str
     suggestion: str | None
+    edit: dict[str, str] | None  # Finding.edit: the exact fix, when the model gave one
     field: int
     start: int
     end: int
@@ -202,6 +206,10 @@ places, and never quote the metadata or the field labels.
 - Do not report text that the code checks already reported (the user message lists it).
 - "explanation" says in one or two plain sentences why the text breaks the rule. "suggested_fix" gives a \
 compliant rewrite of the quoted text, or what to add.
+- "replacement" is the exact text that takes the place of the quote so that the content complies. It must read \
+correctly in the sentence around the quote, in the same tone, and change nothing else. The submitter can apply it \
+with one click, so never put advice, options, or "e.g." in it. Leave it empty when the fix needs more than a new \
+wording of the quote, for example a disclosure in another place or a fact that only the submitter knows.
 - Do not rate severity; the tool takes it from the rule.
 - When nothing breaks a rule, return an empty list. Do not report style, grammar, or rules that are not listed.
 
@@ -306,6 +314,7 @@ def validate(
                 flagged_text=texts[i][s:e],
                 explanation=r.explanation.strip()[:2000] or "The AI reviewer flagged this text.",
                 suggestion=r.suggested_fix.strip()[:2000] or None,
+                edit=edit_of(r, injection, texts[i][s:e]),
                 field=i,
                 start=s,
                 end=e,
@@ -313,6 +322,17 @@ def validate(
             )
         )
     return hits, rejected, duplicates
+
+
+def edit_of(r: Reported, injection: bool, quoted: str) -> dict[str, str] | None:
+    """The exact fix: an injection attempt is removed; a violation takes the model's replacement.
+    No edit when the replacement is empty, the same as the quote, or too long to be a rewrite of it."""
+    if injection:
+        return {"op": "replace", "text": ""}
+    text = r.replacement.strip()
+    if not text or text == quoted.strip() or len(text) > max(200, 4 * len(quoted)):
+        return None
+    return {"op": "replace", "text": text}
 
 
 # ---- The review, on plain data ----
@@ -569,12 +589,14 @@ async def store(db: AsyncSession, version_id: uuid.UUID, outcome: Outcome) -> No
             Finding.status.in_([FindingStatus.OPEN, FindingStatus.HIDDEN]),
         )
     )
-    known = {(f.rule_id, f.flagged_text) for f in existing}
+    known = {(f.rule_id, f.flagged_text): f for f in existing}
     added: list[Finding] = []
     for h in outcome.hits:
-        if (h.rule_id, h.flagged_text) in known:
+        if old := known.get((h.rule_id, h.flagged_text)):
+            # A finding from before exact fixes existed gets this one, so the new-version form can apply it.
+            if old.edit is None and h.edit is not None:
+                old.edit = h.edit
             continue
-        known.add((h.rule_id, h.flagged_text))
         f = Finding(
             id=uuid.uuid7(),
             workspace_id=m.workspace_id,
@@ -587,9 +609,11 @@ async def store(db: AsyncSession, version_id: uuid.UUID, outcome: Outcome) -> No
             status=FindingStatus.OPEN,
             explanation=h.explanation,
             suggestion=h.suggestion,
+            edit=h.edit,
         )
         db.add(f)
         added.append(f)
+        known[(h.rule_id, h.flagged_text)] = f
     await db.flush()
 
     # Positions and marks of every open finding on the version, in content order.

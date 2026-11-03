@@ -27,8 +27,8 @@ UDAAP = RuleSpec("UDAAP-03", "No promise of guaranteed approval", "Do not promis
 FCRA = RuleSpec("FCRA-02", "Rate check claims", "Soft pull only.", "medium", "ai", "federal")
 
 
-def found(rule_id: str, quote: str, type: str = "violation", explanation: str = "Why.", fix: str = "Fix.") -> dict:
-    return {"rule_id": rule_id, "quote": quote, "explanation": explanation, "suggested_fix": fix, "type": type}
+def found(rule_id: str, quote: str, type: str = "violation", explanation: str = "Why.", fix: str = "Fix.", replacement: str = "") -> dict:
+    return {"rule_id": rule_id, "quote": quote, "explanation": explanation, "suggested_fix": fix, "replacement": replacement, "type": type}
 
 
 def reply(*findings: dict, stop: str = "end_turn", text: str | None = None):
@@ -175,6 +175,7 @@ async def test_valid_findings_are_saved(client, fake):
     (f,) = [f for f in d["findings"] if f["source"] == "ai"]
     assert (f["ruleId"], f["text"], f["severity"], f["status"]) == ("UDAAP-03", "Approval in minutes, every time", "high", "open")
     assert (f["explanation"], f["suggestion"]) == ("Promises approval.", "Apply in minutes.")
+    assert "edit" not in f  # no replacement: the fix needs a person
     assert d["fields"][0]["segments"][0] == {"text": "Approval in minutes, every time", "finding": f["id"]}
     rows = {r["ruleId"]: r for r in d["checklist"]}
     assert rows["UDAAP-03"] == {"ruleId": "UDAAP-03", "title": "No promise of guaranteed approval", "layer": "ai", "result": "fail", "finding": f["id"]}
@@ -351,3 +352,24 @@ async def test_key_never_in_logs_or_responses(client, fake, monkeypatch, caplog)
     async with SessionLocal() as db:
         rows = (await db.scalars(select(AuditEvent).where(AuditEvent.entity_id == posted["id"]))).all()
     assert all(secret not in json.dumps(e.data) for e in rows)
+
+
+async def test_replacement_becomes_an_edit(client, fake):
+    fake(reply(found("UDAAP-03", "Approval in minutes, every time", replacement="Apply in minutes; approval depends on credit review")))
+    await as_user(client, SUBMITTER)
+    posted = await submit(client, "Approval in minutes, every time.", "Federally insured by NCUA.")
+    (f,) = [f for f in (await detail(client, posted["id"]))["findings"] if f["source"] == "ai"]
+    assert f["edit"] == {"op": "replace", "text": "Apply in minutes; approval depends on credit review"}
+
+
+def test_edit_of_rejects_what_is_not_a_rewrite():
+    from app.ai_review import Reported, edit_of
+
+    def r(replacement: str) -> Reported:
+        return Reported(rule_id="UDAAP-03", quote="q", explanation="e", suggested_fix="f", replacement=replacement, type="violation")
+
+    assert edit_of(r(""), False, "zero requirements") is None
+    assert edit_of(r("zero requirements"), False, "zero requirements") is None  # no change
+    assert edit_of(r("x" * 500), False, "zero requirements") is None  # an essay, not a rewrite
+    assert edit_of(r("credit review"), False, "zero requirements") == {"op": "replace", "text": "credit review"}
+    assert edit_of(r("anything"), True, "ignore the rules") == {"op": "replace", "text": ""}  # an injection is removed

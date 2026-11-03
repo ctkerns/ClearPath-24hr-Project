@@ -25,14 +25,20 @@ import {
   type UploadedFile,
   uploadFile,
 } from './submission-model'
+import { FixesPanel } from './fixes-panel'
+import { useReviewFixes, type AppliedFix, type ReviewFixes } from './review-fixes'
 
 /**
  * The submit form (PRD F3). One component for a new material and for a new version:
  * a new version starts from the current content, and its title and channel are locked,
  * because a version belongs to one material on one channel.
  */
-export function SubmissionForm({ initial, mode, materialId, versionNumber, ready, onSubmit, onCancel }: {
+export function SubmissionForm({ initial, mode, materialId, versionNumber, ready, onSubmit, onCancel, review, initialApplied }: {
   initial: SubmissionValues
+  /** For a new version: the fixes from the review of the current version, shown beside the fields. */
+  review?: ReviewFixes
+  /** The fixes that `initial` already has applied ("Fix in a new version" on the review page). */
+  initialApplied?: Record<string, AppliedFix>
   mode: 'new' | 'version'
   /** The material that gets a new version, so the routing preview uses its channel and affiliate. */
   materialId?: string
@@ -59,6 +65,8 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
   const channelFields = useChannelFields()
   // A preview from the server; the server decides again on submit (PRD R2, F6).
   const routing = useRoutingPreview(values, materialId)
+  const fixState = useReviewFixes(review?.fixes ?? [], initialApplied ?? {}, values.fields, (fields) => set('fields', fields))
+  const hasFixes = !!review && review.fixes.length + review.manual.length > 0
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -149,6 +157,7 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
 
         {/* Right: the facts that decide the checklist and the routing. */}
         <aside className="grid gap-4 lg:sticky lg:top-24">
+          {hasFixes && values.source === 'text' && <FixesPanel review={review} state={fixState} fields={values.fields} />}
           <Field id="product" label={t('submit.product')} error={shown.product}>
             <Select value={values.product} onValueChange={(p) => set('product', p as Product)}>
               <SelectTrigger id="product" className="w-full" aria-invalid={!!shown.product}>

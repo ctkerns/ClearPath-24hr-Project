@@ -199,6 +199,10 @@ class Finding(Base):
     flagged_text: Mapped[str] = mapped_column(Text)
     explanation: Mapped[str] = mapped_column(Text)
     suggestion: Mapped[str | None] = mapped_column(Text)
+    # The exact change that fixes it, when there is one: {"op": "replace", "text": ...} puts the text in place of
+    # flagged_text ("" removes it); {"op": "append", "text": ...} adds the text at the end of the content.
+    # None when a person must decide the fix (for example which rate to use). The new-version form applies it.
+    edit: Mapped[dict[str, str] | None] = mapped_column(JSONB)
 
 
 class GroupReview(Base):

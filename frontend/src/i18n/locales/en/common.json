@@ -395,7 +395,11 @@
     "what": "material",
     "noVersion": "This material has no version yet",
     "noVersionHelp": "Its content shows here after the first version is uploaded or synced.",
-    "uploadFirst": "Upload the first version"
+    "uploadFirst": "Upload the first version",
+    "fixInNewVersion_one": "Apply {{count}} fix in a new version",
+    "fixInNewVersion_other": "Apply {{count}} fixes in a new version",
+    "rerun": "Run the checks again",
+    "rerunning": "Running the checks…"
   },
   "submit": {
     "intro": "Add the content and the facts about where it runs. Pre-review starts as soon as you submit.",
@@ -1935,5 +1939,21 @@
     "reload": "Reload the page",
     "notFound": "There is no page at this address",
     "notFoundHelp": "Check the link, or start again from the Dashboard."
+  },
+  "fixes": {
+    "heading_one": "{{count}} finding from the review",
+    "heading_other": "{{count}} findings from the review",
+    "intro": "Exact fixes from the review. Applying one changes the field. You can still edit the text after.",
+    "applyAll_one": "Apply {{count}} fix",
+    "applyAll_other": "Apply all {{count}} fixes",
+    "allApplied": "All fixes applied",
+    "apply": "Apply",
+    "applied": "Applied",
+    "undo": "Undo",
+    "appendTo": "Adds to {{field}}:",
+    "present": "Already in the content",
+    "stuck": "The text in {{field}} changed. Make this change in the field.",
+    "manual_one": "{{count}} needs your words",
+    "manual_other": "{{count}} need your words"
   }
 }

@@ -21,6 +21,11 @@ export type Finding = {
   text: string
   explanation: string
   suggestion?: string
+  /**
+   * The exact fix, when there is one: replace puts `text` in place of the flagged text ('' removes it);
+   * append adds `text` at the end of the content. Without it, a person writes the fix.
+   */
+  edit?: { op: 'replace' | 'append'; text: string }
 }
 
 export type MaterialDetail = {

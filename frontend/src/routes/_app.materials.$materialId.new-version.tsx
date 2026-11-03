@@ -5,11 +5,14 @@ import { LoadError } from '@/components/load-error'
 import { useMaterials } from '@/components/materials/material-data'
 import { useMaterialDetail } from '@/components/review/material-detail-data'
 import { SubmissionForm } from '@/components/submission/submission-form'
-import { useSubmitMaterial, valuesFromMaterial } from '@/components/submission/submission-model'
+import { applyAll, reviewFixes } from '@/components/submission/review-fixes'
+import { useChannelFields, useSubmitMaterial, valuesFromMaterial } from '@/components/submission/submission-model'
 import { Skeleton } from '@/components/ui/skeleton'
 import { notFoundError } from '@/lib/load-error'
 
 export const Route = createFileRoute('/_app/materials/$materialId/new-version')({
+  // fixes=all: "Apply fixes in a new version" on the review page. The form opens with the exact fixes applied.
+  validateSearch: (search: Record<string, unknown>): { fixes?: 'all' } => (search.fixes === 'all' ? { fixes: 'all' } : {}),
   component: NewVersionPage,
 })
 
@@ -17,13 +20,15 @@ export const Route = createFileRoute('/_app/materials/$materialId/new-version')(
 function NewVersionPage() {
   const { t } = useTranslation()
   const { materialId } = Route.useParams()
+  const { fixes } = Route.useSearch()
+  const channelFields = useChannelFields()
   const navigate = useNavigate()
   const materials = useMaterials()
   const detail = useMaterialDetail(materialId)
   const submitMaterial = useSubmitMaterial()
   const material = materials.data?.find((m) => m.id === materialId)
 
-  if (materials.isPending || detail.isPending) return <Skeleton className="mx-auto h-64 w-full max-w-7xl" />
+  if (materials.isPending || detail.isPending || !channelFields) return <Skeleton className="mx-auto h-64 w-full max-w-7xl" />
   // A failed load must not open an empty form: submitting it would replace the content with nothing.
   const failed = detail.error ?? materials.error ?? (material ? null : notFoundError)
   if (failed || !material) {
@@ -39,6 +44,10 @@ function NewVersionPage() {
   }
 
   const next = (detail.data?.version ?? 0) + 1
+  const initial = valuesFromMaterial(material, detail.data ?? null)
+  const review = detail.data ? reviewFixes(detail.data, channelFields[material.channel]) : undefined
+  // The form reads these once, when it mounts.
+  const start = review && fixes === 'all' ? applyAll(initial.fields, review.fixes) : { fields: initial.fields, applied: {} }
   const back = () => navigate({ to: '/materials/$materialId', params: { materialId } })
 
   return (
@@ -55,7 +64,9 @@ function NewVersionPage() {
         mode="version"
         materialId={materialId}
         versionNumber={next}
-        initial={valuesFromMaterial(material, detail.data ?? null)}
+        initial={{ ...initial, fields: start.fields }}
+        review={review}
+        initialApplied={start.applied}
         ready
         onCancel={back}
         onSubmit={async (values) => {

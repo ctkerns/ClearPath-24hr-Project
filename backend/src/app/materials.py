@@ -174,6 +174,13 @@ async def list_materials(viewer: SignedIn, db: Db, p: Annotated[MaterialFilters,
     )
 
 
+class FindingEdit(APIModel):
+    """The exact fix (Finding.edit): replace puts `text` in place of the flagged text, append adds it at the end."""
+
+    op: Literal["replace", "append"]
+    text: str
+
+
 class FindingOut(APIModel):
     id: uuid.UUID
     source: FindingSource
@@ -183,6 +190,7 @@ class FindingOut(APIModel):
     text: str
     explanation: str
     suggestion: str | None = None
+    edit: FindingEdit | None = None
 
 
 class Deadline(APIModel):
@@ -449,6 +457,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
                 text=f.flagged_text,
                 explanation=f.explanation,
                 suggestion=f.suggestion,
+                edit=FindingEdit(**f.edit) if f.edit else None,
             )
             for f in findings
         ],
