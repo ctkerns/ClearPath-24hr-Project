@@ -7,6 +7,7 @@ from approved materials with "Save to library" (F9); Managers curate them after 
 """
 
 import csv
+import dataclasses
 import io
 import uuid
 from datetime import UTC, date, datetime
@@ -18,10 +19,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import flags, prereview
 from app.api import APIModel, InternalUser, Manager, bad_request, conflict, not_found, require_role
 from app.audit import record
 from app.db import get_db
+from app.flags import AffectedMaterial, Approved
 from app.models import Role, User
+from app.models.flags import FlagKind
 from app.models.library import (
     BlockKind,
     BuildingBlock,
@@ -219,19 +223,13 @@ async def list_rules(viewer: InternalUser, db: Db) -> list[RuleOut]:
     return [RuleOut.of(r, pending) for r in rules]
 
 
-class RuleInput(APIModel):
-    title: ShortText
-    kind: RuleKind
-    text: LongText
+class RuleScope(APIModel):
+    """Where a rule applies, and from when: what decides which approved materials depend on it (F7)."""
+
     jurisdiction: str
     products: list[Product] = Field(max_length=10)
     channels: list[Channel] = Field(max_length=10)
-    citation: Citation | None = None
     effective_date: date
-    severity: Severity
-    layer: CheckLayer
-    check: RuleCheck
-    note: Note  # what changed, for the version history
 
     @field_validator("jurisdiction")
     @classmethod
@@ -239,6 +237,17 @@ class RuleInput(APIModel):
         if value not in ("federal", "all", *US_STATES):
             raise ValueError('Use "federal", "all", or a state code')
         return value
+
+
+class RuleInput(RuleScope):
+    title: ShortText
+    kind: RuleKind
+    text: LongText
+    citation: Citation | None = None
+    severity: Severity
+    layer: CheckLayer
+    check: RuleCheck
+    note: Note  # what changed, for the version history
 
     @model_validator(mode="after")
     def layer_matches_check(self) -> "RuleInput":
@@ -286,15 +295,49 @@ async def create_rule(body: NewRule, viewer: Manager, db: Db) -> RuleOut:
     return await rule_saved(db, viewer, rule.id)
 
 
+async def rule_edit_impact(db: AsyncSession, viewer: User, rule: Rule, scope: RuleScope) -> list[Approved]:
+    """The approved materials that depend on the rule before or after the edit (its scope may change).
+    A version that ends before the new version takes effect is not affected (app.flags)."""
+    before = prereview.rule_spec(rule)
+    after = dataclasses.replace(
+        before,
+        jurisdiction=scope.jurisdiction,
+        products=list(scope.products),
+        channels=list(scope.channels),
+        effective_date=scope.effective_date,
+    )
+    materials = await flags.approved_materials(db, viewer.workspace_id)
+    return flags.affected_by_rules(materials, [before, after], scope.effective_date)
+
+
+@router.get("/rules/{rule_id}/impact")
+async def rule_dependents(rule_id: str, viewer: InternalUser, db: Db) -> list[AffectedMaterial]:
+    """The approved and live materials that depend on the rule now (F7). An edit flags these for re-review."""
+    rule = await load_rule(db, viewer, rule_id)
+    materials = await flags.approved_materials(db, viewer.workspace_id)
+    return [AffectedMaterial.of(a) for a in flags.affected_by_rules(materials, [prereview.rule_spec(rule)], None)]
+
+
+@router.post("/rules/{rule_id}/impact")
+async def rule_edit_preview(rule_id: str, body: RuleScope, viewer: Manager, db: Db) -> list[AffectedMaterial]:
+    """What saving an edit with this scope flags, before the Manager saves. Changes nothing."""
+    rule = await load_rule(db, viewer, rule_id)
+    return [AffectedMaterial.of(a) for a in await rule_edit_impact(db, viewer, rule, body)]
+
+
 @router.patch("/rules/{rule_id}")
 async def edit_rule(rule_id: str, body: RuleInput, viewer: Manager, db: Db) -> RuleOut:
     """Every change is a new version. The owner stays the same.
-    TODO (F7): flag the approved materials that depend on this rule for re-review, when materials are in the database."""
+    The approved materials that depend on the rule get a flag for re-review, in the same transaction (F7)."""
     rule = await load_rule(db, viewer, rule_id)
     await check_disclosure_exists(db, viewer, body)
+    affected = await rule_edit_impact(db, viewer, rule, body)
     set_rule_fields(rule, body)
     new_rule_version(rule, viewer, body.effective_date, body.note.strip())
     record(db, viewer, "rule", rule.id, "updated", {"version": rule.version, "note": body.note.strip()})
+    summary = f'Rule {rule.id} "{rule.title}" changed to version {rule.version}.'
+    for a in affected:
+        flags.flag(db, viewer, a, FlagKind.RULE_CHANGED, rule.id, rule.version, summary)
     return await rule_saved(db, viewer, rule.id)
 
 
@@ -418,11 +461,30 @@ async def create_disclosure(body: NewDisclosure, viewer: Manager, db: Db) -> Dis
     return await disclosure_saved(db, viewer, d.id)
 
 
+async def disclosure_impact(db: AsyncSession, viewer: User, d: Disclosure, effective: date | None) -> list[Approved]:
+    """The approved materials that depend on the disclosure as it is now: they use its text, or a rule
+    they depend on requires it (app.flags)."""
+    materials = await flags.approved_materials(db, viewer.workspace_id)
+    rules = await flags.rule_specs(db, viewer.workspace_id)
+    return flags.affected_by_disclosure(materials, prereview.disclosure_spec(d), rules, effective)
+
+
+@router.get("/disclosures/{disclosure_id}/impact")
+async def disclosure_dependents(
+    disclosure_id: str, viewer: InternalUser, db: Db, effective: date | None = None
+) -> list[AffectedMaterial]:
+    """The approved and live materials that a new version flags for re-review (F7, F15). `effective` is the
+    new version's effective date, if known: a material that ends before it is not affected."""
+    d = await load_disclosure(db, viewer, disclosure_id)
+    return [AffectedMaterial.of(a) for a in await disclosure_impact(db, viewer, d, effective)]
+
+
 @router.patch("/disclosures/{disclosure_id}")
 async def edit_disclosure(disclosure_id: str, body: DisclosureInput, viewer: Manager, db: Db) -> DisclosureOut:
     """Every change is a new version, and each version keeps its full text.
-    TODO (F7, F15): flag the approvals that used the old text, when approvals are in the database."""
+    The approved materials that depend on the old version get a flag for re-review, in the same transaction."""
     d = await load_disclosure(db, viewer, disclosure_id)
+    affected = await disclosure_impact(db, viewer, d, body.effective_date)
     set_disclosure_fields(d, body)
     d.version += 1
     d.versions.insert(
@@ -432,6 +494,9 @@ async def edit_disclosure(disclosure_id: str, body: DisclosureInput, viewer: Man
         ),
     )
     record(db, viewer, "disclosure", d.id, "updated", {"version": d.version, "note": body.note.strip()})
+    summary = f'Disclosure {d.id} "{d.title}" changed to version {d.version}.'
+    for a in affected:
+        flags.flag(db, viewer, a, FlagKind.DISCLOSURE_CHANGED, d.id, d.version, summary)
     return await disclosure_saved(db, viewer, d.id)
 
 
@@ -688,16 +753,33 @@ def parse_rate_csv(content: str) -> list[RateSheetRow]:
     return rows
 
 
+async def rate_impact(db: AsyncSession, viewer: User, rows: list[RateSheetRow], effective: date) -> list[tuple[Approved, list[str]]]:
+    """The approved materials that state a rate which the sheet being replaced covers and the new one does not."""
+    new = [prereview.RateRange(r.product, r.rate.value, r.min, r.max) for r in rows]
+    old = await flags.replaced_rates(db, viewer.workspace_id, effective)
+    materials = await flags.approved_materials(db, viewer.workspace_id)
+    return flags.affected_by_rates(materials, await flags.rule_specs(db, viewer.workspace_id), old, new, effective)
+
+
+@router.post("/rate-sheets/impact")
+async def rate_sheet_preview(body: RateSheetUpload, viewer: Manager, db: Db) -> list[AffectedMaterial]:
+    """What uploading this sheet flags, before the Manager uploads it. Checks the CSV the same way. Changes nothing."""
+    affected = await rate_impact(db, viewer, parse_rate_csv(body.csv), body.effective_date)
+    return [AffectedMaterial.of(a, rates) for a, rates in affected]
+
+
 @router.post("/rate-sheets", status_code=status.HTTP_201_CREATED)
 async def upload_rate_sheet(body: RateSheetUpload, viewer: Manager, db: Db) -> RateSheetOut:
-    """A new full sheet. Older sheets stay as history.
-    TODO (F6, F7): flag approved materials whose rates are no longer on the sheet, when materials are in the database."""
+    """A new full sheet. Older sheets stay as history. Approved materials that state a rate the new sheet
+    no longer covers get a flag for re-review, in the same transaction (F7, F8)."""
+    rows = parse_rate_csv(body.csv)
+    affected = await rate_impact(db, viewer, rows, body.effective_date)
     sheet = RateSheet(
         workspace_id=viewer.workspace_id,
         effective_date=body.effective_date,
         uploaded_by_id=viewer.id,
         file=body.file.strip(),
-        rows=parse_rate_csv(body.csv),
+        rows=rows,
     )
     db.add(sheet)
     await db.flush()
@@ -705,6 +787,9 @@ async def upload_rate_sheet(body: RateSheetUpload, viewer: Manager, db: Db) -> R
     record(db, viewer, "rate_sheet", sheet_id, "created", {
         "effectiveDate": sheet.effective_date, "file": sheet.file, "rows": len(sheet.rows)
     })
+    for a, rates in affected:
+        summary = f"The rate sheet effective {flags.day(sheet.effective_date)} ({sheet.file}) no longer covers {', '.join(rates)}."
+        flags.flag(db, viewer, a, FlagKind.RATE_SHEET_CHANGED, sheet_id, None, summary, {"rates": rates})
     await db.commit()
     saved = await db.scalar(
         select(RateSheet)
@@ -810,12 +895,32 @@ def decide(change: RegChange, viewer: User, new_status: RegChangeStatus, note: s
     change.reviewing_by_id = None
 
 
+async def change_impact(db: AsyncSession, viewer: User, change: RegChange) -> list[Approved]:
+    """The approved materials that depend on any rule the change edits. It changes only their text,
+    so the scope stays; a material that ends before the change takes effect is not affected."""
+    rules = [prereview.rule_spec(await load_rule(db, viewer, e.rule_id)) for e in change.edits]
+    materials = await flags.approved_materials(db, viewer.workspace_id)
+    return flags.affected_by_rules(materials, rules, change.effective_date)
+
+
+@router.get("/regulatory-changes/{change_id}/impact")
+async def change_materials(change_id: str, viewer: InternalUser, db: Db) -> list[AffectedMaterial]:
+    """Undecided: the approved materials that applying it flags. Applied: those it flagged. Dismissed: none."""
+    change = await load_change(db, viewer, change_id)
+    if change.status is RegChangeStatus.APPLIED:
+        return await flags.flagged_by(db, viewer.workspace_id, FlagKind.REGULATORY_CHANGE, change.id)
+    if change.status is RegChangeStatus.DISMISSED:
+        return []
+    return [AffectedMaterial.of(a) for a in await change_impact(db, viewer, change)]
+
+
 @router.post("/regulatory-changes/{change_id}/apply")
 async def apply_change(change_id: str, body: Decision, viewer: Manager, db: Db) -> RegChangeOut:
     """Writes the suggested text into each rule as a new version (R3). Each edit keeps the text the rule had.
-    TODO (F7): flag the approved materials that depend on these rules, when materials are in the database."""
+    The approved materials that depend on these rules get one flag each for re-review, in the same transaction (F7)."""
     change = await undecided_change(db, viewer, change_id)
     note = (body.note or "").strip() or None
+    affected = await change_impact(db, viewer, change)
     for edit in change.edits:
         rule = await load_rule(db, viewer, edit.rule_id)
         edit.before = rule.text
@@ -824,7 +929,11 @@ async def apply_change(change_id: str, body: Decision, viewer: Manager, db: Db) 
         new_rule_version(rule, viewer, change.effective_date, note or f"Applied regulatory change: {change.title}")
         record(db, viewer, "rule", rule.id, "updated", {"version": rule.version, "regChange": change.id})
     decide(change, viewer, RegChangeStatus.APPLIED, note)
-    record(db, viewer, "reg_change", change.id, "applied", {"rules": [e.rule_id for e in change.edits], "note": note})
+    rule_ids = [e.rule_id for e in change.edits]
+    record(db, viewer, "reg_change", change.id, "applied", {"rules": rule_ids, "note": note, "flagged": len(affected)})
+    summary = f'Regulatory change "{change.title}" changed {"rules" if len(rule_ids) > 1 else "rule"} {", ".join(rule_ids)}.'
+    for a in affected:
+        flags.flag(db, viewer, a, FlagKind.REGULATORY_CHANGE, change.id, None, summary, {"rules": rule_ids})
     await db.commit()
     return RegChangeOut.of(await load_change(db, viewer, change_id))
 

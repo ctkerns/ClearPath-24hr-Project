@@ -2,8 +2,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { hasRole } from '@/components/settings/user-data'
 import type { Role } from '@/components/review/material-detail-data'
-import type { Channel, Material, Product } from '@/components/materials/material-data'
+import type { Channel, Product } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
+import { useAfterFlagging } from './impact-data'
 
 // Rules library (PRD F7, and company rules from F8). Managers edit it; every internal user reads it (R3).
 // GET /api/library/rules. Affiliates cannot read it (R4).
@@ -69,13 +70,14 @@ export type RuleInput = Pick<Rule, 'title' | 'kind' | 'text' | 'jurisdiction' | 
 
 /**
  * Managers only (R3); the server checks. Both save a version: create makes version 1, edit the next one.
- * TODO (F7): the server will flag dependent materials on edit, when materials are in the database.
+ * An edit also flags the approved materials that depend on the rule for re-review (F7), so those reload too.
  * Each resolves with the saved rule, or rejects with an ApiError, so the dialog can show what went wrong.
  */
 export function useRuleUpdate() {
   const queryClient = useQueryClient()
+  const afterFlagging = useAfterFlagging()
   const after = async (rule: Rule) => {
-    await queryClient.invalidateQueries({ queryKey: ['rules'] })
+    await Promise.all([queryClient.invalidateQueries({ queryKey: ['rules'] }), afterFlagging()])
     return rule
   }
   return {
@@ -86,16 +88,3 @@ export function useRuleUpdate() {
 
 /** True when another rule already uses this ID. The server compares exactly. */
 export const ruleIdTaken = (rules: Rule[], id: string) => rules.some((r) => r.id === id.trim())
-
-/**
- * Approved materials that this rule applies to. When the rule changes, these get flagged for re-review (F7).
- * TODO: the server knows each material's checklist and target states; this demo matches on product and channel only.
- */
-export function dependentMaterials(rule: Rule, materials: Material[]) {
-  return materials.filter(
-    (m) =>
-      (m.status === 'approved' || m.status === 'live') &&
-      (rule.products.length === 0 || rule.products.includes(m.product)) &&
-      (rule.channels.length === 0 || rule.channels.includes(m.channel)),
-  )
-}

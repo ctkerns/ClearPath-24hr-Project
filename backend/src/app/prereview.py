@@ -275,8 +275,12 @@ def target_states(details: dict[str, Any], licensed: Sequence[str]) -> list[str]
 def applies(rule: RuleSpec, product: str, channel: str, states: Sequence[str], end_date: date | None = None) -> bool:
     """A code rule applies when its product, channel and jurisdiction match. A rule that takes effect
     only after the material's end date does not apply to it."""
-    if rule.layer != CheckLayer.CODE.value:
-        return False
+    return rule.layer == CheckLayer.CODE.value and in_scope(rule, product, channel, states, end_date)
+
+
+def in_scope(rule: RuleSpec, product: str, channel: str, states: Sequence[str], end_date: date | None = None) -> bool:
+    """The checklist test of F7 for a rule of either layer: its product, channel and jurisdiction match.
+    `applies` adds the layer for the code checks; flagging (app.flags) also needs the AI rules."""
     if rule.products and product not in rule.products:
         return False
     if rule.channels and channel not in rule.channels:
@@ -681,38 +685,51 @@ async def load_library(db: AsyncSession, workspace_id: uuid.UUID, on: date) -> L
             .order_by(RateSheet.effective_date.desc(), RateSheet.uploaded_at.desc())
         )
     )
-    sheet = next((s for s in sheets if s.effective_date <= on), sheets[0] if sheets else None)
+    sheet = sheet_on(sheets, on)
     workspace = await db.get_one(Workspace, workspace_id)
     return Library(
-        rules=[
-            RuleSpec(
-                id=r.id,
-                title=r.title,
-                text=r.text,
-                severity=r.severity.value,
-                layer=r.layer.value,
-                jurisdiction=r.jurisdiction,
-                products=r.products,
-                channels=r.channels,
-                check=r.check if isinstance(r.check, dict) else {},
-                effective_date=r.effective_date,
-            )
-            for r in rules
-        ],
-        disclosures={
-            d.id: DisclosureSpec(
-                id=d.id,
-                title=d.title,
-                version=d.version,
-                text=d.text,
-                products=d.products,
-                states=d.states,
-                old=[(v.version, v.text) for v in d.versions if v.version != d.version],
-            )
-            for d in disclosures
-        },
-        rates=[RateRange(r.product, r.rate.value, r.min, r.max) for r in sheet.rows] if sheet else None,
+        rules=[rule_spec(r) for r in rules],
+        disclosures={d.id: disclosure_spec(d) for d in disclosures},
+        rates=rate_ranges(sheet) if sheet else None,
         licensed_states=list(workspace.licensed_states),
+    )
+
+
+def sheet_on(sheets: Sequence[RateSheet], on: date) -> RateSheet | None:
+    """The sheet in effect on a day, from sheets newest first: the newest that takes effect by then, else the newest."""
+    return next((s for s in sheets if s.effective_date <= on), sheets[0] if sheets else None)
+
+
+def rate_ranges(sheet: RateSheet) -> list[RateRange]:
+    """Needs sheet.rows loaded."""
+    return [RateRange(r.product, r.rate.value, r.min, r.max) for r in sheet.rows]
+
+
+def rule_spec(r: Rule) -> RuleSpec:
+    return RuleSpec(
+        id=r.id,
+        title=r.title,
+        text=r.text,
+        severity=r.severity.value,
+        layer=r.layer.value,
+        jurisdiction=r.jurisdiction,
+        products=r.products,
+        channels=r.channels,
+        check=r.check if isinstance(r.check, dict) else {},
+        effective_date=r.effective_date,
+    )
+
+
+def disclosure_spec(d: Disclosure) -> DisclosureSpec:
+    """Needs d.versions loaded."""
+    return DisclosureSpec(
+        id=d.id,
+        title=d.title,
+        version=d.version,
+        text=d.text,
+        products=d.products,
+        states=d.states,
+        old=[(v.version, v.text) for v in d.versions if v.version != d.version],
     )
 
 
@@ -867,7 +884,8 @@ router = APIRouter(prefix="/api/materials", tags=["materials"])
 @router.post("/{material_id}/prereview")
 async def rerun(material_id: uuid.UUID, viewer: Reviewer, db: Db) -> dict[str, Any]:
     """Runs the code checks again on the current version, for example after a rule or the rate sheet changed.
-    Only while the version waits for review: flagging approved materials is F7/F15. Returns the material detail."""
+    Only while the version waits for review: approved materials get a flag for re-review instead (app.flags, F7).
+    Returns the material detail."""
     from app.materials import saved_detail  # here, because materials.py imports this module
 
     m = await db.scalar(

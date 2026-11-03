@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { CopyButton } from '@/components/library/copy-button'
 import { requiredBy, useDisclosures } from '@/components/library/disclosure-data'
 import { DisclosureFormDialog } from '@/components/library/disclosure-form-dialog'
+import { AffectedList } from '@/components/library/affected-materials'
+import { useDisclosureDependents } from '@/components/library/impact-data'
 import { canEditLibrary, useRules } from '@/components/library/rule-data'
 import { useDisclosureList } from '@/components/library/use-disclosure-list'
 import { PersonAvatar } from '@/components/materials/material-meta'
@@ -29,6 +31,8 @@ function DisclosurePage() {
   const { disclosureId } = Route.useParams()
   const disclosures = useDisclosures()
   const rules = useRules()
+  // The approved materials that a new version flags for re-review (F7, F15). The server works it out.
+  const dependents = useDisclosureDependents(disclosureId)
   const { label } = useDisclosureList()
   const d = disclosures.data?.find((x) => x.id === disclosureId)
   // R3: only Managers and Admins change the library. The server checks too.
@@ -143,6 +147,16 @@ function DisclosurePage() {
             ) : (
               <p className="text-xs text-muted-foreground">{t('disclosures.notRequired')}</p>
             )}
+          </section>
+
+          <section className="grid gap-2">
+            {dependents.data ? (
+              <>
+                <SectionHeading>{t('disclosures.dependents.heading', { count: dependents.data.length })}</SectionHeading>
+                <p className="text-xs text-muted-foreground">{t('disclosures.dependents.note')}</p>
+                <AffectedList materials={dependents.data} />
+              </>
+            ) : <Skeleton className="h-16 w-full" />}
           </section>
         </aside>
       </div>

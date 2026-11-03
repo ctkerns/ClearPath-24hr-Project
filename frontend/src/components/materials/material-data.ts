@@ -49,6 +49,8 @@ export type Material = {
   /** When the current version was submitted. Only set while it waits for review. */
   submittedAt?: string
   updatedAt: string
+  /** Flags for re-review that no one resolved yet (PRD F7). Left out when there are none. */
+  openFlags?: number
 }
 
 /**

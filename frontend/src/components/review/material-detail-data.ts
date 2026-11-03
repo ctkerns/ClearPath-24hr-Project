@@ -44,6 +44,26 @@ export type MaterialDetail = {
   issues: MaterialIssue[]
   /** Files uploaded with the current version: content, the ad image, or claim proofs (PRD F3). */
   files: MaterialFile[]
+  /** Open flags for re-review: a library change that the approved version depends on (PRD F7). */
+  flags: MaterialFlag[]
+}
+
+/**
+ * A rule, disclosure, rate sheet, or applied regulatory change that the approved version depends on changed (PRD F7).
+ * The server decides which materials get one. It does not change the status; a Reviewer resolves it.
+ */
+export type MaterialFlag = {
+  id: string
+  kind: 'rule_changed' | 'disclosure_changed' | 'rate_sheet_changed' | 'regulatory_change'
+  /** The rule, disclosure, rate sheet, or regulatory change ID. */
+  sourceId: string
+  sourceVersion?: number
+  /** What changed, in one line. The server writes it. */
+  summary: string
+  /** The approved version it is about. */
+  version: number
+  createdAt: string
+  createdBy?: string
 }
 
 /** The selected text that a comment is about (PRD F5), in one field of the version it was made on. */
@@ -69,7 +89,7 @@ export type VersionSummary = {
 export type HistoryEvent = {
   at: string
   actor: string
-  type: 'submitted' | 'prereview' | 'routed' | 'decision' | 'comment' | 'live' | 'issue'
+  type: 'submitted' | 'prereview' | 'routed' | 'decision' | 'comment' | 'live' | 'issue' | 'flag'
   text: string
 }
 
