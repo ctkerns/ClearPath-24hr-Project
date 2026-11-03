@@ -70,6 +70,7 @@
     "live": "Live status and issues"
   },
   "libraryTabs": {
+    "products": "Products",
     "rules": "Rules",
     "disclosures": "Disclosures",
     "buildingBlocks": "Building blocks",
@@ -173,14 +174,6 @@
       "wordpress": "WordPress",
       "affiliate": "Affiliate",
       "other": "Other"
-    },
-    "product": {
-      "personal_loan": "Personal loan",
-      "credit_card": "Credit card",
-      "mortgage": "Mortgage",
-      "heloc": "HELOC",
-      "auto_loan": "Auto loan",
-      "savings": "Savings"
     },
     "groupState": {
       "waiting": "{{group}}: waiting for review",
@@ -476,7 +469,8 @@
         "url": "Add a full URL that starts with https://."
       }
     },
-    "routingDefault": "Default group, no routing rule matched"
+    "routingDefault": "Default group, no routing rule matched",
+    "noProducts": "No products yet. Ask a Manager to add one in the Library."
   },
   "list": {
     "views": "Views",
@@ -1971,5 +1965,111 @@
     "stuck": "The text in {{field}} changed. Make this change in the field.",
     "manual_one": "{{count}} needs your words",
     "manual_other": "{{count}} need your words"
+  },
+  "products": {
+    "intro": "The financial products this workspace markets. Rules, disclosures, rates, routing and the submit form use this list.",
+    "add": "Add product",
+    "edit": "Edit",
+    "reactivate": "Reactivate",
+    "cancel": "Cancel",
+    "what": "products",
+    "whatOne": "product",
+    "firstRun": "No products yet. A Manager adds them here.",
+    "firstRunEditor": "No products yet. Add the first one: the submit form, rules and the rate sheet need it.",
+    "inactive": "Inactive",
+    "inactiveNote": "Inactive: nobody can choose it for new materials, rules or routing. Records that have it keep it.",
+    "readOnly": "Only Managers and Admins can change products.",
+    "addedOn": "Added {{date}}",
+    "libraryCounts": "{{rules}} rules · {{disclosures}} disclosures",
+    "rates_one": "{{count}} rate",
+    "rates_other": "{{count}} rates",
+    "noRates": "No rates",
+    "column": {
+      "product": "Product",
+      "materials": "Materials",
+      "library": "Rules and disclosures",
+      "rates": "Rate sheet",
+      "status": "Status"
+    },
+    "usage": {
+      "heading": "What uses it",
+      "materials": "Materials",
+      "inReview_one": "{{count}} in review now",
+      "inReview_other": "{{count}} in review now",
+      "rules": "Rules",
+      "disclosures": "Disclosures",
+      "blocks": "Building blocks",
+      "rates": "Rate sheet rows",
+      "routing": "Routing rules",
+      "view": "View",
+      "allProducts": "Rules and disclosures for every product apply to it too. They are not counted here."
+    },
+    "setup": {
+      "heading": "Setup",
+      "ready": "Ready. Its materials get a full review.",
+      "left_one": "{{count}} step left",
+      "left_other": "{{count}} steps left",
+      "done": "done",
+      "todo": "to do",
+      "view": "View",
+      "rules": {
+        "title": "Product rules",
+        "done_one": "{{count}} rule names this product.",
+        "done_other": "{{count}} rules name this product.",
+        "todo": "No rule names it yet. Rules for every product still apply.",
+        "action": "Add a rule"
+      },
+      "disclosures": {
+        "title": "Required disclosures",
+        "done_one": "{{count}} disclosure applies.",
+        "done_other": "{{count}} disclosures apply.",
+        "todo": "No disclosure applies yet.",
+        "action": "Add a disclosure"
+      },
+      "rateSheet": {
+        "title": "Rates on the rate sheet",
+        "done_one": "{{count}} rate on the current sheet.",
+        "done_other": "{{count}} rates on the current sheet.",
+        "todo": "The rate check fails every rate in its materials until the sheet has its rates.",
+        "action": "Upload a rate sheet"
+      },
+      "routing": {
+        "title": "Routing",
+        "done_one": "{{count}} routing rule uses it.",
+        "done_other": "{{count}} routing rules use it.",
+        "todo": "No routing rule uses it, so its materials go to the default group.",
+        "action": "Add a routing rule"
+      }
+    },
+    "form": {
+      "createTitle": "Add a product",
+      "editTitle": "Edit {{name}}",
+      "createDescription": "Add the product here, then give it rules, disclosures and rates from its page.",
+      "editDescription": "Rules, materials and rates keep the product. Only its name and description change.",
+      "name": "Name",
+      "namePlaceholder": "Auto loan",
+      "nameHint": "The submit form, filters and reports show this name.",
+      "nameTaken": "Another product has this name.",
+      "renameNote": "The new name shows everywhere at once.",
+      "description": "Description",
+      "descriptionPlaceholder": "New and used vehicle loans, direct and through dealers.",
+      "descriptionHint": "Helps submitters choose the right product.",
+      "create": "Add product",
+      "save": "Save"
+    },
+    "deactivate": {
+      "action": "Deactivate",
+      "title": "Deactivate {{name}}?",
+      "description": "Do this when the workspace stops marketing the product.",
+      "noNew": "Nobody can choose it for new materials, rules, disclosures, building blocks or routing rules.",
+      "inReview_one": "{{count}} material in review keeps its review.",
+      "inReview_other": "{{count}} materials in review keep their review.",
+      "keeps_one": "{{count}} library record keeps the product.",
+      "keeps_other": "{{count}} library records keep the product.",
+      "rates_one": "The rate sheet keeps its {{count}} rate.",
+      "rates_other": "The rate sheet keeps its {{count}} rates.",
+      "undo": "You can reactivate it at any time.",
+      "confirm": "Deactivate"
+    }
   }
 }

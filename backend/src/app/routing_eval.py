@@ -24,7 +24,6 @@ from app.models.materials import (
     Material,
     MaterialVersion,
     Outcome,
-    Product,
     ReviewPath,
 )
 from app.models.routing import NoMaterialChangeType, RoutingRule, RoutingSettings, RuleSource
@@ -241,7 +240,7 @@ async def route(
     db: AsyncSession,
     viewer: User,
     *,
-    product: Product,
+    product: str,
     channel: Channel,
     affiliate_id: uuid.UUID | None,
     nationwide: bool,
@@ -259,7 +258,7 @@ async def route(
     source = RuleSource.AFFILIATE if affiliate_id or channel is Channel.AFFILIATE else RuleSource.INTERNAL
     history = await affiliate_history(db, ws, affiliate_id, at) if affiliate_id else False
     v = RoutingInput(
-        product=product.value,
+        product=product,
         channel=channel.value,
         source=source.value,
         affiliate_history=history,

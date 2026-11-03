@@ -13,7 +13,7 @@ from sqlalchemy.orm import aliased
 from app.listing import Facets, Paging, TextSearch, Values, every, facet_counts
 from app.material_access import visible
 from app.models import Affiliate, ReviewerGroup, User
-from app.models.materials import Channel, GroupReview, LiveStatus, Material, MaterialStatus, Product
+from app.models.materials import Channel, GroupReview, LiveStatus, Material, MaterialStatus
 
 Owner = aliased(User, name="owner")
 
@@ -27,7 +27,8 @@ class MaterialMatch(TextSearch):
     status: Annotated[list[MaterialStatus], *Values] = []
     live: Annotated[list[LiveStatus], *Values] = []
     channel: Annotated[list[Channel], *Values] = []
-    product: Annotated[list[Product], *Values] = []
+    # Any product ID: an unknown one matches nothing, so an old link or an ID from another workspace is no error.
+    product: Annotated[list[str], *Values] = []
     group: Annotated[list[str], *Values] = []
     owner: Annotated[list[str], *Values] = []
     affiliate: Annotated[list[str], *Values] = []

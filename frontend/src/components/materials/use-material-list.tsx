@@ -1,5 +1,6 @@
 import { Building2, Megaphone, Package, Radio, UserRound, UsersRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { filterableProducts, useProducts } from '@/components/library/product-data'
 import type { FacetField, Preset, SortOption } from '@/components/list/list-filters'
 import { StatusPill, type MaterialStatus } from '@/components/ui/status-pill'
 import type { Channel, LiveStatus } from './material-data'
@@ -21,6 +22,9 @@ const icons = {
 export function useMaterialList() {
   const { t } = useTranslation()
   const label = useOptionLabel()
+  const products = useProducts().data
+  // While the products load, the menu shows the products the server counted.
+  const fixed = { ...MATERIAL_FIXED, product: products && filterableProducts(products).map((p) => p.id) }
 
   const render: Partial<Record<MaterialFilterKey, (v: string) => React.ReactNode>> = {
     status: (v) => <StatusPill status={v as MaterialStatus} />,
@@ -33,8 +37,8 @@ export function useMaterialList() {
     key,
     label: t(`materials.field.${key}`),
     icon: icons[key],
-    // Fixed lists come from the PRD. People, groups and affiliates come from the server's counts.
-    fixed: MATERIAL_FIXED[key],
+    // Fixed lists come from the PRD, products from the Library. People, groups and affiliates come from the server's counts.
+    fixed: fixed[key],
     optionLabel: (v) => label(key, v),
     renderOption: render[key],
   }))

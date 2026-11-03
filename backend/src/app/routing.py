@@ -22,16 +22,17 @@ from app.db import get_db
 from app.groups import GroupOut, load_group
 from app.material_access import Submitter, now, visible
 from app.models import ReviewerGroup, Role, User
-from app.models.materials import Channel, Material, Product, ReviewPath
+from app.models.materials import Channel, Material, ReviewPath
 from app.models.routing import NoMaterialChangeType, RoutingRule, RoutingRuleGroup, RoutingSettings, RuleSource
+from app.products import ProductId, check_products, unique
 from app.routing_eval import route
 from app.workspace import US_STATES
 
 router = APIRouter(prefix="/api/routing", tags=["routing"])
 Db = Annotated[AsyncSession, Depends(get_db)]
 
-# The fixed metadata values (the same lists as PRODUCTS and CHANNELS in the frontend's material-data.ts)
-PRODUCTS = ("personal_loan", "credit_card", "mortgage", "heloc", "auto_loan", "savings")
+# The fixed channels (the same list as CHANNELS in the frontend's material-data.ts). Products are the
+# workspace's own list: the endpoints check them against it (app.products).
 CHANNELS = ("meta", "google", "mailchimp", "wordpress", "affiliate", "other")
 CHANGE_TYPES = [t.value for t in NoMaterialChangeType]
 
@@ -42,7 +43,7 @@ CHANGE_TYPES = [t.value for t in NoMaterialChangeType]
 class RuleConditions(APIModel):
     """An empty list or a missing field means "any"."""
 
-    products: list[str] = Field(default_factory=list)
+    products: list[ProductId] = Field(default_factory=list, max_length=50)
     channels: list[str] = Field(default_factory=list)
     source: RuleSource | None = None
     affiliate_history: bool = False
@@ -58,8 +59,8 @@ class RuleConditions(APIModel):
 
     @field_validator("products")
     @classmethod
-    def known_products(cls, v: list[str]) -> list[str]:
-        return cls.known(v, PRODUCTS, "products")
+    def once_each(cls, v: list[str]) -> list[str]:
+        return unique(v)
 
     @field_validator("channels")
     @classmethod
@@ -218,6 +219,7 @@ def clean_note(note: str | None) -> str | None:
 async def create_rule(body: RuleInput, viewer: Manager, db: Db) -> RuleOut:
     """A new rule is on, and goes at the end of the list."""
     group_ids = await checked_groups(db, viewer, body.required_group_ids)
+    await check_products(db, viewer.workspace_id, body.conditions.products)
     last = await db.scalar(select(func.max(RoutingRule.position)).where(RoutingRule.workspace_id == viewer.workspace_id))
     rule = RoutingRule(
         workspace_id=viewer.workspace_id,
@@ -246,6 +248,7 @@ async def change_rule(rule_id: uuid.UUID, body: RuleChange, viewer: Manager, db:
         if not rule.name:
             raise bad_request("A rule needs a name")
     if body.conditions is not None:
+        await check_products(db, viewer.workspace_id, body.conditions.products, had=rule.products)
         set_conditions(rule, checked_conditions(body.conditions))
     if body.required_group_ids is not None:
         group_ids = await checked_groups(db, viewer, body.required_group_ids)
@@ -364,7 +367,7 @@ class PreviewInput(APIModel):
 
     material_id: uuid.UUID | None = None
     channel: Channel
-    product: Product
+    product: ProductId
     nationwide: bool = False
     states: list[str] = Field(default_factory=list, max_length=51)
 

@@ -1,0 +1,53 @@
+{
+  "_note": "Demo products (PRD F8). createdBy is a user name. Seed materials, rate sheets and rules use all six, so all six are active.",
+  "products": [
+    {
+      "id": "personal_loan",
+      "name": "Personal loan",
+      "description": "Unsecured fixed-rate loans with terms of 12 to 60 months.",
+      "active": true,
+      "createdAt": "2026-01-12T15:04:00Z",
+      "createdBy": "Alex Chen"
+    },
+    {
+      "id": "credit_card",
+      "name": "Credit card",
+      "description": "Cash back card with an intro APR on purchases and balance transfers for the first 12 months.",
+      "active": true,
+      "createdAt": "2026-01-12T15:06:00Z",
+      "createdBy": "Alex Chen"
+    },
+    {
+      "id": "mortgage",
+      "name": "Mortgage",
+      "description": "15- and 30-year fixed-rate home loans, including mortgage prequalification.",
+      "active": true,
+      "createdAt": "2026-01-12T15:09:00Z",
+      "createdBy": "Alex Chen"
+    },
+    {
+      "id": "heloc",
+      "name": "HELOC",
+      "description": "Variable-rate home equity line of credit with a 10-year draw, up to 80% combined loan-to-value.",
+      "active": true,
+      "createdAt": "2026-02-03T14:20:00Z",
+      "createdBy": "Alex Chen"
+    },
+    {
+      "id": "auto_loan",
+      "name": "Auto loan",
+      "description": "Loans for new vehicles (up to 72 months) and used vehicles from model year 2019 (up to 60 months).",
+      "active": true,
+      "createdAt": "2026-03-17T16:45:00Z",
+      "createdBy": "Alex Chen"
+    },
+    {
+      "id": "savings",
+      "name": "Savings",
+      "description": "Share savings accounts and 12-month share certificates.",
+      "active": true,
+      "createdAt": "2026-03-17T16:52:00Z",
+      "createdBy": "Alex Chen"
+    }
+  ]
+}

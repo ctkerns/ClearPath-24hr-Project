@@ -1,4 +1,5 @@
-"""Seeds the policy library (PRD F7, F8, F9): rules, disclosures, building blocks, rate sheets, regulatory changes.
+"""Seeds the policy library (PRD F7, F8, F9): products, rules, disclosures, building blocks, rate sheets,
+regulatory changes.
 
 The IDs are the same as in the frontend demo data, because materials refer to rule and disclosure IDs.
 """
@@ -27,6 +28,7 @@ from app.models.library import (
     RuleVersion,
     Severity,
 )
+from app.models.products import Product
 from app.seed.context import SeedContext, load, parse_time
 
 
@@ -34,6 +36,20 @@ async def create(ctx: SeedContext) -> None:
     db = ctx.db
     ws = ctx.workspace.id
     people = {name: u.id for name, u in ctx.users.items()}
+
+    # Products first: materials and connectors refer to them (foreign keys).
+    for p in load("products.json", "products"):
+        db.add(
+            Product(
+                workspace_id=ws,
+                id=p["id"],
+                name=p["name"],
+                description=p["description"],
+                active=p["active"],
+                created_at=parse_time(p["createdAt"]),
+                created_by_id=people[p["createdBy"]],
+            )
+        )
 
     rules: dict[str, Rule] = {}
     for r in load("rules.json", "rules"):
@@ -173,5 +189,5 @@ async def create(ctx: SeedContext) -> None:
 async def delete_all(db: AsyncSession, workspace: Workspace) -> None:
     """Versions, rows and edits go with their parent rows (ON DELETE CASCADE)."""
     ws = workspace.id
-    for table in (RegChange, RateSheet, BuildingBlock, Rule, Disclosure):
+    for table in (RegChange, RateSheet, BuildingBlock, Rule, Disclosure, Product):
         await db.execute(delete(table).where(table.workspace_id == ws))

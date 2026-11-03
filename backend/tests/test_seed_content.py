@@ -72,7 +72,8 @@ def library_at(at: datetime, launch: date | None) -> Library:
     on = max(launch, day) if launch else day
     sheet = next((s for s in sheets if date.fromisoformat(s["effectiveDate"]) <= on), sheets[0] if sheets else None)
     rates = [RateRange(r["product"], r["rate"], r["min"], r["max"]) for r in sheet["rows"]] if sheet else None
-    return Library(rules, disclosures, rates, load("workspace.json")["workspace"]["licensedStates"])
+    names = {p["id"]: p["name"] for p in load("products.json")["products"]}
+    return Library(rules, disclosures, rates, load("workspace.json")["workspace"]["licensedStates"], names)
 
 
 def test_every_material_has_a_version():

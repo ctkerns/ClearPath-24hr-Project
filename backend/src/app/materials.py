@@ -55,10 +55,10 @@ from app.models.materials import (
     MaterialStatus,
     MaterialVersion,
     Outcome,
-    Product,
     ReviewPath,
     Severity,
 )
+from app.products import ProductId, check_products
 from app.notify import NotificationType, notify_comment, notify_decision, notify_groups
 from app.routing_eval import route
 from app.workspace import US_STATES
@@ -84,7 +84,7 @@ class MaterialOut(APIModel):
     id: uuid.UUID
     title: str
     channel: Channel
-    product: Product
+    product: str
     status: MaterialStatus
     live_status: LiveStatus
     groups: list[GroupSummary]
@@ -556,7 +556,7 @@ class Submission(APIModel):
 
     title: str = Field(default="", max_length=300)
     channel: Channel
-    product: Product
+    product: ProductId
     fields: list[FieldInput] = Field(min_length=1, max_length=30)
     file_ids: list[uuid.UUID] = Field(default=[], max_length=30)
     nationwide: bool = False
@@ -679,6 +679,7 @@ async def submit_material(body: Submission, viewer: Submitter, db: Db, backgroun
     an affiliate's material belongs to their company."""
     if not body.title.strip():
         raise bad_request("Add a title")
+    await check_products(db, viewer.workspace_id, [body.product])  # an active product (PRD F8)
     m = Material(
         workspace_id=viewer.workspace_id,
         title=body.title.strip(),
@@ -706,6 +707,8 @@ async def submit_version(material_id: uuid.UUID, body: Submission, viewer: Submi
         raise conflict("A retired material cannot get a new version")
     if body.channel is not m.channel:
         raise bad_request("A new version keeps the channel")
+    # The material may keep its product after it became inactive, but not move to another inactive one (PRD F8).
+    await check_products(db, viewer.workspace_id, [body.product], had=[m.product])
     version = await add_version(db, viewer, m, body, (m.versions[-1].number if m.versions else 0) + 1)
     detail = await saved_detail(db, viewer, m.id)
     ai_review.schedule(background, version)

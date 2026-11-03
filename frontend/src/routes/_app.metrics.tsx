@@ -4,7 +4,8 @@ import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { LoadError } from '@/components/load-error'
 import { useRules } from '@/components/library/rule-data'
-import { CHANNELS, PRODUCTS, useMaterials, type Channel, type Product } from '@/components/materials/material-data'
+import { filterableProducts, useProducts } from '@/components/library/product-data'
+import { CHANNELS, useMaterials, type Channel, type Product } from '@/components/materials/material-data'
 import { ChannelIcon } from '@/components/materials/material-meta'
 import { BarList, ChartSection, Sparkline, TrendChart } from '@/components/metrics/charts'
 import {
@@ -244,6 +245,7 @@ function MetricsPage() {
 /** One row of filters above everything. All of them live in the URL, so a filtered report can be shared. */
 function Filters({ search, period, set, groupNames }: { search: MetricsSearch; period: Period; set: (patch: Partial<MetricsSearch>) => void; groupNames: string[] }) {
   const { t } = useTranslation()
+  const products = useProducts().data ?? []
   const filtered = search.channel || search.product || search.group
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -275,7 +277,7 @@ function Filters({ search, period, set, groupNames }: { search: MetricsSearch; p
         label={t('metrics.product')}
         value={search.product}
         all={t('metrics.allProducts')}
-        options={PRODUCTS.map((p) => [p, t(`materials.product.${p}`)])}
+        options={filterableProducts(products).map((p) => [p.id, p.name])}
         onChange={(v) => set({ product: v as Product | undefined })}
       />
       <FilterSelect

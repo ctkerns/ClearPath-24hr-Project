@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CHANNELS, PRODUCTS, type Channel, type Product } from '@/components/materials/material-data'
+import { CHANNELS, type Channel, type Product } from '@/components/materials/material-data'
 import { ToggleChip } from '@/components/settings/routing-fields'
 import { useLicensedStates } from '@/components/settings/workspace-data'
 import { Checkbox } from '@/components/ui/checkbox'
+import { pickableProducts, useProducts } from './product-data'
 
 // Form parts shared by the rule, disclosure and building block editors (PRD F7, F8, F9).
 
@@ -27,13 +29,16 @@ export function ChipField({ id, label, hint, error, children }: {
   )
 }
 
-/** Products the item applies to. Empty means every product. */
+/** Products the item applies to. Empty means every product. The chips are the active products, plus any the item has now. */
 export function ProductChips({ value, onChange }: { value: Product[]; onChange: (v: Product[]) => void }) {
   const { t } = useTranslation()
+  // The products the item had when the form opened stay, so unticking an inactive one does not hide it.
+  const [initial] = useState(value)
+  const products = pickableProducts(useProducts().data ?? [], [...initial, ...value])
   return (
     <ChipField id="field-products" label={t('rules.editor.products')} hint={t('rules.editor.productsHint')}>
-      {PRODUCTS.map((p) => (
-        <ToggleChip key={p} on={value.includes(p)} onToggle={() => onChange(toggle(value, p))}>{t(`materials.product.${p}`)}</ToggleChip>
+      {products.map((p) => (
+        <ToggleChip key={p.id} on={value.includes(p.id)} onToggle={() => onChange(toggle(value, p.id))}>{p.name}</ToggleChip>
       ))}
     </ChipField>
   )

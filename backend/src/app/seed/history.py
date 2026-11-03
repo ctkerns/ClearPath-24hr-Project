@@ -52,7 +52,6 @@ from app.models.materials import (
     MaterialStatus,
     MaterialVersion,
     Outcome,
-    Product,
     ReviewPath,
     Severity,
 )
@@ -70,12 +69,12 @@ LIGHTER_SHARE = 0.42  # of the approved materials that get a later version with 
 DECISIONS_PER_MONTH = [19, 33, 27, 24, 26, 36, 22, 40, 47, 47, 44, 60]  # oldest month first
 CHANNELS = {Channel.META: 132, Channel.GOOGLE: 86, Channel.MAILCHIMP: 73, Channel.AFFILIATE: 62, Channel.WORDPRESS: 60, Channel.OTHER: 12}
 PRODUCTS = {
-    Product.PERSONAL_LOAN: 132,
-    Product.CREDIT_CARD: 84,
-    Product.AUTO_LOAN: 59,
-    Product.SAVINGS: 57,
-    Product.MORTGAGE: 55,
-    Product.HELOC: 38,
+    "personal_loan": 132,
+    "credit_card": 84,
+    "auto_loan": 59,
+    "savings": 57,
+    "mortgage": 55,
+    "heloc": 38,
 }
 ROUNDS = {1: 119, 2: 167, 3: 27, 4: 2}  # versions until the decision, full path
 TURNAROUND_MEDIAN = {1: 1.6, 2: 3.2, 3: 5.0, 4: 8.0}  # business days, full path
@@ -117,17 +116,17 @@ NOUN = {
     Channel.OTHER: "branch flyer",
 }
 COPY = {  # name, headlines, the first sentence of the long text
-    Product.PERSONAL_LOAN: ("Personal loan", ["Pay off debt faster", "One payment, one rate", "Fund your next project"],
+    "personal_loan": ("Personal loan", ["Pay off debt faster", "One payment, one rate", "Fund your next project"],
                             "A ClearPath personal loan for debt payoff, home projects, or big plans."),
-    Product.CREDIT_CARD: ("Cash back card", ["Cash back on every purchase", "A card that pays you back", "Rewards made simple"],
+    "credit_card": ("Cash back card", ["Cash back on every purchase", "A card that pays you back", "Rewards made simple"],
                           "The ClearPath Cash Back Visa earns rewards on everyday spending."),
-    Product.MORTGAGE: ("Mortgage", ["Your first home starts here", "Rates for every buyer", "Move in sooner"],
+    "mortgage": ("Mortgage", ["Your first home starts here", "Rates for every buyer", "Move in sooner"],
                        "ClearPath home loans with local service from application to closing."),
-    Product.HELOC: ("HELOC", ["Put your home equity to work", "Renovate with confidence", "A line of credit for your home"],
+    "heloc": ("HELOC", ["Put your home equity to work", "Renovate with confidence", "A line of credit for your home"],
                     "A ClearPath home equity line of credit for repairs, projects, or tuition."),
-    Product.AUTO_LOAN: ("Auto loan", ["Drive home today", "Refinance your car loan", "New or used, we can help"],
+    "auto_loan": ("Auto loan", ["Drive home today", "Refinance your car loan", "New or used, we can help"],
                         "ClearPath auto loans for new and used cars, and for refinancing."),
-    Product.SAVINGS: ("Savings", ["Grow your savings", "Save for what matters", "A better place for your money"],
+    "savings": ("Savings", ["Grow your savings", "Save for what matters", "A better place for your money"],
                       "ClearPath savings accounts help members reach their goals."),
 }
 ACTIONS = ["Apply now", "Check your rate", "Learn more", "Get started"]
@@ -251,20 +250,20 @@ class History:
                     role=role, at=at, body=body, **kw)
         )
 
-    def rule_pool(self, layer: str, product: Product, channel: Channel) -> dict[str, float]:
+    def rule_pool(self, layer: str, product: str, channel: Channel) -> dict[str, float]:
         pool = {}
         for rule_id, weight in RULE_WEIGHTS.items():
             rule = self.rules.get(rule_id)
             if rule is None or rule.layer.value != layer:
                 continue
-            if (rule.products and product.value not in rule.products) or (rule.channels and channel.value not in rule.channels):
+            if (rule.products and product not in rule.products) or (rule.channels and channel.value not in rule.channels):
                 continue
             pool[rule_id] = weight
         return pool
 
-    def required_groups(self, product: Product, channel: Channel) -> list[str]:
+    def required_groups(self, product: str, channel: Channel) -> list[str]:
         names = [self.people.default_group]
-        mortgage = product in (Product.MORTGAGE, Product.HELOC)
+        mortgage = product in ("mortgage", "heloc")
         if mortgage:
             names.append("Mortgage")
         if self.rng.random() < (0.65 if mortgage else 0.33):

@@ -9,8 +9,8 @@ import { BlockDeleteDialog, BlockScopeDialog } from '@/components/library/block-
 import { canEditLibrary } from '@/components/library/rule-data'
 import { BlockExpiry, BlockKindLabel } from '@/components/library/block-meta'
 import { CopyButton } from '@/components/library/copy-button'
+import { useProducts } from '@/components/library/product-data'
 import { useBlockList } from '@/components/library/use-block-list'
-import { PRODUCTS } from '@/components/materials/material-data'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { useLicensedStates } from '@/components/settings/workspace-data'
@@ -33,6 +33,7 @@ function BlockPage() {
   const blocks = useBlocks()
   const { label } = useBlockList()
   const licensedStates = useLicensedStates()
+  const productIds = (useProducts().data ?? []).map((p) => p.id)
   const block = blocks.data?.find((b) => b.id === blockId)
   // R3: only Managers and Admins change the library. The server checks too.
   const canEdit = canEditLibrary(viewer.role)
@@ -50,7 +51,7 @@ function BlockPage() {
     )
   }
   const expiry = expiryState(block.expiresAt)
-  const swaps = swapCandidates(block, blocks.data ?? [], licensedStates)
+  const swaps = swapCandidates(block, blocks.data ?? [], licensedStates, productIds)
   const kindLower = t(`blocks.kindLower.${block.kind}`)
 
   return (
@@ -173,8 +174,8 @@ function BlockPage() {
  * Other current blocks of the same kind that are approved for at least this block's products and states.
  * Swapping in one of them is a "building block swap", so the new version takes the lighter path (F6).
  */
-function swapCandidates(block: Block, all: Block[], licensedStates: readonly string[]) {
-  const products = (b: Block) => (b.products.length ? b.products : [...PRODUCTS])
+function swapCandidates(block: Block, all: Block[], licensedStates: readonly string[], allProducts: readonly string[]) {
+  const products = (b: Block) => (b.products.length ? b.products : [...allProducts])
   const covers = (outer: string[], inner: string[]) => inner.every((x) => outer.includes(x))
   return all.filter(
     (b) =>

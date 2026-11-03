@@ -40,7 +40,7 @@ from app.material_access import Db, Reviewer, visible
 from app.models import User, Workspace
 from app.models.flags import FlagKind, FlagResolution, MaterialFlag
 from app.models.library import Disclosure, RateSheet, Rule
-from app.models.materials import Channel, Finding, Material, MaterialStatus, MaterialVersion, Product
+from app.models.materials import Channel, Finding, Material, MaterialStatus, MaterialVersion
 from app.prereview import Content, DisclosureSpec, Library, RateRange, RuleSpec
 
 APPROVED = (MaterialStatus.APPROVED, MaterialStatus.LIVE)
@@ -66,7 +66,7 @@ class Approved:
 
     @property
     def product(self) -> str:
-        return self.material.product.value
+        return self.material.product
 
     @property
     def channel(self) -> str:
@@ -251,7 +251,7 @@ class AffectedMaterial(APIModel):
     id: uuid.UUID
     title: str
     channel: Channel
-    product: Product
+    product: str
     status: MaterialStatus
     version: int
     approval_id: str | None = None

@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { apiDownload } from '@/lib/api'
 import { useSave } from '@/lib/use-save'
-import { CHANNELS, PRODUCTS, STATUSES } from './material-data'
+import { filterableProducts, useProducts } from '@/components/library/product-data'
+import { CHANNELS, STATUSES } from './material-data'
 import { useOptionLabel } from './use-option-label'
 
 const ANY = 'any'
@@ -44,6 +45,7 @@ export function RegulatorExportDialog({ shown, open, onClose }: { shown: ShownLi
 function ExportForm({ shown, onClose }: { shown: ShownList; onClose: () => void }) {
   const { t } = useTranslation()
   const label = useOptionLabel()
+  const productIds = filterableProducts(useProducts().data ?? []).map((p) => p.id)
   const { pending, error, run } = useSave(onClose)
   const [from, setFrom] = useState(() => utcDay(-90))
   const [to, setTo] = useState(() => utcDay())
@@ -57,7 +59,7 @@ function ExportForm({ shown, onClose }: { shown: ShownList; onClose: () => void 
 
   const filters = [
     { id: 'export-channel', label: t('materials.export.channel'), value: channel, set: setChannel, options: CHANNELS, key: 'channel' as const },
-    { id: 'export-product', label: t('materials.export.product'), value: product, set: setProduct, options: PRODUCTS, key: 'product' as const },
+    { id: 'export-product', label: t('materials.export.product'), value: product, set: setProduct, options: productIds, key: 'product' as const },
     { id: 'export-status', label: t('materials.export.status'), value: status, set: setStatus, options: STATUSES, key: 'status' as const },
   ]
 

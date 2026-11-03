@@ -16,6 +16,7 @@ export type AuditEntity =
   | 'routing_rule'
   | 'routing_settings'
   | 'integration'
+  | 'product'
 
 export type AuditEvent = {
   /** Pass the last one as `before` to get the next page. */

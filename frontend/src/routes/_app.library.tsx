@@ -22,6 +22,7 @@ function LibraryLayout() {
       <LinkTabs
         label={t('page.library')}
         tabs={[
+          { to: '/library/products', label: t('libraryTabs.products') },
           { to: '/library/rules', label: t('libraryTabs.rules') },
           { to: '/library/disclosures', label: t('libraryTabs.disclosures') },
           { to: '/library/building-blocks', label: t('libraryTabs.buildingBlocks') },

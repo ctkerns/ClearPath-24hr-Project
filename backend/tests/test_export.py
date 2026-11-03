@@ -103,7 +103,6 @@ async def test_invalid_filters(client):
         {"dateFrom": "2020-01-01", "dateTo": "2026-01-01"},  # too long
         {"dateFrom": "2026-01-01"},  # no end
         WIDE | {"channel": "tiktok"},
-        WIDE | {"product": "boat_loan"},
         WIDE | {"status": "pending"},
         WIDE | {"materialIds": ["not-a-uuid"]},
         WIDE | {"materialIds": [str(uuid.uuid4()) for _ in range(501)]},
@@ -121,6 +120,8 @@ async def test_filters(client):
     # The range is on the version submitted date: DEBT's versions are May to July 2026.
     assert ids(await export(client, dateFrom="2026-06-11", dateTo="2026-06-11")) == {DEBT}
     assert ids(await export(client, dateFrom="2025-01-01", dateTo="2025-02-01")) == set()
+    # Products are the workspace's own list: an unknown ID matches nothing, it is no error (PRD F8)
+    assert ids(await export(client, product="boat_loan")) == set()
     debt = rows(await export(client, materialIds=[DEBT]), "materials")
     assert [r["materialId"] for r in debt] == [DEBT]
     channel, product, status = debt[0]["channel"], debt[0]["product"], debt[0]["status"]

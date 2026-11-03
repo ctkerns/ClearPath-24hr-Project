@@ -34,7 +34,6 @@ from app.models.materials import (
     Material,
     MaterialVersion,
     Outcome,
-    Product,
     ReviewPath,
 )
 
@@ -49,7 +48,7 @@ DECIDING = (Decision.APPROVE, Decision.APPROVE_CONDITIONS, Decision.REJECT)
 class DecisionRecord(APIModel):
     decided_at: datetime
     channel: Channel
-    product: Product
+    product: str  # a product ID
     groups: list[str]  # the required reviewer groups
     path: Literal["full", "no_change"]
     turnaround_days: float  # business days from the first submission of the cycle to the decision
@@ -66,7 +65,7 @@ class DecisionRecord(APIModel):
 class ViolationRecord(APIModel):
     found_at: datetime
     channel: Channel
-    product: Product | None = None  # none for content that matches no material
+    product: str | None = None  # none for content that matches no material
     kind: IssueKind
     days_to_fix: float | None = None  # none while the issue is open
 

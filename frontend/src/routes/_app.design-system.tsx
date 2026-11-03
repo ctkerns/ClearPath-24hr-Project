@@ -40,6 +40,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { FindingCard } from '@/components/review/finding-card'
+import type { Product } from '@/components/library/product-data'
+import { DeactivateProductDialog, ProductFormDialog } from '@/components/library/product-dialogs'
+import { ProductListHeader, ProductRow, ProductSetup } from '@/components/library/product-meta'
 import { FlaggedText } from '@/components/review/flagged-text'
 
 // Design review page: every Ledger token and component in one place.
@@ -64,6 +67,7 @@ const sections = [
   ['table', 'Table'],
   ['cards', 'Cards and alerts'],
   ['overlays', 'Menus and dialogs'],
+  ['products', 'Products'],
   ['misc', 'Other'],
 ] as const
 
@@ -375,6 +379,22 @@ function DesignSystemPage() {
           </Row>
         </Section>
 
+        <Section id="products" title="Products" note="Library > Products (PRD F8). Sample data: the products API is not built yet. A new product shows its setup steps until it has rates.">
+          <div className="overflow-hidden rounded-lg border">
+            <ProductListHeader />
+            <ul>
+              {sampleProducts.map((p) => <li key={p.id} className="border-b last:border-b-0"><ProductRow product={p} /></li>)}
+            </ul>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <ProductSetup product={sampleProducts[1]} />
+            <ProductSetup product={sampleProducts[0]} />
+          </div>
+          <Row label="Dialogs">
+            <ProductDialogsPreview />
+          </Row>
+        </Section>
+
         <Section id="misc" title="Other">
           <Row label="Avatars">
             <Avatar><AvatarFallback>MR</AvatarFallback></Avatar>
@@ -393,6 +413,27 @@ function DesignSystemPage() {
           </Row>
         </Section>
       </div>
+    </div>
+  )
+}
+
+const usage = (u: Partial<Product['usage']>): Product['usage'] => ({
+  materials: 0, materialsInReview: 0, rules: 0, disclosures: 0, blocks: 0, rateSheetRows: 0, routingRules: 0, ...u,
+})
+const sampleProducts: Product[] = [
+  { id: 'personal_loan', name: 'Personal loan', description: 'Unsecured fixed-rate loans from $2,000 to $50,000, for members and non-members.', active: true, createdAt: '2026-01-12T15:00:00Z', createdBy: 'Dana Okafor', usage: usage({ materials: 48, materialsInReview: 6, rules: 9, disclosures: 3, blocks: 7, rateSheetRows: 4, routingRules: 1 }) },
+  { id: 'auto_loan', name: 'Auto loan', description: 'New and used vehicle loans, direct and through dealers.', active: true, createdAt: '2026-11-03T15:00:00Z', createdBy: 'Dana Okafor', usage: usage({ rules: 1 }) },
+  { id: 'heloc', name: 'Home equity line', description: 'Variable-rate lines of credit secured by the home.', active: false, createdAt: '2026-02-02T15:00:00Z', createdBy: 'Marcus Reyes', usage: usage({ materials: 11, rules: 4, disclosures: 2, rateSheetRows: 2 }) },
+]
+
+function ProductDialogsPreview() {
+  const [open, setOpen] = useState<'edit' | 'deactivate' | null>(null)
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={() => setOpen('edit')}>Edit product</Button>
+      <Button size="sm" variant="outline" onClick={() => setOpen('deactivate')}>Deactivate product</Button>
+      <ProductFormDialog product={sampleProducts[0]} open={open === 'edit'} onClose={() => setOpen(null)} />
+      <DeactivateProductDialog product={sampleProducts[0]} open={open === 'deactivate'} onClose={() => setOpen(null)} />
     </div>
   )
 }
