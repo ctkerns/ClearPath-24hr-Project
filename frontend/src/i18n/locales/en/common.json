@@ -194,7 +194,16 @@
       "changes": "changes requested",
       "rejected": "rejected"
     },
-    "sortButton": "Sort: {{sort}}"
+    "sortButton": "Sort: {{sort}}",
+    "column": {
+      "title": "Material",
+      "status": "Status",
+      "groups": "Reviewer groups",
+      "live": "Live status",
+      "approval": "Approval ID",
+      "product": "Product",
+      "date": "Expires / updated"
+    }
   },
   "review": {
     "notFound": "This material does not exist, or you do not have access to it.",

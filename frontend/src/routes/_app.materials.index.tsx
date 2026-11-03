@@ -68,9 +68,45 @@ function MaterialsPage() {
         )}
         {shown.length > 0 && (
           // -mb-px tucks the last row line under the frame border.
-          <div className="-mb-px"><Rows materials={shown} /></div>
+          <div className="-mb-px"><HeaderRow /><Rows materials={shown} /></div>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Column widths and breakpoints, shared by the header row and every material row so they always line up.
+ * Narrow screens drop the less important columns first.
+ */
+const col = {
+  channel: 'w-4 shrink-0',
+  title: 'min-w-0 flex-1',
+  status: 'w-32 shrink-0 max-sm:hidden',
+  groups: 'w-56 shrink-0 justify-end text-right max-lg:hidden',
+  live: 'flex w-36 shrink-0 justify-end text-right max-md:hidden',
+  approval: 'w-32 shrink-0 text-right max-lg:hidden',
+  product: 'w-28 shrink-0 text-right max-xl:hidden',
+  date: 'w-24 shrink-0 text-right max-sm:hidden',
+  owner: 'w-6 shrink-0',
+}
+
+/** Labels for the columns, in the same style as the table header in the design system.
+ * Hidden from screen readers: each row is one link whose text already names its values. TODO: add a real table view for auditors. */
+function HeaderRow() {
+  const { t } = useTranslation()
+  const h = (key: 'title' | 'status' | 'groups' | 'live' | 'approval' | 'product' | 'date') => t(`materials.column.${key}`)
+  return (
+    <div aria-hidden="true" className="flex h-8 items-center gap-3 border-b bg-muted px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <span className={col.channel} />
+      <span className={col.title}>{h('title')}</span>
+      <span className={col.status}>{h('status')}</span>
+      <span className={cn(col.groups, 'block')}>{h('groups')}</span>
+      <span className={col.live}>{h('live')}</span>
+      <span className={col.approval}>{h('approval')}</span>
+      <span className={col.product}>{h('product')}</span>
+      <span className={col.date}>{h('date')}</span>
+      <span className={col.owner} />
     </div>
   )
 }
@@ -88,7 +124,7 @@ function Rows({ materials }: { materials: Material[] }) {
 }
 
 /**
- * One material on one line. Left: status, channel and title. Right: properties.
+ * One material on one line. Left: channel and title, then status. Right: properties.
  * Narrow screens drop the less important columns first.
  */
 function MaterialRow({ material: m }: { material: Material }) {
@@ -102,29 +138,29 @@ function MaterialRow({ material: m }: { material: Material }) {
       params={{ materialId: m.id }}
       className="flex h-11 items-center gap-3 px-3 transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
     >
-      {/* Status first: it is what people scan for in a compliance list. */}
-      <span className="w-32 shrink-0 max-sm:hidden"><StatusPill status={m.status} /></span>
-      <span title={label('channel', m.channel)}><ChannelIcon channel={m.channel} /></span>
-      <span className="flex min-w-0 flex-1 items-center gap-2">
+      <span title={label('channel', m.channel)} className={col.channel}><ChannelIcon channel={m.channel} /></span>
+      <span className={cn(col.title, 'flex items-center gap-2')}>
         <span className="truncate font-medium">{m.title}</span>
         {m.affiliate && (
           <span className="shrink-0 rounded-sm border px-1 text-[11px] text-muted-foreground max-md:hidden">{m.affiliate}</span>
         )}
       </span>
 
-      <GroupApprovals groups={m.groups} className="w-56 shrink-0 justify-end overflow-hidden max-lg:hidden" />
+      {/* Status right after the title, in a fixed column so the pills line up. */}
+      <span className={col.status}><StatusPill status={m.status} /></span>
 
-      <span className="flex w-36 shrink-0 justify-end max-md:hidden">
+      <GroupApprovals groups={m.groups} className={cn(col.groups, 'overflow-hidden')} />
+
+      <span className={col.live}>
         {m.liveStatus !== 'not_live' && <LiveStatusTag status={m.liveStatus} />}
       </span>
 
       {/* The approval ID is the reference for audits and affiliates (PRD glossary). Only approved versions have one. */}
-      <code className="w-32 shrink-0 text-right text-xs text-muted-foreground max-lg:hidden">{m.approvalId}</code>
+      <code className={cn(col.approval, 'text-xs text-muted-foreground')}>{m.approvalId}</code>
 
+      <span className={cn(col.product, 'truncate text-xs text-muted-foreground')}>{label('product', m.product)}</span>
 
-      <span className="w-28 shrink-0 truncate text-right text-xs text-muted-foreground max-xl:hidden">{label('product', m.product)}</span>
-
-      <span className="w-24 shrink-0 text-right text-xs text-muted-foreground tabular-nums max-sm:hidden">
+      <span className={cn(col.date, 'text-xs text-muted-foreground tabular-nums')}>
         {m.expiresAt && daysLeft !== undefined ? (
           <span
             title={t('materials.expiresOn', { date: formatDate(m.expiresAt) })}
@@ -137,7 +173,7 @@ function MaterialRow({ material: m }: { material: Material }) {
         )}
       </span>
 
-      <PersonAvatar name={m.owner} />
+      <PersonAvatar name={m.owner} className={col.owner} />
     </Link>
   )
 }
