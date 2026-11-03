@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app import issues, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
+from app.channels import check_fields
 from app.config import settings
 from app.material_access import (
     Db,
@@ -517,7 +518,8 @@ class Submission(APIModel):
 
     @model_validator(mode="after")
     def check(self) -> Submission:
-        self.fields = [f for f in self.fields if f.text.strip()]
+        # Only the channel's own fields, in platform order (app/channels.py). A new version has the material's channel.
+        self.fields = [f for f in check_fields(self.channel, self.fields) if f.text.strip()]
         if not self.fields:
             raise ValueError("Add the content")
         if not self.nationwide and not self.states:

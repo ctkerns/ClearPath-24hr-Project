@@ -11,7 +11,7 @@ users who may read the audit log page.
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
@@ -23,7 +23,7 @@ from sqlalchemy.orm import selectinload
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import actor_name, history, record
 from app.material_access import Db, Reviewer, Submitter, can_submit, issue_visible, now, visible
-from app.models import Affiliate, Role, User, UserStatus
+from app.models import Affiliate, Role, User, UserStatus, Workspace
 from app.models.audit import AuditEvent
 from app.models.materials import (
     ActionKind,
@@ -40,6 +40,7 @@ from app.models.materials import (
 )
 from app.notify import notify_new_issue
 from app.users import load_user
+from app.workspace import issue_due_days
 
 router = APIRouter(prefix="/api/issues", tags=["issues"])
 
@@ -204,7 +205,8 @@ class NewIssue(APIModel):
     summary: str = Field(min_length=1, max_length=5000)
     severity: Severity
     owner_id: uuid.UUID
-    due_at: datetime
+    # None: the workspace's default days to fix for this severity (PRD F12, Settings "Issues" tab)
+    due_at: datetime | None = None
     # A live problem (PRD F10), when the reviewer found one
     kind: IssueKind | None = None
     # The problem was already in the approved version, for example when the reviewer disagrees with an approval (F5)
@@ -228,10 +230,15 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
     title, summary = body.title.strip(), body.summary.strip()
     if not title or not summary:
         raise bad_request("Write a title and a summary")
-    if body.due_at.tzinfo is None:
+    if body.due_at is None:
+        workspace = await db.get_one(Workspace, viewer.workspace_id)
+        due_at = now() + timedelta(days=issue_due_days(workspace, body.severity))
+    elif body.due_at.tzinfo is None:
         raise bad_request("The due date needs a time zone")
-    if body.due_at <= now():
+    elif body.due_at <= now():
         raise bad_request("The due date has passed")
+    else:
+        due_at = body.due_at
     owner = await load_user(db, viewer, body.owner_id)
     if owner.status is not UserStatus.ACTIVE:
         raise bad_request("The owner must be an active user")
@@ -262,7 +269,7 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
         owner_id=owner.id,
         opened_by_id=viewer.id,
         opened_at=now(),
-        due_at=body.due_at,
+        due_at=due_at,
         actions=[],
         comments=[],
     )
@@ -271,7 +278,7 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
     owner_ref = {"id": owner.id, "name": owner.name}
     record(db, viewer, "issue", issue.id, "raised", {
         "materialId": material.id, "title": title, "severity": body.severity, "owner": owner_ref,
-        "dueAt": body.due_at, "text": f"Raised this issue and assigned it to {owner.name}.",
+        "dueAt": due_at, "text": f"Raised this issue and assigned it to {owner.name}.",
     })
     # The material's History shows it too (PRD F2): one entry there, so the History tab reads one thing.
     record(db, viewer, "material", material.id, "issue_raised", {

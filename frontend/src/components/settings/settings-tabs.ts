@@ -6,6 +6,8 @@ export const SETTINGS_TABS = [
   { to: '/settings/users', key: 'users', min: 'admin' },
   { to: '/settings/reviewer-groups', key: 'reviewerGroups', min: 'manager' },
   { to: '/settings/routing', key: 'routing', min: 'manager' },
+  // PRD F12, section 4: the default time to fix an issue is compliance policy, which Managers own.
+  { to: '/settings/issues', key: 'issues', min: 'manager' },
   { to: '/settings/integrations', key: 'integrations', min: 'admin' },
   { to: '/settings/workspace', key: 'workspace', min: 'admin' },
 ] as const satisfies readonly { to: string; key: string; min: Role }[]

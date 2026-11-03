@@ -74,6 +74,7 @@
     "users": "Users and roles",
     "reviewerGroups": "Reviewer groups",
     "routing": "Routing",
+    "issues": "Issues",
     "integrations": "Integrations",
     "workspace": "Workspace"
   },
@@ -1729,6 +1730,19 @@
           "alerts": "New issues, review requests and expiry warnings by email."
         }
       }
+    }
+  },
+  "settingsIssues": {
+    "loadError": "Could not load the issue settings. Reload the page to try again.",
+    "save": "Save changes",
+    "discard": "Discard",
+    "dueDays": {
+      "heading": "Time to fix",
+      "intro": "A new issue is due this many days after it is raised, by its severity.",
+      "unit": "days",
+      "invalid": "Enter a whole number from 1 to {{max}} for each severity.",
+      "override": "The person who raises an issue can pick another due date.",
+      "newOnly": "A change applies to new issues only. Open issues keep their due date."
     }
   },
   "settingsWorkspace": {

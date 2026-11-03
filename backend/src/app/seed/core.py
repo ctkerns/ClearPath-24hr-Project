@@ -32,6 +32,9 @@ async def create(ctx: SeedContext) -> None:
         is_demo=True,
         licensed_states=settings["licensedStates"],
         approval_days=settings["approvalDays"],
+        issue_due_days_high=settings["issueDueDays"]["high"],
+        issue_due_days_medium=settings["issueDueDays"]["medium"],
+        issue_due_days_low=settings["issueDueDays"]["low"],
     )
     db.add(workspace)
     await db.flush()  # gets the workspace id from Postgres

@@ -14,7 +14,7 @@ from app.db import SessionLocal
 from app.models import Role, User, Workspace
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD
-from tests.helpers import ADMIN, AFFILIATE, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, SUBMITTER, as_user, with_channel_fields
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 SUMMER = "01a112a1-4000-7d42-94be-d09364e3b51d"  # in review, version 2, open High finding
@@ -54,7 +54,7 @@ def submission(**change):
         "fields": [{"label": "Subject line", "text": "Save more this winter"}],
         "nationwide": True,
     }
-    return body | change
+    return with_channel_fields(body, change)
 
 
 # Who may run it
@@ -224,7 +224,8 @@ async def test_csv_formula_escaping(client):
     await as_user(client, SUBMITTER)
     body = submission(
         title="=HYPERLINK(\"http://evil.example\",\"click\")",
-        fields=[{"label": "+Subject", "text": "@SUM(A1:A2)"}, {"label": "Body", "text": "-2+3 off today"}],
+        # Labels come from the channel's fields (app/channels.py), so only the texts can start with a formula.
+        fields=[{"label": "Subject line", "text": "@SUM(A1:A2)"}, {"label": "Body", "text": "-2+3 off today"}],
     )
     m = (await client.post("/api/materials", json=body)).json()
     await client.post(f"/api/materials/{m['id']}/comments", json={"body": "=1+1"})
@@ -232,7 +233,7 @@ async def test_csv_formula_escaping(client):
     z = await export(client, dateFrom=today(), dateTo=today(), materialIds=[m["id"]])
     row = rows(z, "materials")[0]
     assert row["title"] == "'=HYPERLINK(\"http://evil.example\",\"click\")"
-    assert rows(z, "versions")[0]["content"] == "'+Subject: @SUM(A1:A2)\n\nBody: -2+3 off today"
+    assert rows(z, "versions")[0]["content"] == "Subject line: @SUM(A1:A2)\n\nBody: -2+3 off today"
     assert rows(z, "comments")[0]["body"] == "'=1+1"
     # Every text cell of every CSV is safe
     for t in TABLES:
@@ -241,7 +242,7 @@ async def test_csv_formula_escaping(client):
     # The JSON copies keep the original text
     assert json.loads(z.read("materials.json"))[0]["title"].startswith("=HYPERLINK")
     doc = material_json(z, m["id"])
-    assert doc["versions"][0]["fields"][0] == {"label": "+Subject", "text": "@SUM(A1:A2)"}
+    assert doc["versions"][0]["fields"][0] == {"label": "Subject line", "text": "@SUM(A1:A2)"}
 
 
 async def test_files_and_missing_file(client, tmp_path, monkeypatch):

@@ -8,6 +8,7 @@ import { useSave } from '@/lib/use-save'
 import { SaveError } from '@/components/save-error'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useUsers } from '@/components/settings/user-data'
+import { useIssueDueDays } from '@/components/settings/workspace-data'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -18,9 +19,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { ISSUE_KINDS, SEVERITIES, type IssueKind } from './issue-data'
 import { useRaiseIssue } from './issue-update'
-
-/** Default time to fix, by severity. TODO: let a Manager set these in Settings. */
-const daysToFix: Record<RiskLevel, number> = { high: 1, medium: 3, low: 7 }
 
 /** A date as yyyy-mm-dd, some days from today, for the date field. */
 function dateFromToday(days: number) {
@@ -68,9 +66,10 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
   )
   const [ownerId, setOwnerId] = useState<string>()
   const owner = ownerId ?? people.find((u) => u.name === material.owner)?.id ?? viewer.id
-  const [dueDate, setDueDate] = useState(() => dateFromToday(daysToFix.medium))
-  // The due date follows the severity until the person picks a date.
-  const [dueTouched, setDueTouched] = useState(false)
+  // The due date follows the severity, by the workspace's defaults (Settings, Issues tab), until the person picks a date.
+  const daysToFix = useIssueDueDays()
+  const [pickedDue, setPickedDue] = useState<string>()
+  const dueDate = pickedDue ?? (daysToFix ? dateFromToday(daysToFix[severity]) : '')
   const ready = title.trim() && summary.trim() && dueDate && users.data
 
   return (
@@ -118,10 +117,7 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
               type="button"
               role="radio"
               aria-checked={severity === level}
-              onClick={() => {
-                setSeverity(level)
-                if (!dueTouched) setDueDate(dateFromToday(daysToFix[level]))
-              }}
+              onClick={() => setSeverity(level)}
               className={cn(
                 'flex h-8 flex-1 items-center justify-center rounded-md border transition-colors hover:bg-muted',
                 'aria-checked:border-primary aria-checked:bg-primary-soft aria-checked:shadow-[inset_0_0_0_1px_var(--color-primary)]',
@@ -155,10 +151,7 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
             type="date"
             value={dueDate}
             min={dateFromToday(0)}
-            onChange={(e) => {
-              setDueDate(e.target.value)
-              setDueTouched(true)
-            }}
+            onChange={(e) => setPickedDue(e.target.value)}
           />
         </div>
       </div>

@@ -59,6 +59,10 @@ class Workspace(Base):
     licensed_states: Mapped[list[str]] = mapped_column(ARRAY(String(2)), server_default=text("'{}'"))
     # Days from approval to expiry for new approvals (PRD F9, F15)
     approval_days: Mapped[int] = mapped_column(server_default=text("90"))
+    # Default days to fix a new issue, by severity (PRD F12). A Manager sets them in Settings.
+    issue_due_days_high: Mapped[int] = mapped_column(server_default=text("1"))
+    issue_due_days_medium: Mapped[int] = mapped_column(server_default=text("3"))
+    issue_due_days_low: Mapped[int] = mapped_column(server_default=text("7"))
     created_at: Mapped[datetime] = now_default()
 
 

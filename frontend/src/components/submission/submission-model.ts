@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
 import { versionFields, type MaterialDetail, type MaterialFile } from '@/components/review/material-detail-data'
 import { api, ApiError } from '@/lib/api'
@@ -7,20 +7,26 @@ import i18n from '@/i18n'
 
 // Shared model for the submit form (PRD F3), used by /materials/new and /materials/$id/new-version.
 
-/** Content fields for each channel, in the order the platform shows them. TODO: come from the connector definitions. */
-export const channelFields: Record<Channel, { label: string; multiline?: boolean; kind?: 'image' }[]> = {
-  meta: [
-    { label: 'Primary text', multiline: true },
-    { label: 'Headline' },
-    { label: 'Description' },
-    { label: 'Call to action' },
-    { label: 'Image', kind: 'image' },
-  ],
-  google: [{ label: 'Headline 1' }, { label: 'Headline 2' }, { label: 'Headline 3' }, { label: 'Description', multiline: true }],
-  mailchimp: [{ label: 'Subject line' }, { label: 'Preview text' }, { label: 'Body', multiline: true }],
-  wordpress: [{ label: 'Page title' }, { label: 'Body', multiline: true }],
-  affiliate: [{ label: 'Page text', multiline: true }],
-  other: [{ label: 'Body', multiline: true }],
+/** One content field of a channel. The image field's text is the text in the ad image. */
+export type ChannelField = { label: string; multiline: boolean; kind?: 'image' }
+export type ChannelFields = Record<Channel, ChannelField[]>
+
+/**
+ * GET /api/channels: the content fields of each channel, in the order the platform shows them.
+ * They come from the server (app/channels.py), which accepts a submission only with these fields.
+ */
+const channelFieldsQuery = queryOptions({
+  queryKey: ['channel-fields'],
+  queryFn: async () => {
+    const list = await api<{ channel: Channel; fields: ChannelField[] }[]>('GET', '/channels')
+    return Object.fromEntries(list.map((c) => [c.channel, c.fields])) as ChannelFields
+  },
+  staleTime: Infinity, // fixed for the life of a release
+})
+
+/** The content fields of each channel. Undefined while they load. */
+export function useChannelFields(): ChannelFields | undefined {
+  return useQuery(channelFieldsQuery).data
 }
 
 export type ContentSource = 'text' | 'file' | 'url'
@@ -133,14 +139,16 @@ export function validate(v: SubmissionValues, isNewVersion: boolean) {
 /**
  * Sends a submission: POST /api/materials for a new material, POST /api/materials/<id>/versions for a new version.
  * Resolves with the material ID, and rejects with an ApiError, so the form can show what went wrong.
- * The server stores the version, routes it (it alone decides the groups), and moves the material to In review.
- * TODO (F4): pre-review.
+ * The server checks the content fields against the channel, stores the version, routes it (it alone decides the groups),
+ * runs the code checks of the pre-review (PRD F4), and moves the material to In review.
  */
 export function useSubmitMaterial() {
   const queryClient = useQueryClient()
 
   return async (values: SubmissionValues, existing?: { material: Material }) => {
     const channel = values.channel as Channel
+    // Only this channel's fields: a new version can start from content with other labels.
+    const channelFields = await queryClient.ensureQueryData(channelFieldsQuery)
     const fields =
       values.source === 'text'
         ? channelFields[channel].map((f) => ({ label: f.label, kind: f.kind, text: values.fields[f.label]?.trim() ?? '' })).filter((f) => f.text)

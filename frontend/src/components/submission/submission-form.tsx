@@ -11,12 +11,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/lib/api'
 import { useSave } from '@/lib/use-save'
 import { cn } from '@/lib/utils'
 import {
-  channelFields,
+  useChannelFields,
   useRoutingPreview,
   validate,
   type ContentSource,
@@ -55,6 +56,7 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
   // Licensed states and routing come from Settings (Workspace and Routing tabs), so a change there shows here at once.
   const licensedStates = useLicensedStates()
   const save = useSave(() => {})
+  const channelFields = useChannelFields()
   // A preview from the server; the server decides again on submit (PRD R2, F6).
   const routing = useRoutingPreview(values, materialId)
 
@@ -110,7 +112,11 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
             </div>
             <div className="grid gap-4 p-4">
               {values.source === 'text' && (
-                values.channel ? (
+                !values.channel ? (
+                  <p className="text-muted-foreground">{t('submit.chooseChannelFirst')}</p>
+                ) : !channelFields ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
                   channelFields[values.channel].map((f) => (
                     <div key={f.label} className="grid gap-1.5">
                       <Label htmlFor={`field-${f.label}`} className="text-xs text-muted-foreground">
@@ -124,8 +130,6 @@ export function SubmissionForm({ initial, mode, materialId, versionNumber, ready
                       )}
                     </div>
                   ))
-                ) : (
-                  <p className="text-muted-foreground">{t('submit.chooseChannelFirst')}</p>
                 )
               )}
               {values.source === 'file' && (
