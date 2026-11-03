@@ -2,14 +2,14 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Plus } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { daysToDeadline, myIssues, myQueue, mySubmissions } from '@/components/dashboard/dashboard-data'
-import { isOverdue, useIssues, type Issue } from '@/components/issues/issue-data'
+import { useDashboard, type Dashboard, type QueueItem } from '@/components/dashboard/dashboard-data'
+import { DeadlineLabel } from '@/components/dashboard/deadline-label'
+import { isOverdue, type Issue } from '@/components/issues/issue-data'
 import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { listRowClass } from '@/components/list/list-filters'
-import { daysUntil, LIVE_PROBLEMS, useMaterials, type Material } from '@/components/materials/material-data'
+import { LIVE_PROBLEMS, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, GroupApprovals, PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
-import { useReviewerGroups } from '@/components/settings/group-data'
 import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,22 +24,58 @@ export const Route = createFileRoute('/_app/dashboard')({
 /**
  * Dashboard (PRD screen 2, "Home dashboard"): the signed-in person's own work, most urgent first.
  * No chart cards: the numbers live in Metrics. Each section is a short list that links to the full, filtered list.
- * TODO: order the sections by role. A Submitter or Affiliate sees My submissions first, and has no queue.
+ * The server sends only my lists (GET /api/dashboard). A role that reviews nothing (Viewer, Submitter, Affiliate)
+ * gets no queue, and sees My submissions first.
  */
 function DashboardPage() {
   const { t } = useTranslation()
-  const materials = useMaterials()
-  const issues = useIssues()
-  const groups = useReviewerGroups()
+  const dashboard = useDashboard()
   const viewer = useViewer()
 
-  if (materials.isPending || issues.isPending || groups.isPending) return <DashboardSkeleton />
-  const allMaterials = materials.data ?? []
-  const allIssues = issues.data ?? []
-  const queue = myQueue(allMaterials, viewer, groups.data ?? [])
-  const late = queue.filter((q) => daysToDeadline(q.deadline) < 0).length
-  const mine = myIssues(allIssues, viewer)
-  const submissions = mySubmissions(allMaterials, viewer)
+  if (dashboard.isPending) return <DashboardSkeleton />
+  if (!dashboard.data) return null
+  const { queue, issues: mine, submissions, workspace } = dashboard.data
+  const late = queue?.filter((q) => q.deadline.overdue).length ?? 0
+
+  const queueSection = queue && (
+    <Section
+      key="queue"
+      title={t('dashboard.queue.title')}
+      count={queue.length}
+      note={late > 0 && <span className="rounded-sm bg-risk-high-soft px-1.5 py-0.5 text-xs font-semibold text-risk-high shadow-[inset_0_0_0_1px_currentColor]">{t('dashboard.queue.late', { count: late })}</span>}
+      empty={t('dashboard.queue.empty')}
+      viewAll={<Link to="/materials" search={{ status: 'submitted,in_review', group: viewer.groups.join(',') }}>{t('dashboard.viewAll')}</Link>}
+    >
+      {queue.map((q) => <QueueRow key={q.material.id} item={q} />)}
+    </Section>
+  )
+  const issuesSection = (
+    <Section
+      key="issues"
+      title={t('dashboard.issues.title')}
+      count={mine.length}
+      empty={t('dashboard.issues.empty')}
+      viewAll={<Link to="/issues" search={{ owner: viewer.name, status: 'open,in_progress' }}>{t('dashboard.viewAll')}</Link>}
+    >
+      {mine.map((i) => <IssueRow key={i.id} issue={i} raisedByMe={i.ownerId !== viewer.id} />)}
+    </Section>
+  )
+  const submissionsSection = (
+    <Section
+      key="submissions"
+      title={t('dashboard.submissions.title')}
+      count={submissions.length}
+      empty={t('dashboard.submissions.empty')}
+      viewAll={submissions.length > 0 && <Link to="/materials" search={{ owner: viewer.name }}>{t('dashboard.viewAll')}</Link>}
+      action={
+        <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+          <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
+        </Button>
+      }
+    >
+      {submissions.map((m) => <SubmissionRow key={m.id} material={m} />)}
+    </Section>
+  )
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-8">
@@ -48,41 +84,10 @@ function DashboardPage() {
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="grid min-w-0 content-start gap-8">
-          <Section
-            title={t('dashboard.queue.title')}
-            count={queue.length}
-            note={late > 0 && <span className="rounded-sm bg-risk-high-soft px-1.5 py-0.5 text-xs font-semibold text-risk-high shadow-[inset_0_0_0_1px_currentColor]">{t('dashboard.queue.late', { count: late })}</span>}
-            empty={t('dashboard.queue.empty')}
-            viewAll={<Link to="/materials" search={{ status: 'submitted,in_review', group: viewer.groups.join(',') }}>{t('dashboard.viewAll')}</Link>}
-          >
-            {queue.map((q) => <QueueRow key={q.material.id} material={q.material} deadline={q.deadline} targetDays={q.targetDays} />)}
-          </Section>
-
-          <Section
-            title={t('dashboard.issues.title')}
-            count={mine.length}
-            empty={t('dashboard.issues.empty')}
-            viewAll={<Link to="/issues" search={{ owner: viewer.name, status: 'open,in_progress' }}>{t('dashboard.viewAll')}</Link>}
-          >
-            {mine.map((i) => <IssueRow key={i.id} issue={i} raisedByMe={i.owner !== viewer.name} />)}
-          </Section>
-
-          <Section
-            title={t('dashboard.submissions.title')}
-            count={submissions.length}
-            empty={t('dashboard.submissions.empty')}
-            viewAll={submissions.length > 0 && <Link to="/materials" search={{ owner: viewer.name }}>{t('dashboard.viewAll')}</Link>}
-            action={
-              <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
-              </Button>
-            }
-          >
-            {submissions.map((m) => <SubmissionRow key={m.id} material={m} />)}
-          </Section>
+          {queueSection ? [queueSection, issuesSection, submissionsSection] : [submissionsSection, issuesSection]}
         </div>
 
-        <WorkspacePanel materials={allMaterials} issues={allIssues} />
+        <WorkspacePanel workspace={workspace} />
       </div>
     </div>
   )
@@ -119,20 +124,7 @@ function Section({ title, count, note, empty, viewAll, action, children }: {
   )
 }
 
-/** How long a review has left before the group deadline. Late is red; today and tomorrow are amber. */
-function DeadlineLabel({ deadline, targetDays }: { deadline: Date; targetDays: number }) {
-  const { t } = useTranslation()
-  const days = daysToDeadline(deadline)
-  const tone = days < 0 ? 'font-medium text-risk-high' : days <= 1 ? 'font-medium text-risk-medium' : 'text-muted-foreground'
-  const text =
-    days < 0 ? t('dashboard.deadline.late', { count: -days })
-      : days === 0 ? t('dashboard.deadline.today')
-        : days === 1 ? t('dashboard.deadline.tomorrow')
-          : t('dashboard.deadline.on', { date: formatDate(deadline, { month: 'short', day: 'numeric' }) })
-  return <span title={t('dashboard.deadline.title', { date: formatDate(deadline), count: targetDays })} className={tone}>{text}</span>
-}
-
-function QueueRow({ material: m, deadline, targetDays }: { material: Material; deadline: Date; targetDays: number }) {
+function QueueRow({ item: { material: m, deadline } }: { item: QueueItem }) {
   const { t } = useTranslation()
   return (
     <li className="border-b last:border-b-0">
@@ -144,7 +136,7 @@ function QueueRow({ material: m, deadline, targetDays }: { material: Material; d
         </span>
         <span className="w-24 shrink-0 max-sm:hidden"><StatusPill status={m.status} /></span>
         <GroupApprovals groups={m.groups} className="w-52 shrink-0 justify-end overflow-hidden max-xl:hidden" />
-        <span className="w-28 shrink-0 text-right text-xs tabular-nums"><DeadlineLabel deadline={deadline} targetDays={targetDays} /></span>
+        <span className="w-28 shrink-0 text-right text-xs tabular-nums"><DeadlineLabel deadline={deadline} /></span>
         <span title={t('dashboard.owner', { name: m.owner })}><PersonAvatar name={m.owner} className="shrink-0" /></span>
       </Link>
     </li>
@@ -192,19 +184,11 @@ function SubmissionRow({ material: m }: { material: Material }) {
 }
 
 /**
- * Right side: problems in the whole workspace that a compliance person should know about today,
- * each one a link to the filtered list. Approvals that expire soon need a renewal before they lapse.
+ * Right side: problems in the workspace that a compliance person should know about today (for an affiliate,
+ * only in their own company's items), each one a link to the filtered list. Approvals that expire soon need a renewal before they lapse.
  */
-function WorkspacePanel({ materials, issues }: { materials: Material[]; issues: Issue[] }) {
+function WorkspacePanel({ workspace: w }: { workspace: Dashboard['workspace'] }) {
   const { t } = useTranslation()
-  const liveProblems = materials.filter((m) => LIVE_PROBLEMS.includes(m.liveStatus)).length
-  const overdue = issues.filter(isOverdue).length
-  const openHigh = issues.filter((i) => i.status !== 'resolved' && i.severity === 'high').length
-  const expiring = materials
-    .filter((m) => m.expiresAt && daysUntil(m.expiresAt) > 0 && daysUntil(m.expiresAt) <= 30)
-    .sort((a, b) => a.expiresAt!.localeCompare(b.expiresAt!))
-
-
   return (
     <aside className="grid content-start gap-6">
       <section className="grid gap-2">
@@ -212,17 +196,17 @@ function WorkspacePanel({ materials, issues }: { materials: Material[]; issues: 
         <ul className="overflow-hidden rounded-lg border">
           <li className="border-b">
             <Link to="/materials" search={{ live: LIVE_PROBLEMS.join(',') }} className={statClass}>
-              <Stat label={t('dashboard.workspace.liveProblems')} count={liveProblems} />
+              <Stat label={t('dashboard.workspace.liveProblems')} count={w.liveProblems} />
             </Link>
           </li>
           <li className="border-b">
             <Link to="/issues" search={{ due: 'overdue' }} className={statClass}>
-              <Stat label={t('dashboard.workspace.overdueIssues')} count={overdue} />
+              <Stat label={t('dashboard.workspace.overdueIssues')} count={w.overdueIssues} />
             </Link>
           </li>
           <li>
             <Link to="/issues" search={{ status: 'open,in_progress', severity: 'high' }} className={statClass}>
-              <Stat label={t('dashboard.workspace.highIssues')} count={openHigh} />
+              <Stat label={t('dashboard.workspace.highIssues')} count={w.highIssues} />
             </Link>
           </li>
         </ul>
@@ -230,16 +214,16 @@ function WorkspacePanel({ materials, issues }: { materials: Material[]; issues: 
 
       <section className="grid gap-2">
         <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('dashboard.workspace.expiring')}</h2>
-        {expiring.length ? (
+        {w.expiring.length ? (
           <ul className="grid gap-2">
-            {expiring.map((m) => (
+            {w.expiring.map((m) => (
               <li key={m.id}>
                 <Link to="/materials/$materialId" params={{ materialId: m.id }} className="group grid gap-0.5">
                   <span className="flex items-start gap-2 text-sm font-medium group-hover:underline">
                     <ChannelIcon channel={m.channel} className="mt-0.5 size-3.5 shrink-0" />
                     {m.title}
                   </span>
-                  <span className="pl-5.5 text-xs text-risk-medium">{t('materials.expiresOn', { date: formatDate(m.expiresAt!) })}</span>
+                  <span className="pl-5.5 text-xs text-risk-medium">{t('materials.expiresOn', { date: formatDate(m.expiresAt) })}</span>
                 </Link>
               </li>
             ))}

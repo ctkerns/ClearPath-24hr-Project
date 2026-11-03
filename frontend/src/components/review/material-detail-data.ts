@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import type { Deadline } from '@/components/dashboard/dashboard-data'
 import type { IssueStatus } from '@/components/issues/issue-data'
 import type { GroupState } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
@@ -33,7 +34,17 @@ export type MaterialDetail = {
   fields: { label: string; kind?: 'image'; segments: Segment[] }[]
   findings: Finding[]
   checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: 'pass' | 'fail'; finding?: string; note?: string }[]
-  groups: { name: string; state: GroupState; members?: string[]; by?: string; at?: string; reason: string; escalatedBy?: string }[]
+  groups: {
+    name: string
+    state: GroupState
+    members?: string[]
+    /** For a waiting group: when its review is due (PRD F6 "Deadlines"). */
+    deadline?: Deadline
+    by?: string
+    at?: string
+    reason: string
+    escalatedBy?: string
+  }[]
   /** Set by "Approve with conditions" (PRD F5). */
   conditions?: string
   comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision; anchor?: CommentAnchor }[]

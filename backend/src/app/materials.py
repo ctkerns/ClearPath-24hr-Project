@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app import flags, issues, material_list, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
+from app.business_days import days_left, review_deadline
 from app.channels import check_fields
 from app.config import settings
 from app.flags import FlagOut
@@ -184,10 +185,33 @@ class FindingOut(APIModel):
     suggestion: str | None = None
 
 
+class Deadline(APIModel):
+    """When a waiting group's review is due (PRD F6 "Deadlines"): the submit time plus the group's target
+    business days. Days left are calendar days to the due day (UTC): 0 is today, negative is late."""
+
+    at: datetime
+    target_days: int
+    days_left: int
+    overdue: bool
+
+    @classmethod
+    def of(cls, submitted_at: datetime, target_days: int, at: datetime) -> Deadline:
+        due = review_deadline(submitted_at, target_days)
+        return cls(at=due, target_days=target_days, days_left=days_left(due, at), overdue=due < at)
+
+
+def group_deadline(m: Material, r: GroupReview, at: datetime) -> Deadline | None:
+    """The deadline of one required group, while it still waits on the current version."""
+    if r.state is not GroupState.WAITING or m.status not in WAITING or m.submitted_at is None:
+        return None
+    return Deadline.of(m.submitted_at, r.group.target_business_days, at)
+
+
 class DetailGroup(APIModel):
     name: str
     state: GroupState
     members: list[str] | None = None  # who can still approve, for a waiting group
+    deadline: Deadline | None = None  # for a waiting group, while the material waits for review
     by: str | None = None
     at: datetime | None = None
     reason: str
@@ -365,7 +389,7 @@ async def load_material(db: AsyncSession, viewer: User, material_id: uuid.UUID) 
     return material
 
 
-def group_out(r: GroupReview) -> DetailGroup:
+def group_out(m: Material, r: GroupReview, at: datetime) -> DetailGroup:
     members = None
     if r.state is GroupState.WAITING:
         members = sorted(
@@ -375,6 +399,7 @@ def group_out(r: GroupReview) -> DetailGroup:
         name=r.group.name,
         state=r.state,
         members=members,
+        deadline=group_deadline(m, r, at),
         by=r.decided_by.name if r.decided_by else None,
         at=r.decided_at,
         reason=r.reason,
@@ -426,7 +451,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
             for f in findings
         ],
         checklist=current.checklist,
-        groups=[group_out(r) for r in m.reviews],
+        groups=[group_out(m, r, now()) for r in m.reviews],
         conditions="\n".join(conditions) or None,
         comments=[
             CommentOut(
