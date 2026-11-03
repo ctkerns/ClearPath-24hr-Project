@@ -1,0 +1,7 @@
+# All ClearPath services. Start: `docker compose up --build`. Stop: `docker compose down`.
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80" # open http://localhost:8080
+    restart: unless-stopped

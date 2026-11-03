@@ -1,0 +1,24 @@
+# ":80" serves plain HTTP. For a real domain, replace ":80" with the domain name
+# and Caddy gets an HTTPS certificate automatically.
+:80 {
+	root * /srv
+	encode zstd gzip
+
+	# Later, when the backend exists:
+	# reverse_proxy /api/* backend:8000
+
+	# Single-page app: unknown paths like /materials/123 return index.html,
+	# and TanStack Router selects the page in the browser.
+	try_files {path} /index.html
+	file_server
+
+	# Vite puts a content hash in asset file names, so browsers can cache them permanently
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# Everything else (index.html for every page URL) must always be fresh,
+	# so users get the newest asset names after a deploy.
+	# Caddy runs "header" before "try_files", so match the original path, not /index.html.
+	@not_assets not path /assets/*
+	header @not_assets Cache-Control "no-cache"
+}
