@@ -5,7 +5,7 @@
   },
   "nav": {
     "main": "Main",
-    "home": "Home",
+    "dashboard": "Dashboard",
     "materials": "Materials",
     "myMaterials": "My materials",
     "issues": "Issues",
@@ -46,7 +46,7 @@
   },
   "page": {
     "signIn": "Sign in",
-    "home": "Home",
+    "dashboard": "Dashboard",
     "materials": "Materials",
     "newMaterial": "New submission",
     "material": "Material {{id}}",
@@ -542,7 +542,7 @@
       "noticeSent": "Sent the correction notice to {{to}}."
     }
   },
-  "home": {
+  "dashboard": {
     "viewAll": "View all",
     "owner": "Owner: {{name}}",
     "queue": {

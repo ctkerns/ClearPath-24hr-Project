@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Plus } from 'lucide-react'
 import type * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { daysToDeadline, myIssues, myQueue, mySubmissions } from '@/components/home/home-data'
+import { daysToDeadline, myIssues, myQueue, mySubmissions } from '@/components/dashboard/dashboard-data'
 import { isOverdue, useIssues, type Issue } from '@/components/issues/issue-data'
 import { IssueStatusPill } from '@/components/issues/issue-meta'
 import { listRowClass } from '@/components/list/list-filters'
@@ -16,22 +16,22 @@ import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/_app/home')({
-  component: HomePage,
+export const Route = createFileRoute('/_app/dashboard')({
+  component: DashboardPage,
 })
 
 /**
- * Home (PRD screen 2): the signed-in person's own work, most urgent first.
+ * Dashboard (PRD screen 2, "Home dashboard"): the signed-in person's own work, most urgent first.
  * No chart cards: the numbers live in Metrics. Each section is a short list that links to the full, filtered list.
  * TODO: order the sections by role. A Submitter or Affiliate sees My submissions first, and has no queue.
  */
-function HomePage() {
+function DashboardPage() {
   const { t } = useTranslation()
   const materials = useMaterials()
   const issues = useIssues()
   const viewer = demoViewer
 
-  if (materials.isPending || issues.isPending) return <HomeSkeleton />
+  if (materials.isPending || issues.isPending) return <DashboardSkeleton />
   const allMaterials = materials.data ?? []
   const allIssues = issues.data ?? []
   const queue = myQueue(allMaterials, viewer)
@@ -42,34 +42,34 @@ function HomePage() {
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-8">
       {/* No visible heading: the active tab already names the page, as on Materials and Issues. */}
-      <h1 className="sr-only">{t('page.home')}</h1>
+      <h1 className="sr-only">{t('page.dashboard')}</h1>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="grid min-w-0 content-start gap-8">
           <Section
-            title={t('home.queue.title')}
+            title={t('dashboard.queue.title')}
             count={queue.length}
-            note={late > 0 && <span className="rounded-sm bg-risk-high-soft px-1.5 py-0.5 text-xs font-semibold text-risk-high shadow-[inset_0_0_0_1px_currentColor]">{t('home.queue.late', { count: late })}</span>}
-            empty={t('home.queue.empty')}
-            viewAll={<Link to="/materials" search={{ status: 'submitted,in_review', group: viewer.groups.join(',') }}>{t('home.viewAll')}</Link>}
+            note={late > 0 && <span className="rounded-sm bg-risk-high-soft px-1.5 py-0.5 text-xs font-semibold text-risk-high shadow-[inset_0_0_0_1px_currentColor]">{t('dashboard.queue.late', { count: late })}</span>}
+            empty={t('dashboard.queue.empty')}
+            viewAll={<Link to="/materials" search={{ status: 'submitted,in_review', group: viewer.groups.join(',') }}>{t('dashboard.viewAll')}</Link>}
           >
             {queue.map((q) => <QueueRow key={q.material.id} material={q.material} deadline={q.deadline} />)}
           </Section>
 
           <Section
-            title={t('home.issues.title')}
+            title={t('dashboard.issues.title')}
             count={mine.length}
-            empty={t('home.issues.empty')}
-            viewAll={<Link to="/issues" search={{ owner: viewer.name, status: 'open,in_progress' }}>{t('home.viewAll')}</Link>}
+            empty={t('dashboard.issues.empty')}
+            viewAll={<Link to="/issues" search={{ owner: viewer.name, status: 'open,in_progress' }}>{t('dashboard.viewAll')}</Link>}
           >
             {mine.map((i) => <IssueRow key={i.id} issue={i} raisedByMe={i.owner !== viewer.name} />)}
           </Section>
 
           <Section
-            title={t('home.submissions.title')}
+            title={t('dashboard.submissions.title')}
             count={submissions.length}
-            empty={t('home.submissions.empty')}
-            viewAll={submissions.length > 0 && <Link to="/materials" search={{ owner: viewer.name }}>{t('home.viewAll')}</Link>}
+            empty={t('dashboard.submissions.empty')}
+            viewAll={submissions.length > 0 && <Link to="/materials" search={{ owner: viewer.name }}>{t('dashboard.viewAll')}</Link>}
             action={
               <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
                 <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
@@ -123,11 +123,11 @@ function DeadlineLabel({ deadline }: { deadline: Date }) {
   const days = daysToDeadline(deadline)
   const tone = days < 0 ? 'font-medium text-risk-high' : days <= 1 ? 'font-medium text-risk-medium' : 'text-muted-foreground'
   const text =
-    days < 0 ? t('home.deadline.late', { count: -days })
-      : days === 0 ? t('home.deadline.today')
-        : days === 1 ? t('home.deadline.tomorrow')
-          : t('home.deadline.on', { date: formatDate(deadline, { month: 'short', day: 'numeric' }) })
-  return <span title={t('home.deadline.title', { date: formatDate(deadline) })} className={tone}>{text}</span>
+    days < 0 ? t('dashboard.deadline.late', { count: -days })
+      : days === 0 ? t('dashboard.deadline.today')
+        : days === 1 ? t('dashboard.deadline.tomorrow')
+          : t('dashboard.deadline.on', { date: formatDate(deadline, { month: 'short', day: 'numeric' }) })
+  return <span title={t('dashboard.deadline.title', { date: formatDate(deadline) })} className={tone}>{text}</span>
 }
 
 function QueueRow({ material: m, deadline }: { material: Material; deadline: Date }) {
@@ -143,7 +143,7 @@ function QueueRow({ material: m, deadline }: { material: Material; deadline: Dat
         <span className="w-24 shrink-0 max-sm:hidden"><StatusPill status={m.status} /></span>
         <GroupApprovals groups={m.groups} className="w-52 shrink-0 justify-end overflow-hidden max-xl:hidden" />
         <span className="w-28 shrink-0 text-right text-xs tabular-nums"><DeadlineLabel deadline={deadline} /></span>
-        <span title={t('home.owner', { name: m.owner })}><PersonAvatar name={m.owner} className="shrink-0" /></span>
+        <span title={t('dashboard.owner', { name: m.owner })}><PersonAvatar name={m.owner} className="shrink-0" /></span>
       </Link>
     </li>
   )
@@ -159,7 +159,7 @@ function IssueRow({ issue: i, raisedByMe }: { issue: Issue; raisedByMe: boolean 
         <span className="flex min-w-0 flex-1 items-center gap-2">
           <span className="truncate font-medium">{i.title}</span>
           {/* Issues I raised but someone else owns: I follow them, they fix them. */}
-          {raisedByMe && <span className="shrink-0 rounded-sm border px-1 text-[11px] text-muted-foreground max-md:hidden">{t('home.issues.raised')}</span>}
+          {raisedByMe && <span className="shrink-0 rounded-sm border px-1 text-[11px] text-muted-foreground max-md:hidden">{t('dashboard.issues.raised')}</span>}
         </span>
         <span className="w-24 shrink-0 max-sm:hidden"><IssueStatusPill status={i.status} /></span>
         <span className="flex w-56 shrink-0 items-center gap-2 text-xs text-muted-foreground max-xl:hidden">
@@ -169,7 +169,7 @@ function IssueRow({ issue: i, raisedByMe }: { issue: Issue; raisedByMe: boolean 
         <span className={cn('w-28 shrink-0 text-right text-xs tabular-nums', overdue ? 'font-medium text-risk-high' : 'text-muted-foreground')}>
           {overdue ? t('issues.overdueShort', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) }) : t('issues.dueOn', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) })}
         </span>
-        <span title={t('home.owner', { name: i.owner })}><PersonAvatar name={i.owner} className="shrink-0" /></span>
+        <span title={t('dashboard.owner', { name: i.owner })}><PersonAvatar name={i.owner} className="shrink-0" /></span>
       </Link>
     </li>
   )
@@ -206,28 +206,28 @@ function WorkspacePanel({ materials, issues }: { materials: Material[]; issues: 
   return (
     <aside className="grid content-start gap-6">
       <section className="grid gap-2">
-        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('home.workspace.title')}</h2>
+        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('dashboard.workspace.title')}</h2>
         <ul className="overflow-hidden rounded-lg border">
           <li className="border-b">
             <Link to="/materials" search={{ live: LIVE_PROBLEMS.join(',') }} className={statClass}>
-              <Stat label={t('home.workspace.liveProblems')} count={liveProblems} />
+              <Stat label={t('dashboard.workspace.liveProblems')} count={liveProblems} />
             </Link>
           </li>
           <li className="border-b">
             <Link to="/issues" search={{ due: 'overdue' }} className={statClass}>
-              <Stat label={t('home.workspace.overdueIssues')} count={overdue} />
+              <Stat label={t('dashboard.workspace.overdueIssues')} count={overdue} />
             </Link>
           </li>
           <li>
             <Link to="/issues" search={{ status: 'open,in_progress', severity: 'high' }} className={statClass}>
-              <Stat label={t('home.workspace.highIssues')} count={openHigh} />
+              <Stat label={t('dashboard.workspace.highIssues')} count={openHigh} />
             </Link>
           </li>
         </ul>
       </section>
 
       <section className="grid gap-2">
-        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('home.workspace.expiring')}</h2>
+        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t('dashboard.workspace.expiring')}</h2>
         {expiring.length ? (
           <ul className="grid gap-2">
             {expiring.map((m) => (
@@ -243,7 +243,7 @@ function WorkspacePanel({ materials, issues }: { materials: Material[]; issues: 
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">{t('home.workspace.noneExpiring')}</p>
+          <p className="text-xs text-muted-foreground">{t('dashboard.workspace.noneExpiring')}</p>
         )}
       </section>
     </aside>
@@ -263,7 +263,7 @@ function Stat({ label, count }: { label: string; count: number }) {
   )
 }
 
-function HomeSkeleton() {
+function DashboardSkeleton() {
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6">
       <Skeleton className="h-3 w-48" />

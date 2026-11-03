@@ -1,12 +1,12 @@
 import type { LinkProps } from '@tanstack/react-router'
-import { ChartColumn, CircleDot, Files, House, LibraryBig, type LucideIcon } from 'lucide-react'
+import { ChartColumn, CircleDot, Files, LayoutDashboard, LibraryBig, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 /** The main sections, in order. One list for the desktop bar and the mobile menu. */
 export function useMainNavLinks(): { to: LinkProps['to']; label: string; icon: LucideIcon }[] {
   const { t } = useTranslation()
   return [
-    { to: '/home', label: t('nav.home'), icon: House },
+    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { to: '/materials', label: t('nav.materials'), icon: Files },
     { to: '/issues', label: t('nav.issues'), icon: CircleDot },
     { to: '/library', label: t('nav.library'), icon: LibraryBig },

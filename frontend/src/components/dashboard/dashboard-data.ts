@@ -1,7 +1,7 @@
 import type { Issue } from '@/components/issues/issue-data'
 import type { Material } from '@/components/materials/material-data'
 
-// What the Home page shows for the signed-in person (PRD screen 2): my queue, my submissions, my issues.
+// What the Dashboard shows for the signed-in person (PRD screen 2): my queue, my submissions, my issues.
 // TODO: the API should return these lists per user, so the page does not load the whole workspace.
 
 /** Review deadline for each group (PRD F6, "Deadlines"). TODO: read slaHours from each ReviewerGroup. */

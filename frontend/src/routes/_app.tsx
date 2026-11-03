@@ -34,7 +34,7 @@ function AppLayout() {
         <WorkspaceBand />
         <div className="flex h-12 items-center gap-2 px-3 sm:px-6 lg:gap-6">
           <MobileNav />
-          <Link to="/home" aria-label={t('nav.home')} className="rounded-md focus-visible:outline-2 focus-visible:outline-ring">
+          <Link to="/dashboard" aria-label={t('nav.dashboard')} className="rounded-md focus-visible:outline-2 focus-visible:outline-ring">
             <AppLogo />
           </Link>
           <nav ref={containerRef} aria-label={t('nav.main')} className="relative hidden h-full min-w-0 flex-1 lg:flex">

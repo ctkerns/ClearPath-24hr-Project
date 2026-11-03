@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDesignSystemRouteImport } from './routes/_app.design-system'
-import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppLibraryRouteImport } from './routes/_app.library'
 import { Route as AppMetricsRouteImport } from './routes/_app.metrics'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -50,14 +50,14 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDesignSystemRoute = AppDesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHomeRoute = AppHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLibraryRoute = AppLibraryRouteImport.update({
@@ -174,8 +174,8 @@ const AppMaterialsMaterialIdNewVersionRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/dashboard': typeof AppDashboardRoute
   '/design-system': typeof AppDesignSystemRoute
-  '/home': typeof AppHomeRoute
   '/library': typeof AppLibraryRouteWithChildren
   '/metrics': typeof AppMetricsRoute
   '/settings': typeof AppSettingsRouteWithChildren
@@ -201,8 +201,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/dashboard': typeof AppDashboardRoute
   '/design-system': typeof AppDesignSystemRoute
-  '/home': typeof AppHomeRoute
   '/metrics': typeof AppMetricsRoute
   '/issues/$issueId': typeof AppIssuesIssueIdRoute
   '/library/building-blocks': typeof AppLibraryBuildingBlocksRoute
@@ -228,8 +228,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_app/dashboard': typeof AppDashboardRoute
   '/_app/design-system': typeof AppDesignSystemRoute
-  '/_app/home': typeof AppHomeRoute
   '/_app/library': typeof AppLibraryRouteWithChildren
   '/_app/metrics': typeof AppMetricsRoute
   '/_app/settings': typeof AppSettingsRouteWithChildren
@@ -257,8 +257,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/sign-in'
+    | '/dashboard'
     | '/design-system'
-    | '/home'
     | '/library'
     | '/metrics'
     | '/settings'
@@ -284,8 +284,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/sign-in'
+    | '/dashboard'
     | '/design-system'
-    | '/home'
     | '/metrics'
     | '/issues/$issueId'
     | '/library/building-blocks'
@@ -310,8 +310,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/sign-in'
+    | '/_app/dashboard'
     | '/_app/design-system'
-    | '/_app/home'
     | '/_app/library'
     | '/_app/metrics'
     | '/_app/settings'
@@ -364,18 +364,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/design-system': {
       id: '/_app/design-system'
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof AppDesignSystemRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/home': {
-      id: '/_app/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AppHomeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/library': {
@@ -573,8 +573,8 @@ const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
   AppDesignSystemRoute: typeof AppDesignSystemRoute
-  AppHomeRoute: typeof AppHomeRoute
   AppLibraryRoute: typeof AppLibraryRouteWithChildren
   AppMetricsRoute: typeof AppMetricsRoute
   AppSettingsRoute: typeof AppSettingsRouteWithChildren
@@ -587,8 +587,8 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
   AppDesignSystemRoute: AppDesignSystemRoute,
-  AppHomeRoute: AppHomeRoute,
   AppLibraryRoute: AppLibraryRouteWithChildren,
   AppMetricsRoute: AppMetricsRoute,
   AppSettingsRoute: AppSettingsRouteWithChildren,

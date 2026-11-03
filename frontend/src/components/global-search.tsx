@@ -6,7 +6,7 @@ import {
   CircleDot,
   FileText,
   Files,
-  House,
+  LayoutDashboard,
   LibraryBig,
   Palette,
   Plus,
@@ -83,7 +83,7 @@ export function GlobalSearch() {
   }
 
   const pages: { to: LinkProps['to']; label: string; icon: LucideIcon }[] = [
-    { to: '/home', label: t('nav.home'), icon: House },
+    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { to: '/materials', label: t('nav.materials'), icon: Files },
     { to: '/issues', label: t('nav.issues'), icon: CircleDot },
     { to: '/library', label: t('nav.library'), icon: LibraryBig },

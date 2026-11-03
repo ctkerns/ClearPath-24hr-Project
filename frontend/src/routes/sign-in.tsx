@@ -23,7 +23,7 @@ function SignInPage() {
         ]}
       >
         <div>
-          <Button asChild><Link to="/home">{t('page.signIn')}</Link></Button>
+          <Button asChild><Link to="/dashboard">{t('page.signIn')}</Link></Button>
         </div>
       </PlaceholderPage>
     </div>
