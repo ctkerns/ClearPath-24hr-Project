@@ -38,13 +38,38 @@ export async function api<T = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | '
     // Never settles: the page is about to change, so no error message flashes first.
     return new Promise<T>(() => {})
   }
-  if (!res.ok) {
-    const json = await res.json().catch(() => null)
-    // FastAPI sends { detail: string } for its own errors, and { detail: [...] } for invalid input (422).
-    // For a 422, show the first problem, like "The expiry date must be in the future", without pydantic's "Value error, ".
-    const first = Array.isArray(json?.detail) && typeof json.detail[0]?.msg === 'string' ? json.detail[0].msg.replace(/^Value error, /, '') : null
-    const detail = typeof json?.detail === 'string' ? json.detail : (first ?? `HTTP ${res.status}`)
-    throw new ApiError(res.status, detail)
-  }
+  if (!res.ok) throw await errorOf(res)
   return (res.status === 204 ? undefined : await res.json()) as T
+}
+
+async function errorOf(res: Response): Promise<ApiError> {
+  const json = await res.json().catch(() => null)
+  // FastAPI sends { detail: string } for its own errors, and { detail: [...] } for invalid input (422).
+  // For a 422, show the first problem, like "The expiry date must be in the future", without pydantic's "Value error, ".
+  const first = Array.isArray(json?.detail) && typeof json.detail[0]?.msg === 'string' ? json.detail[0].msg.replace(/^Value error, /, '') : null
+  const detail = typeof json?.detail === 'string' ? json.detail : (first ?? `HTTP ${res.status}`)
+  return new ApiError(res.status, detail)
+}
+
+/**
+ * POSTs the body and saves the file that the server sends back (its Content-Disposition names it).
+ * For a download that is also an action the server records, like the regulator export, so it cannot be a plain link.
+ */
+export async function apiDownload(path: string, body: unknown): Promise<void> {
+  const res = await fetch(`/api${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (res.status === 401) {
+    goToSignIn()
+    return new Promise<void>(() => {})
+  }
+  if (!res.ok) throw await errorOf(res)
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'download'
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  document.body.append(a)
+  a.click()
+  a.remove()
+  // Revoke later: some browsers start reading the blob only after click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }

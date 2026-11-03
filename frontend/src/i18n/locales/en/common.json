@@ -194,6 +194,26 @@
       "approval": "Approval ID",
       "product": "Product",
       "date": "Expires / updated"
+    },
+    "export": {
+      "button": "Export for regulator",
+      "title": "Export for regulator",
+      "description": "A ZIP with the materials, every version, decisions, findings, comments, issues, uploaded files, and the full audit log. A manifest lists a SHA-256 for every file.",
+      "from": "Submitted from",
+      "to": "Submitted to",
+      "rangeHint": "Includes each material with a version submitted in this range (UTC), with its whole history. At most two years.",
+      "channel": "Channel",
+      "product": "Product",
+      "status": "Current status",
+      "any": "Any",
+      "onlyShown_one": "Only the {{count}} material shown in the list",
+      "onlyShown_other": "Only the {{count}} materials shown in the list",
+      "tooMany": "The list shows more than {{max}} materials. Narrow the filters to export only those.",
+      "audited": "The audit log records who ran the export and with which filters.",
+      "cancel": "Cancel",
+      "submit": "Download ZIP",
+      "running": "Preparing…",
+      "badRange": "The end date is before the start date."
     }
   },
   "review": {

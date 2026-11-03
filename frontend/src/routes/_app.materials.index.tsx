@@ -1,17 +1,20 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { FileArchive, Plus } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ListFrame, ListHeader } from '@/components/list/list-frame'
 import { applyFilters, listRowClass, withoutFilters, type ListSearch } from '@/components/list/list-filters'
 import { ListToolbar } from '@/components/list/list-toolbar'
 import { daysUntil, useMaterials, type Material } from '@/components/materials/material-data'
 import { materialSearchText, sortMaterials, validateMaterialsSearch } from '@/components/materials/material-filters'
+import { RegulatorExportDialog } from '@/components/materials/regulator-export-dialog'
 import { ChannelIcon, GroupApprovals, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useMaterialList } from '@/components/materials/use-material-list'
 import { useOptionLabel } from '@/components/materials/use-option-label'
 import { Button } from '@/components/ui/button'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
+import { useViewer } from '@/lib/session'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/materials/')({
@@ -25,6 +28,10 @@ function MaterialsPage() {
   const navigate = useNavigate({ from: Route.fullPath })
   const materials = useMaterials()
   const list = useMaterialList()
+  const viewer = useViewer()
+  // PRD section 4: Viewers (auditors) and higher run regulator exports; affiliates do not.
+  const canExport = viewer.role !== 'affiliate'
+  const [exporting, setExporting] = useState(false)
 
   // Filters change often, so they replace the history entry instead of adding one.
   const setSearch = (update: (prev: ListSearch) => ListSearch) => void navigate({ search: update, replace: true })
@@ -44,11 +51,20 @@ function MaterialsPage() {
         setSearch={setSearch}
         searchPlaceholder={t('materials.searchPlaceholder')}
         action={
-          <Button asChild size="sm" className="h-7 gap-1.5 text-xs">
-            <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
-          </Button>
+          <>
+            {canExport && (
+              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => setExporting(true)}>
+                <FileArchive className="size-3.5" aria-hidden="true" />
+                <span className="max-sm:sr-only">{t('materials.export.button')}</span>
+              </Button>
+            )}
+            <Button asChild size="sm" className="h-7 gap-1.5 text-xs">
+              <Link to="/materials/new"><Plus className="size-3.5" />{t('page.newMaterial')}</Link>
+            </Button>
+          </>
         }
       />
+      {canExport && <RegulatorExportDialog shownIds={shown.map((m) => m.id)} open={exporting} onClose={() => setExporting(false)} />}
 
       <ListFrame
         status={materials.status}
