@@ -29,6 +29,7 @@ from typing import Any, TypeVar
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import clock
 from app.audit import OtherActor, entry
 from app.business_days import add_business_days
 from app.models import Base, ReviewerGroup, Role, User, UserStatus, Workspace, group_memberships
@@ -209,6 +210,8 @@ class History:
         self.rules = ctx.extra["rules"]
         self.approval_days = ctx.workspace.approval_days
         self.issue_due_days = {s: issue_due_days(ctx.workspace, s) for s in Severity}  # PRD F12
+        self.workspace = ctx.workspace  # its time zone has the business dates and weekends (app.clock)
+        self.tz = clock.zone(ctx.workspace)
         self.people = people
         self.now = today
         self.monday = utc(today.date() - timedelta(days=today.weekday()))
@@ -284,9 +287,9 @@ class History:
         turnaround = self.lognormal(TURNAROUND_MEDIAN[rounds], 0.45) * (3 if rng.random() < 0.03 else 1)
         # Each round: request changes, then the next version, inside the turnaround
         cuts = sorted(rng.uniform(0.1, 0.95) for _ in range(2 * (rounds - 1)))
-        submits = [start] + [add_business_days(start, turnaround * c) for c in cuts[1::2]]
-        changes_at = [add_business_days(start, turnaround * c) for c in cuts[0::2]]
-        decided_at = add_business_days(start, turnaround)
+        submits = [start] + [add_business_days(start, turnaround * c, self.tz) for c in cuts[1::2]]
+        changes_at = [add_business_days(start, turnaround * c, self.tz) for c in cuts[0::2]]
+        decided_at = add_business_days(start, turnaround, self.tz)
         if decided_at > self.now:
             return
 
@@ -427,7 +430,7 @@ class History:
             covered = [g for g in waiting if g in self.people.groups_of[reviewer.id]]
             approvers.append((reviewer, covered))
             waiting = [g for g in waiting if g not in covered]
-        approval = Approval(m, final, decided_at, decided_at.date())
+        approval = Approval(m, final, decided_at, clock.day_of(self.workspace, decided_at))
         for k, (reviewer, covered) in enumerate(approvers):
             at = decided_at - timedelta(hours=2 * (len(approvers) - 1 - k))
             at = max(at, final.submitted_at + timedelta(minutes=30))
@@ -457,7 +460,7 @@ class History:
     def lighter(self, m: Material, before: MaterialVersion, reviews: dict[str, GroupReview], approved_at: datetime) -> None:
         rng = self.rng
         at = self.work_time(approved_at + timedelta(days=10), 60)
-        decided_at = add_business_days(at, min(max(self.lognormal(0.6, 0.5), 0.2), 1.5))
+        decided_at = add_business_days(at, min(max(self.lognormal(0.6, 0.5), 0.2), 1.5), self.tz)
         if decided_at > self.now:
             return
         owner = next(u for u in self.people.submitters + self.people.affiliates if u.id == m.owner_id)
@@ -483,7 +486,7 @@ class History:
                            version=v.number, decision=Decision.APPROVE, groups=[group])
         v.outcome_by = f"{reviewer.name} ({group})"
         m.submitted_at, m.updated_at = at, decided_at
-        self.approvals.append(Approval(m, v, decided_at, decided_at.date(), [event]))
+        self.approvals.append(Approval(m, v, decided_at, clock.day_of(self.workspace, decided_at), [event]))
 
     # -- approval IDs and the status today
 
@@ -492,28 +495,29 @@ class History:
         numbers: Counter[int] = Counter()
         last: dict[uuid.UUID, Approval] = {}
         for a in sorted(self.approvals, key=lambda a: a.at):
-            year = a.at.year
+            year = clock.day_of(self.workspace, a.at).year
             while True:
                 numbers[year] += 1
                 approval_id = f"CP-{year}-{numbers[year]:04d}-v{a.version.number}"
                 if not any(t.startswith(f"CP-{year}-{numbers[year]:04d}-") for t in taken):
                     break
-            a.expires = a.at.date() + timedelta(days=self.approval_days)
+            a.expires = clock.day_of(self.workspace, a.at) + timedelta(days=self.approval_days)
             for e in a.events:  # not saved yet, so the entry can still change
                 assert e.data is not None
                 e.data["text"] += f" Approval ID {approval_id}, expires {a.expires:%b} {a.expires.day}, {a.expires.year}."
                 e.data |= {"approvalId": approval_id, "expiresAt": a.expires.isoformat()}
             a.material.approval_id = approval_id
             last[a.material.id] = a
-        today = self.now.date()
+        today = clock.day_of(self.workspace, self.now)
         for a in last.values():
             m = a.material
             m.expires_at = a.expires
             if a.expires > today:
                 m.status = MaterialStatus.APPROVED
             elif self.rng.random() < 0.3:
-                m.status, m.updated_at = MaterialStatus.EXPIRED, utc(a.expires)
-                self.event(m, utc(a.expires), "ClearPath", "approval_expired", f"Approval {m.approval_id} expired.",
+                expired_at = clock.day_start(self.workspace, a.expires)  # the start of the expiry day (PRD F15)
+                m.status, m.updated_at = MaterialStatus.EXPIRED, expired_at
+                self.event(m, expired_at, "ClearPath", "approval_expired", f"Approval {m.approval_id} expired.",
                            approvalId=m.approval_id, expiresAt=a.expires.isoformat())
             else:
                 m.status = MaterialStatus.RETIRED  # the campaign ended before the approval did
@@ -554,7 +558,7 @@ class History:
                 status=IssueStatus.RESOLVED if done else rng.choice([IssueStatus.OPEN, IssueStatus.IN_PROGRESS]),
                 source=IssueSource.REVIEWER if reviewer else IssueSource.MONITORING, owner_id=owner.id,
                 opened_by_id=reviewer.id if reviewer else None, opened_at=found,
-                due_at=found + timedelta(days=self.issue_due_days[severity]),
+                due_at=clock.day_end(self.workspace, clock.day_of(self.workspace, found) + timedelta(days=self.issue_due_days[severity])),
                 resolved_at=resolved_at if done else None,
                 approved_version_id=a.version.id if a else None, present_at_approval=missed, seeded=True,
                 actions=[], comments=[],
@@ -655,7 +659,7 @@ async def create(ctx: SeedContext, today: datetime | None = None) -> None:
         return
     people = await people_of(ctx)
     taken = {m.approval_id for m in ctx.extra.get("materials", {}).values() if m.approval_id}
-    rows = History(ctx, people, today or datetime.now(UTC)).run(taken)
+    rows = History(ctx, people, today or clock.now()).run(taken)
     # One table at a time, parents first: the session orders inserts only along relationships,
     # and most of these tables have none.
     for table in Base.metadata.sorted_tables:

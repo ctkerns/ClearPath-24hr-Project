@@ -20,7 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import issue_list
+from app import clock, issue_list
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import actor_name, history, record
 from app.issue_list import IssueFilters
@@ -252,8 +252,10 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
     if not title or not summary:
         raise bad_request("Write a title and a summary")
     if body.due_at is None:
+        # Due at the end of the day, N days from today, in the workspace's time zone (app.clock), the same
+        # as a due day that the raise-issue dialog picks.
         workspace = await db.get_one(Workspace, viewer.workspace_id)
-        due_at = now() + timedelta(days=issue_due_days(workspace, body.severity))
+        due_at = clock.day_end(workspace, clock.today(workspace) + timedelta(days=issue_due_days(workspace, body.severity)))
     elif body.due_at.tzinfo is None:
         raise bad_request("The due date needs a time zone")
     elif body.due_at <= now():

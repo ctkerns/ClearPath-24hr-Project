@@ -6,7 +6,7 @@ from app.business_days import days_left, review_deadline
 from app.db import SessionLocal, engine
 from app.models import User
 from app.models.materials import Issue, IssueStatus, Material
-from tests.helpers import AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import AFFILIATE, DEMO_ZONE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 LEGAL = "tara.nguyen@demo.clearpathcu.org"  # Legal reviewer
@@ -49,8 +49,8 @@ async def test_reviewer_queue_has_deadlines_late_first(client):
         assert q["groups"] == ["Compliance"]
         assert q["deadline"]["targetDays"] == 2
         submitted = parse(q["material"]["submittedAt"])
-        assert parse(q["deadline"]["at"]) == review_deadline(submitted, 2)
-        assert q["deadline"]["daysLeft"] == days_left(review_deadline(submitted, 2), datetime.now(UTC))
+        assert parse(q["deadline"]["at"]) == review_deadline(submitted, 2, DEMO_ZONE)
+        assert q["deadline"]["daysLeft"] == days_left(review_deadline(submitted, 2, DEMO_ZONE), datetime.now(UTC), DEMO_ZONE)
     heloc = next(q for q in queue if q["material"]["title"] == HELOC)
     assert heloc["deadline"]["overdue"] is False and heloc["deadline"]["daysLeft"] >= 1
     assert queue[0]["deadline"]["overdue"] is True and queue[0]["deadline"]["daysLeft"] < -10
@@ -76,13 +76,13 @@ async def test_deadline_is_the_strictest_of_my_groups(client):
     groups = {g["name"]: g for g in detail["groups"]}
     assert groups["Compliance"]["deadline"]["targetDays"] == 2
     assert groups["Senior compliance"]["deadline"]["targetDays"] == 1
-    assert parse(groups["Legal"]["deadline"]["at"]) == review_deadline(submitted, 3)
+    assert parse(groups["Legal"]["deadline"]["at"]) == review_deadline(submitted, 3, DEMO_ZONE)
 
     manager = await dashboard(client, MANAGER)
     item = next(q for q in manager["queue"] if q["material"]["id"] == detail["id"])
     assert item["groups"] == ["Compliance", "Senior compliance"]
     assert item["deadline"]["targetDays"] == 1
-    assert parse(item["deadline"]["at"]) == review_deadline(submitted, 1)
+    assert parse(item["deadline"]["at"]) == review_deadline(submitted, 1, DEMO_ZONE)
     reviewer = await dashboard(client, REVIEWER)
     item = next(q for q in reviewer["queue"] if q["material"]["id"] == detail["id"])
     assert (item["groups"], item["deadline"]["targetDays"]) == (["Compliance"], 2)
@@ -94,7 +94,7 @@ async def test_detail_deadline_only_while_waiting(client):
     row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     groups = {g["name"]: g for g in d["groups"]}
     # From the material's submit time, the same one that the list and the dashboard use
-    assert parse(groups["Compliance"]["deadline"]["at"]) == review_deadline(parse(row["submittedAt"]), 2)
+    assert parse(groups["Compliance"]["deadline"]["at"]) == review_deadline(parse(row["submittedAt"]), 2, DEMO_ZONE)
     assert "deadline" not in groups["Legal"]  # already approved
 
 
@@ -143,7 +143,7 @@ async def test_workspace_panel(client):
     assert w["liveProblems"] == sum(m["liveStatus"] in problems for m in materials)
     assert w["overdueIssues"] == sum(i["status"] != "resolved" and parse(i["dueAt"]) < now for i in issues)
     assert w["highIssues"] == sum(i["status"] != "resolved" and i["severity"] == "high" for i in issues)
-    today = now.date()
+    today = demo_today()
     expected = sorted(
         (m["expiresAt"], m["id"]) for m in materials
         if m.get("expiresAt") and today < datetime.fromisoformat(m["expiresAt"]).date() <= today + timedelta(days=30)

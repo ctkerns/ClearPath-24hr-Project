@@ -17,10 +17,11 @@ from typing import Literal
 from fastapi import APIRouter
 from sqlalchemy import select
 
+from app import clock
 from app.api import APIModel, InternalUser
 from app.business_days import business_days
 from app.material_access import Db, now
-from app.models import ReviewerGroup
+from app.models import ReviewerGroup, Workspace
 from app.models.materials import (
     Channel,
     Comment,
@@ -90,6 +91,7 @@ def overlaps(a: str, b: str) -> bool:
 async def get_metrics(viewer: InternalUser, db: Db) -> Metrics:
     ws = viewer.workspace_id
     since = now() - HISTORY
+    tz = clock.zone(await db.get_one(Workspace, ws))  # weekends in the workspace's time zone, as for the deadlines
 
     materials = {m.id: m for m in await db.scalars(select(Material).where(Material.workspace_id == ws))}
     versions: dict[uuid.UUID, list[MaterialVersion]] = defaultdict(list)
@@ -161,7 +163,7 @@ async def get_metrics(viewer: InternalUser, db: Db) -> Metrics:
                     product=m.product,
                     groups=groups,
                     path="no_change" if v.path is ReviewPath.LIGHTER else "full",
-                    turnaround_days=business_days(cycle[0].submitted_at, decided_at),
+                    turnaround_days=business_days(cycle[0].submitted_at, decided_at, tz),
                     rounds=len(cycle),
                     outcome="approved" if v.outcome is Outcome.APPROVED else "rejected",
                     findings=[f.rule_id for f in cycle_findings if f.status is not FindingStatus.HIDDEN],

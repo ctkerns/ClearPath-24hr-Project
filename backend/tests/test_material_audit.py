@@ -18,7 +18,7 @@ from app.models import Workspace
 from app.models.audit import AuditEvent
 from app.models.materials import Finding, FindingSource, FindingStatus, IssueComment, Material, MaterialVersion, Severity
 from app.seed import seed
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today
 from tests.test_issues import DEBT_ISSUE, NOTICE_ISSUE, SAM, TARA, due, user_id
 from tests.test_materials import (
     DEBT,
@@ -167,7 +167,7 @@ async def test_comment_writes_its_entry(client):
 
 async def test_expiry_writes_a_system_entry(client):
     async with SessionLocal() as db, db.begin():
-        await db.execute(update(Material).where(Material.id == DEBT).values(expires_at=datetime.now(UTC).date()))
+        await db.execute(update(Material).where(Material.id == DEBT).values(expires_at=demo_today()))
     await as_user(client, VIEWER)
     d = (await client.get(f"/api/materials/{DEBT}")).json()
     [e] = [e for e in await entries("material", DEBT) if e.action == "approval_expired"]

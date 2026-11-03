@@ -15,6 +15,8 @@ export type SessionUser = {
   workspaceId: string
   workspaceName: string
   isDemo: boolean
+  /** The workspace's IANA time zone, like "America/Los_Angeles": the days of its business dates (lib/workspace-time). */
+  timeZone: string
   /** Names of the reviewer groups this user approves for (PRD F6). */
   groups: string[]
 }

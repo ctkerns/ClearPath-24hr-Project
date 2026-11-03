@@ -6,7 +6,7 @@ never on a version they submitted (R1). Issues are in issues.py; this module's r
 """
 
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, UploadFile, status
@@ -16,7 +16,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import ai_review, flags, issues, material_list, prereview
+from app import ai_review, clock, flags, issues, material_list, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import OtherActor, actor_name, history, record
 from app.business_days import days_left, review_deadline
@@ -126,10 +126,10 @@ LIST_LOAD = (
 
 
 async def expire_approvals(db: AsyncSession, viewer: User) -> None:
-    """PRD F15: an approval ends on its expiry date, and the material becomes Expired.
-    Runs before each read, so no background job is needed. A rule, disclosure, or rate that the approval
+    """PRD F15: an approval ends on its expiry date, and the material becomes Expired: at the start of that day
+    in the workspace's time zone (app.clock). Runs before each read, so no background job is needed. A rule, disclosure, or rate that the approval
     depends on does not end it early: app.flags flags the material for re-review instead (see there)."""
-    today = now().date()
+    today = clock.today(await workspace_of(db, viewer))
     due = list(
         await db.scalars(
             select(Material).where(
@@ -195,7 +195,7 @@ class FindingOut(APIModel):
 
 class Deadline(APIModel):
     """When a waiting group's review is due (PRD F6 "Deadlines"): the submit time plus the group's target
-    business days. Days left are calendar days to the due day (UTC): 0 is today, negative is late."""
+    business days. Days left are calendar days to the due day in the workspace's time zone: 0 is today, negative is late."""
 
     at: datetime
     target_days: int
@@ -203,16 +203,17 @@ class Deadline(APIModel):
     overdue: bool
 
     @classmethod
-    def of(cls, submitted_at: datetime, target_days: int, at: datetime) -> Deadline:
-        due = review_deadline(submitted_at, target_days)
-        return cls(at=due, target_days=target_days, days_left=days_left(due, at), overdue=due < at)
+    def of(cls, submitted_at: datetime, target_days: int, at: datetime, tz: tzinfo) -> Deadline:
+        """`tz` is the workspace's time zone (app.clock.zone): its weekends and its days."""
+        due = review_deadline(submitted_at, target_days, tz)
+        return cls(at=due, target_days=target_days, days_left=days_left(due, at, tz), overdue=due < at)
 
 
-def group_deadline(m: Material, r: GroupReview, at: datetime) -> Deadline | None:
+def group_deadline(m: Material, r: GroupReview, at: datetime, tz: tzinfo) -> Deadline | None:
     """The deadline of one required group, while it still waits on the current version."""
     if r.state is not GroupState.WAITING or m.status not in WAITING or m.submitted_at is None:
         return None
-    return Deadline.of(m.submitted_at, r.group.target_business_days, at)
+    return Deadline.of(m.submitted_at, r.group.target_business_days, at, tz)
 
 
 class DetailGroup(APIModel):
@@ -400,7 +401,7 @@ async def load_material(db: AsyncSession, viewer: User, material_id: uuid.UUID) 
     return material
 
 
-def group_out(m: Material, r: GroupReview, at: datetime) -> DetailGroup:
+def group_out(m: Material, r: GroupReview, at: datetime, tz: tzinfo) -> DetailGroup:
     members = None
     if r.state is GroupState.WAITING:
         members = sorted(
@@ -410,7 +411,7 @@ def group_out(m: Material, r: GroupReview, at: datetime) -> DetailGroup:
         name=r.group.name,
         state=r.state,
         members=members,
-        deadline=group_deadline(m, r, at),
+        deadline=group_deadline(m, r, at, tz),
         by=r.decided_by.name if r.decided_by else None,
         at=r.decided_at,
         reason=r.reason,
@@ -438,6 +439,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
     )
     files = await db.scalars(select(MaterialFile).where(MaterialFile.version_id == current.id).order_by(MaterialFile.created_at))
     conditions = [r.conditions for r in m.reviews if r.state is GroupState.APPROVED and r.conditions]
+    tz = clock.zone(await db.get_one(Workspace, m.workspace_id))
 
     return MaterialDetail(
         id=m.id,
@@ -463,7 +465,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
             for f in findings
         ],
         checklist=current.checklist,
-        groups=[group_out(m, r, now()) for r in m.reviews],
+        groups=[group_out(m, r, now(), tz) for r in m.reviews],
         conditions="\n".join(conditions) or None,
         comments=[
             CommentOut(
@@ -728,7 +730,7 @@ def fmt_day(d: date) -> str:
 
 async def next_approval_id(db: AsyncSession, viewer: User, version: int) -> str:
     """For example CP-2026-0142-v3 (PRD section 5): a number for each approval in the year, and the version."""
-    year = now().year
+    year = clock.today(await workspace_of(db, viewer)).year  # the year in the workspace's time zone
     taken = await db.scalars(
         select(Material.approval_id).where(
             Material.workspace_id == viewer.workspace_id, Material.approval_id.like(f"CP-{year}-%")
@@ -860,7 +862,8 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
             # PRD F5, F6, F15: one member of each required group approved. The approval gets an ID and an expiry.
             m.status = MaterialStatus.APPROVED
             m.approval_id = await next_approval_id(db, viewer, version.number)
-            m.expires_at = now().date() + timedelta(days=(await workspace_of(db, viewer)).approval_days)
+            workspace = await workspace_of(db, viewer)
+            m.expires_at = clock.today(workspace) + timedelta(days=workspace.approval_days)
             version.outcome, version.outcome_by = Outcome.APPROVED, outcome_by
             history += f" Approval ID {m.approval_id}, expires {fmt_day(m.expires_at)}."
             data |= {"approvalId": m.approval_id, "expiresAt": m.expires_at}

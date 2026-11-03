@@ -13,6 +13,7 @@ import { SeverityLabel } from '@/components/ui/risk-tag'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate, formatDateTime, formatRelativeTime } from '@/i18n/format'
+import { dueDay } from '@/lib/workspace-time'
 import { cn } from '@/lib/utils'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
@@ -298,7 +299,7 @@ export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue:
         </dd>
         <dt className="text-muted-foreground">{t('issues.field.due')}</dt>
         <dd className={cn(overdue && 'font-medium text-risk-high')}>
-          {formatDate(i.dueAt)}{overdue && ` · ${t('issues.due.overdue')}`}
+          {formatDate(dueDay(i.dueAt))}{overdue && ` · ${t('issues.due.overdue')}`}
         </dd>
         {i.affiliateManager && (
           <>

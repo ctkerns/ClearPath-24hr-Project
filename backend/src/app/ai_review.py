@@ -52,6 +52,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import clock
 from app.audit import OtherActor, record
 from app.config import settings
 from app.db import SessionLocal
@@ -67,7 +68,6 @@ from app.models.materials import (
     MaterialVersion,
     Severity,
 )
-from app.material_access import now
 from app.prereview import (
     Content,
     DisclosureSpec,
@@ -730,7 +730,7 @@ async def load_context(db: AsyncSession, m: Material, version: MaterialVersion) 
     """The reference data and the earlier version for the AI input (PRD F4). The rate sheet is the one in
     effect on the same day as for the code checks (prereview.run: the launch date, or today when it is past
     or missing), so the AI and RATE-01 compare with the same sheet."""
-    today = now().date()
+    today = clock.today(await db.get_one(Workspace, m.workspace_id))  # the workspace's date, as for expiry
     launch = iso_date(version.details.get("launchDate"))
     on = max(launch, today) if launch else today
     sheets = list(

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 import { api } from '@/lib/api'
+import { dayEnd } from '@/lib/workspace-time'
 import type { Issue, IssueDetail, IssueKind, IssueStatus } from './issue-data'
 
 /**
@@ -60,8 +61,8 @@ export function useRaiseIssue() {
       ownerId: input.ownerId,
       kind: input.kind,
       presentAtApproval: input.presentAtApproval ?? false,
-      // The due date is a day; the issue is due at the end of it, in the person's time zone.
-      dueAt: new Date(`${input.dueDate}T23:59:00`).toISOString(),
+      // The due date is a day; the issue is due at the end of it in the workspace's time zone, as the server's default.
+      dueAt: new Date(dayEnd(input.dueDate)).toISOString(),
     })
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['issues'] }),

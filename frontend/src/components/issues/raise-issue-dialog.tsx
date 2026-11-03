@@ -17,15 +17,9 @@ import { SeverityLabel, type RiskLevel } from '@/components/ui/risk-tag'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { dayFromToday } from '@/lib/workspace-time'
 import { ISSUE_KINDS, SEVERITIES, type IssueKind } from './issue-data'
 import { useRaiseIssue } from './issue-update'
-
-/** A date as yyyy-mm-dd, some days from today, for the date field. */
-function dateFromToday(days: number) {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d.toLocaleDateString('en-CA')
-}
 
 /**
  * Raise an issue on a material (PRD F12). Any Reviewer or higher can do this at any time,
@@ -69,7 +63,7 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
   // The due date follows the severity, by the workspace's defaults (Settings, Issues tab), until the person picks a date.
   const daysToFix = useIssueDueDays()
   const [pickedDue, setPickedDue] = useState<string>()
-  const dueDate = pickedDue ?? (daysToFix ? dateFromToday(daysToFix[severity]) : '')
+  const dueDate = pickedDue ?? (daysToFix ? dayFromToday(daysToFix[severity]) : '')
   const ready = title.trim() && summary.trim() && dueDate && users.data
 
   return (
@@ -150,7 +144,7 @@ function RaiseIssueForm({ material, onClose }: { material: Material; onClose: ()
             id="issue-due"
             type="date"
             value={dueDate}
-            min={dateFromToday(0)}
+            min={dayFromToday(0)}
             onChange={(e) => setPickedDue(e.target.value)}
           />
         </div>

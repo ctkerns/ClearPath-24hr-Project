@@ -1,5 +1,5 @@
-"""Workspace settings (PRD section 10 "Workspace" tab): licensed states (F7) and approval expiry (F15),
-and the default time to fix an issue by severity (F12).
+"""Workspace settings (PRD section 10 "Workspace" tab): licensed states (F7), approval expiry (F15), the time zone
+of the business dates (app.clock), and the default time to fix an issue by severity (F12).
 
 Every signed-in user reads them, because the submit form, routing, decisions and new issues use them.
 Only an Admin changes the Workspace tab. The issue due days are policy, so a Manager changes them too (PRD section 4),
@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import Admin, APIModel, Manager, SignedIn, bad_request
 from app.audit import changes, record
+from app.clock import is_time_zone
 from app.db import get_db
 from app.models import Workspace
 from app.models.materials import Severity
@@ -53,6 +54,7 @@ class WorkspaceOut(APIModel):
     is_demo: bool
     licensed_states: list[str]
     approval_days: int
+    time_zone: str
     issue_due_days: IssueDueDays
 
     @classmethod
@@ -62,6 +64,7 @@ class WorkspaceOut(APIModel):
             is_demo=w.is_demo,
             licensed_states=w.licensed_states,
             approval_days=w.approval_days,
+            time_zone=w.time_zone,
             issue_due_days=IssueDueDays.of(w),
         )
 
@@ -69,6 +72,14 @@ class WorkspaceOut(APIModel):
 class WorkspaceChange(APIModel):
     licensed_states: list[str] | None = None
     approval_days: int | None = Field(default=None, ge=15, le=365)
+    time_zone: str | None = Field(default=None, max_length=64)  # an IANA name, like America/Los_Angeles
+
+    @field_validator("time_zone")
+    @classmethod
+    def known_time_zone(cls, name: str | None) -> str | None:
+        if name is not None and not is_time_zone(name):
+            raise ValueError(f"Unknown time zone: {name}")
+        return name
 
     @field_validator("licensed_states")
     @classmethod
@@ -91,15 +102,23 @@ async def change_workspace(
     change: WorkspaceChange, viewer: Admin, db: Annotated[AsyncSession, Depends(get_db)]
 ) -> WorkspaceOut:
     workspace: Workspace = viewer.workspace
-    before = {"licensedStates": list(workspace.licensed_states), "approvalDays": workspace.approval_days}
+    def values() -> dict[str, object]:
+        return {
+            "licensedStates": list(workspace.licensed_states),
+            "approvalDays": workspace.approval_days,
+            "timeZone": workspace.time_zone,
+        }
+
+    before = values()
     if change.licensed_states is not None:
         if not change.licensed_states:
             raise bad_request("Choose at least one licensed state")
         workspace.licensed_states = change.licensed_states
     if change.approval_days is not None:
         workspace.approval_days = change.approval_days
-    after = {"licensedStates": list(workspace.licensed_states), "approvalDays": workspace.approval_days}
-    if diff := changes(before, after):
+    if change.time_zone is not None:
+        workspace.time_zone = change.time_zone  # business dates from now on; stored dates and times stay as they are
+    if diff := changes(before, values()):
         record(db, viewer, "workspace", workspace.id, "updated", diff)
     await db.commit()
     return WorkspaceOut.of(workspace)

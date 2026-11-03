@@ -51,6 +51,7 @@ class CurrentUser(APIModel):
     workspace_id: uuid.UUID
     workspace_name: str
     is_demo: bool  # true in the demo workspace (PRD A1)
+    time_zone: str  # the workspace's IANA time zone: the frontend counts days left and due days in it (app.clock)
     groups: list[str]  # reviewer group names: what this user can approve for (PRD F6)
 
     @classmethod
@@ -64,6 +65,7 @@ class CurrentUser(APIModel):
             workspace_id=user.workspace_id,
             workspace_name=user.workspace.name,
             is_demo=user.workspace.is_demo,
+            time_zone=user.workspace.time_zone,
             groups=[g.name for g in user.groups],
         )
 

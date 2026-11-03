@@ -10,6 +10,7 @@ import { ListToolbar } from '@/components/list/list-toolbar'
 import { ChannelIcon, PersonAvatar } from '@/components/materials/material-meta'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { formatDate } from '@/i18n/format'
+import { dueDay } from '@/lib/workspace-time'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 
@@ -95,6 +96,7 @@ function IssueRow({ issue: i, sourceLabel }: { issue: Issue; sourceLabel: string
   const { t } = useTranslation()
   const overdue = isOverdue(i)
   const short = (date: string) => formatDate(date, { month: 'short', day: 'numeric' })
+  const due = dueDay(i.dueAt) // the due day in the workspace's time zone
 
   return (
     <Link to="/issues/$issueId" params={{ issueId: i.id }} className={listRowClass}>
@@ -119,8 +121,8 @@ function IssueRow({ issue: i, sourceLabel }: { issue: Issue; sourceLabel: string
             {t('issues.resolvedShort', { date: short(i.resolvedAt) })}
           </span>
         ) : (
-          <span title={t('issues.dueOn', { date: formatDate(i.dueAt) })} className={overdue ? 'font-medium text-risk-high' : 'text-muted-foreground'}>
-            {overdue ? t('issues.overdueShort', { date: short(i.dueAt) }) : short(i.dueAt)}
+          <span title={t('issues.dueOn', { date: formatDate(dueDay(i.dueAt)) })} className={overdue ? 'font-medium text-risk-high' : 'text-muted-foreground'}>
+            {overdue ? t('issues.overdueShort', { date: short(due) }) : short(due)}
           </span>
         )}
       </span>

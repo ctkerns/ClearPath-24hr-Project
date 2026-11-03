@@ -13,18 +13,18 @@ import uuid
 from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import flags, prereview
+from app import clock, flags, prereview
 from app.api import APIModel, InternalUser, Manager, bad_request, conflict, not_found, require_role
 from app.audit import record
 from app.db import get_db
 from app.flags import AffectedMaterial, Approved
-from app.models import Role, User
+from app.models import Role, User, Workspace
 from app.models.flags import FlagKind
 from app.models.library import (
     BlockKind,
@@ -576,12 +576,11 @@ class BlockScope(APIModel):
     def known_states(cls, states: Literal["all"] | list[str]) -> Literal["all"] | list[str]:
         return states if states == "all" else check_states(states)
 
-    @field_validator("expires_at")
-    @classmethod
-    def in_the_future(cls, value: date) -> date:
-        if value <= datetime.now(UTC).date():
-            raise ValueError("The expiry date must be in the future")
-        return value
+    async def check_expiry(self, db: AsyncSession, viewer: User) -> None:
+        """After today in the workspace's time zone (app.clock), the day the server marks expiry by.
+        Here and not in a validator, because a validator does not know the workspace."""
+        if self.expires_at <= clock.today(await db.get_one(Workspace, viewer.workspace_id)):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "The expiry date must be in the future")
 
 
 class NewBlock(BlockScope):
@@ -594,6 +593,7 @@ class NewBlock(BlockScope):
 async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
     """ "Save to library" on an approved material (F9). The one who saves it is the approver of the block.
     TODO: check that the material is approved and contains this text, when materials are in the database."""
+    await body.check_expiry(db, viewer)
     text = body.text.strip()
     taken = await db.scalar(
         select(BuildingBlock.id).where(
@@ -609,7 +609,7 @@ async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
         products=list(body.products),
         states=states_in(body.states),
         approved_by_id=viewer.id,
-        approved_at=datetime.now(UTC).date(),
+        approved_at=clock.today(await db.get_one(Workspace, viewer.workspace_id)),
         expires_at=body.expires_at,
         saved_from_id=body.saved_from.id,
         saved_from_title=body.saved_from.title.strip(),
@@ -624,6 +624,7 @@ async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
 async def edit_block(block_id: uuid.UUID, body: BlockScope, viewer: Manager, db: Db) -> BlockOut:
     """Managers curate where a block applies and when it expires. The text stays as it was approved."""
     block = await load_block(db, viewer, block_id)
+    await body.check_expiry(db, viewer)
     record(db, viewer, "building_block", block.id, "updated", {
         "before": {"products": block.products, "states": states_out(block.states), "expiresAt": block.expires_at},
         "after": body,

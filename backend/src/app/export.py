@@ -4,7 +4,7 @@ uploaded files, and audit log for a date range and optional filters.
 Who: internal users, Viewer and higher (PRD section 4: Viewers "run regulator exports"). Affiliates get 403 (R4).
 
 What the range means: a material is in the export when at least one of its versions was *submitted* in the range
-(UTC days, both ends included). The export then has the whole material: every version, decision, and history entry,
+(days in the workspace's time zone, app.clock, both ends included). The export then has the whole material: every version, decision, and history entry,
 also the ones outside the range, so a reader sees each decision in its context. `versions.csv` marks which versions
 are in the range. The submission date was chosen over the decision date because every version has one, also a
 version that waits for review or was never decided.
@@ -33,7 +33,7 @@ import uuid
 import zipfile
 from collections import defaultdict
 from collections.abc import Iterator
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import IO, Any
 
@@ -45,7 +45,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app import material_list
+from app import clock, material_list
 from app.api import APIModel, InternalUser
 from app.audit import actor_name, history, record
 from app.config import settings
@@ -524,8 +524,8 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
     ws = viewer.workspace_id
     started = now()
     export_id = uuid.uuid4()
-    start = datetime.combine(body.date_from, time.min, UTC)
-    end = datetime.combine(body.date_to + timedelta(days=1), time.min, UTC)
+    workspace = await db.get_one(Workspace, ws)
+    start, end = clock.day_start(workspace, body.date_from), clock.day_end(workspace, body.date_to)
 
     in_range = select(MaterialVersion.material_id).where(
         MaterialVersion.workspace_id == ws, MaterialVersion.submitted_at >= start, MaterialVersion.submitted_at < end
@@ -589,7 +589,6 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
         filters = body.model_dump(mode="json", by_alias=True, exclude_none=True)
         if body.list_filters:  # only the list filters that are set
             filters["listFilters"] = body.list_filters.model_dump(mode="json", by_alias=True, exclude_defaults=True)
-        workspace = await db.get_one(Workspace, ws)
         manifest = {
             "format": "clearpath-regulator-export",
             "formatVersion": FORMAT_VERSION,
@@ -602,7 +601,9 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
                 "appliesTo": "version.submittedAt",
                 "from": iso(start),
                 "toExclusive": iso(end),
-                "note": "A material is included when at least one of its versions was submitted in the range (UTC). "
+                "timeZone": workspace.time_zone,
+                "note": "A material is included when at least one of its versions was submitted in the range "
+                "(days in the workspace's time zone; from and toExclusive are in UTC). "
                 "Its other versions, decisions, and history are included too; versions.csv marks inRange.",
             },
             "counts": counts,
@@ -632,7 +633,7 @@ async def regulator_export(body: ExportFilters, viewer: InternalUser, db: Db) ->
     await db.commit()
 
     size = spool.tell()
-    filename = f"clearpath-export-{started.date().isoformat()}.zip"
+    filename = f"clearpath-export-{clock.day_of(workspace, started).isoformat()}.zip"
     return StreamingResponse(
         stream(spool),
         media_type="application/zip",

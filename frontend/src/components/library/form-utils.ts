@@ -1,3 +1,5 @@
+import { dayFromToday } from '@/lib/workspace-time'
+
 // Small helpers for the library editors (PRD F7, F8, F9). The limits match backend/src/app/library.py.
 
 /** A short ID that people read, like "REGZ-1026.24" or "D-7". It is part of URLs, so no spaces or slashes. */
@@ -10,12 +12,8 @@ export const MAX_NOTE = 2000
 /** Most terms or phrases in one code check. */
 export const MAX_LIST = 100
 
-/** A date as yyyy-mm-dd in the local time zone, some days from today, for a date field. */
-export function dateFromToday(days: number) {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d.toLocaleDateString('en-CA')
-}
+/** A date as yyyy-mm-dd, some days from today in the workspace's time zone, for a date field. */
+export const dateFromToday = dayFromToday
 
 /** One term or phrase per line: trimmed, no empty lines, each once. */
 export function splitLines(text: string) {

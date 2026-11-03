@@ -10,7 +10,7 @@ from app.models.audit import AuditEvent
 from app.models.materials import Channel, Comment, Material, MaterialStatus, MaterialVersion, Product
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD, create_demo, delete_demo
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, EXAMPLE_FIELDS, with_channel_fields
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today, EXAMPLE_FIELDS, with_channel_fields
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 LEGAL = "tara.nguyen@demo.clearpathcu.org"  # Legal reviewer
@@ -400,8 +400,8 @@ async def test_approve_completes_the_approval(client):
     assert "Override reason" in d["history"][-1]["text"]
     row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
     assert row["status"] == "approved"
-    assert row["approvalId"] == f"CP-{datetime.now(UTC).year}-0139-v2"  # after the highest seeded number, 0138
-    assert row["expiresAt"] == (datetime.now(UTC).date() + timedelta(days=90)).isoformat()
+    assert row["approvalId"] == f"CP-{demo_today().year}-0139-v2"  # after the highest seeded number, 0138
+    assert row["expiresAt"] == (demo_today() + timedelta(days=90)).isoformat()
     assert "submittedAt" not in row
 
 
@@ -411,7 +411,7 @@ async def test_approval_uses_workspace_days(client):
     await as_user(client, REVIEWER)
     await decide(client, SUMMER, "approve", override="ok")
     row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == SUMMER)
-    assert row["expiresAt"] == (datetime.now(UTC).date() + timedelta(days=120)).isoformat()
+    assert row["expiresAt"] == (demo_today() + timedelta(days=120)).isoformat()
 
 
 async def test_who_may_decide(client):
@@ -520,7 +520,7 @@ async def test_comments(client):
 
 async def test_approval_expires_on_its_date(client):
     async with SessionLocal() as db, db.begin():
-        await db.execute(update(Material).where(Material.id == APPROVED).values(expires_at=datetime.now(UTC).date()))
+        await db.execute(update(Material).where(Material.id == APPROVED).values(expires_at=demo_today()))
     await as_user(client, VIEWER)
     row = next(m for m in (await client.get("/api/materials")).json()["items"] if m["id"] == APPROVED)
     assert row["status"] == "expired"

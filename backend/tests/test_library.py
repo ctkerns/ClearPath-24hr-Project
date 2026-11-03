@@ -10,7 +10,7 @@ from app.models import Role, User, Workspace
 from app.models.library import CheckLayer, Rule, RuleKind, RuleVersion, Severity
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 LISTS = ["rules", "disclosures", "building-blocks", "rate-sheets", "regulatory-changes"]
@@ -224,7 +224,7 @@ async def test_reviewer_saves_a_block_to_the_library(client):
     res = await client.post("/api/library/building-blocks", json=block_body())
     assert res.status_code == 201, res.text
     block = res.json()
-    assert (block["approvedBy"], block["approvedAt"], block["usedIn"]) == ("Jordan Kim", datetime.now(UTC).date().isoformat(), 0)
+    assert (block["approvedBy"], block["approvedAt"], block["usedIn"]) == ("Jordan Kim", demo_today().isoformat(), 0)
     assert block["savedFrom"]["title"] == "Savings email"
     assert len(await get(client, "building-blocks")) == 12
     # The same text of the same kind is in the library once.
@@ -233,7 +233,7 @@ async def test_reviewer_saves_a_block_to_the_library(client):
 
 async def test_invalid_blocks(client):
     await as_user(client, REVIEWER)
-    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    yesterday = (demo_today() - timedelta(days=1)).isoformat()
     for change in [{"expiresAt": yesterday}, {"kind": "footer"}, {"text": ""}, {"states": ["XX"]}]:
         assert (await client.post("/api/library/building-blocks", json=block_body(**change))).status_code == 422
 

@@ -14,6 +14,7 @@ import {
   type WorkspaceSettings,
 } from '@/components/settings/workspace-data'
 import { ResetDemoDialog } from '@/components/settings/workspace-reset-dialog'
+import { TimeZoneSelect } from '@/components/settings/time-zone-select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ export const Route = createFileRoute('/_app/settings/workspace')({
   component: WorkspaceTab,
 })
 
-/** Workspace settings (PRD section 10): details, licensed states (F7), approval expiry (F15), and the demo reset. Admins only. */
+/** Workspace settings (PRD section 10): details, licensed states (F7), approval expiry (F15), time zone, and the demo reset. Admins only. */
 function WorkspaceTab() {
   const viewer = useViewer()
   const { t } = useTranslation()
@@ -106,11 +107,13 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
   const save = useSave(() => undefined)
   const [states, setStates] = useState(settings.licensedStates)
   const [days, setDays] = useState(String(settings.approvalDays))
+  const [timeZone, setTimeZone] = useState(settings.timeZone)
 
   const dayCount = Number(days)
   const daysValid = Number.isInteger(dayCount) && dayCount >= 15 && dayCount <= 365
   const removed = settings.licensedStates.filter((s) => !states.includes(s))
-  const dirty = removed.length > 0 || states.length !== settings.licensedStates.length || dayCount !== settings.approvalDays
+  const dirty =
+    removed.length > 0 || states.length !== settings.licensedStates.length || dayCount !== settings.approvalDays || timeZone !== settings.timeZone
   const valid = states.length > 0 && daysValid
 
   return (
@@ -119,7 +122,7 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
       onSubmit={(e) => {
         e.preventDefault()
         if (!dirty || !valid || save.pending) return
-        void save.run(() => saveSettings({ licensedStates: US_STATES.filter((s) => states.includes(s)), approvalDays: dayCount }))
+        void save.run(() => saveSettings({ licensedStates: US_STATES.filter((s) => states.includes(s)), approvalDays: dayCount, timeZone }))
       }}
     >
       <Section title={t('settingsWorkspace.states.heading')}>
@@ -170,6 +173,19 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
         </ul>
       </Section>
 
+      <Section title={t('settingsWorkspace.timeZone.heading')}>
+        <p className="text-sm">{t('settingsWorkspace.timeZone.intro')}</p>
+        <div className="grid gap-1.5 text-sm">
+          <label htmlFor="time-zone">{t('settingsWorkspace.timeZone.label')}</label>
+          <TimeZoneSelect id="time-zone" value={timeZone} onChange={setTimeZone} disabled={!canEdit} />
+        </div>
+        <ul className="grid gap-1 text-xs text-muted-foreground">
+          <li>{t('settingsWorkspace.timeZone.uses')}</li>
+          <li>{t('settingsWorkspace.timeZone.dates')}</li>
+          <li>{t('settingsWorkspace.timeZone.times')}</li>
+        </ul>
+      </Section>
+
       <SaveError error={save.error} />
 
       {canEdit && (
@@ -183,6 +199,7 @@ function SettingsForm({ settings, canEdit }: { settings: WorkspaceSettings; canE
             onClick={() => {
               setStates(settings.licensedStates)
               setDays(String(settings.approvalDays))
+              setTimeZone(settings.timeZone)
             }}
           >
             {t('settingsWorkspace.discard')}

@@ -4,13 +4,13 @@ import type { Channel, Material } from '@/components/materials/material-data'
 import { api } from '@/lib/api'
 
 // What the Dashboard shows for the signed-in person (PRD screen 2). GET /api/dashboard returns only their lists,
-// with the review deadlines computed on the server (business days, UTC), so the page does not load the workspace.
+// with the review deadlines computed on the server (business days in the workspace time zone), so the page does not load the workspace.
 
 /** When a waiting group's review is due (PRD F6 "Deadlines"): the submit time plus the group's target business days. */
 export type Deadline = {
   at: string
   targetDays: number
-  /** Calendar days to the due day (UTC): 0 is today, 1 tomorrow, negative is late. */
+  /** Calendar days to the due day in the workspace time zone: 0 is today, 1 tomorrow, negative is late. */
   daysLeft: number
   overdue: boolean
 }

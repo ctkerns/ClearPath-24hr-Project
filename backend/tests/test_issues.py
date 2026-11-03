@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 import pytest
 
@@ -6,7 +6,7 @@ from app.db import SessionLocal
 from app.models import Role, User, Workspace
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD
-from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
+from tests.helpers import ADMIN, AFFILIATE, DEMO_ZONE, MANAGER, REVIEWER, SUBMITTER, as_user, demo_today
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 SAM = "sam.rivera@demo.clearpathcu.org"
@@ -91,11 +91,11 @@ async def test_issue_without_due_date_gets_the_workspace_default(client):
     await client.patch("/api/workspace/issue-due-days", json={"high": 2})
     owner = await user_id(client, SUBMITTER)
     body = {"materialId": SUMMER, "title": "Rate is wrong", "summary": "8.99% is not on the rate sheet.", "severity": "high", "ownerId": owner}
-    before = datetime.now(UTC)
     res = await client.post("/api/issues", json=body)
     assert res.status_code == 201, res.text
     due_at = datetime.fromisoformat(res.json()["dueAt"])
-    assert before + timedelta(days=2) <= due_at <= datetime.now(UTC) + timedelta(days=2)
+    # The end of the day two days from today in the workspace's time zone: midnight at the start of the day after.
+    assert due_at == datetime.combine(demo_today() + timedelta(days=3), time.min, DEMO_ZONE)
 
 
 @pytest.mark.parametrize(

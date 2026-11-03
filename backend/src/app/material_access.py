@@ -1,13 +1,14 @@
 """Who may see and change materials and issues (PRD section 4). Shared by materials.py and issues.py."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy import ColumnElement, false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import clock
 from app.api import SignedIn, require_role
 from app.db import get_db
 from app.models import ReviewerGroup, Role, User, group_memberships
@@ -18,7 +19,8 @@ Reviewer = Annotated[User, Depends(require_role(Role.REVIEWER))]
 
 
 def now() -> datetime:
-    return datetime.now(UTC)
+    """The time in UTC. Through app.clock, so a test that sets the clock there sets it here too."""
+    return clock.now()
 
 
 def can_submit(user: User) -> bool:

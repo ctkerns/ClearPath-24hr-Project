@@ -32,6 +32,7 @@ async def create(ctx: SeedContext) -> None:
         is_demo=True,
         licensed_states=settings["licensedStates"],
         approval_days=settings["approvalDays"],
+        time_zone=settings["timeZone"],
         issue_due_days_high=settings["issueDueDays"]["high"],
         issue_due_days_medium=settings["issueDueDays"]["medium"],
         issue_due_days_low=settings["issueDueDays"]["low"],

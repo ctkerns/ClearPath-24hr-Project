@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { daysBetween, today } from '@/lib/workspace-time'
 import { FileText, Globe, Handshake, Mail, Megaphone, Search, type LucideIcon } from 'lucide-react'
 import type { ListPage } from '@/components/list/list-filters'
 import type { MaterialStatus } from '@/components/ui/status-pill'
@@ -82,7 +83,10 @@ export function initials(name: string) {
   return name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
 }
 
-/** Whole days from now until a date. Zero or less means the date has passed. */
-export function daysUntil(date: string) {
-  return Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000)
+/**
+ * Whole days from today until a day ("2027-02-01"), in the workspace's time zone. Zero or less means the day has
+ * come: an approval is Expired from the start of its expiry day there, as the server marks it (PRD F15).
+ */
+export function daysUntil(day: string) {
+  return daysBetween(today(), day)
 }

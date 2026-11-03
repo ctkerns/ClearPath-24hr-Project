@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { apiDownload } from '@/lib/api'
 import { useSave } from '@/lib/use-save'
+import { dayFromToday, workspaceTimeZone } from '@/lib/workspace-time'
 import { CHANNELS, PRODUCTS, STATUSES } from './material-data'
 import { useOptionLabel } from './use-option-label'
 
@@ -17,13 +18,6 @@ const ANY = 'any'
 
 /** The Materials list's search and filters (its URL search params, without sort and page), and how many match. */
 export type ShownList = { filters: Record<string, string>; count: number }
-
-/** A date as yyyy-mm-dd in UTC, for the date fields. The server reads the range as UTC days. */
-function utcDay(offsetDays = 0) {
-  const d = new Date()
-  d.setUTCDate(d.getUTCDate() + offsetDays)
-  return d.toISOString().slice(0, 10)
-}
 
 /**
  * The regulator export (PRD F15): a date range on the version submitted date, optional filters, and optionally
@@ -45,8 +39,8 @@ function ExportForm({ shown, onClose }: { shown: ShownList; onClose: () => void 
   const { t } = useTranslation()
   const label = useOptionLabel()
   const { pending, error, run } = useSave(onClose)
-  const [from, setFrom] = useState(() => utcDay(-90))
-  const [to, setTo] = useState(() => utcDay())
+  const [from, setFrom] = useState(() => dayFromToday(-90))
+  const [to, setTo] = useState(() => dayFromToday(0))
   const [channel, setChannel] = useState(ANY)
   const [product, setProduct] = useState(ANY)
   const [status, setStatus] = useState(ANY)
@@ -95,7 +89,7 @@ function ExportForm({ shown, onClose }: { shown: ShownList; onClose: () => void 
             <Input id="export-to" type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} required />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{badRange ? t('materials.export.badRange') : t('materials.export.rangeHint')}</p>
+        <p className="text-xs text-muted-foreground">{badRange ? t('materials.export.badRange') : t('materials.export.rangeHint', { timeZone: workspaceTimeZone() })}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

@@ -7,7 +7,6 @@ import io
 import json
 import uuid
 import zipfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 import app
@@ -16,7 +15,7 @@ from app.db import SessionLocal
 from app.models import Role, User, Workspace
 from app.security import hash_password
 from app.seed import DEMO_PASSWORD
-from tests.helpers import ADMIN, AFFILIATE, SUBMITTER, as_user, with_channel_fields
+from tests.helpers import ADMIN, AFFILIATE, SUBMITTER, as_user, demo_today, with_channel_fields
 
 VIEWER = "ben.okafor@demo.clearpathcu.org"
 SUMMER = "01a112a1-4000-7d42-94be-d09364e3b51d"  # in review, version 2, open High finding
@@ -33,7 +32,7 @@ def seeded(**match) -> set[str]:
 
 
 def today() -> str:
-    return datetime.now(UTC).date().isoformat()
+    return demo_today().isoformat()
 
 
 async def export(client, **filters):

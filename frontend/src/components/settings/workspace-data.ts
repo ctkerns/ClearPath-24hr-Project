@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 import { api } from '@/lib/api'
+import type { SessionUser } from '@/lib/session'
+import { setWorkspaceTimeZone } from '@/lib/workspace-time'
 
 // Workspace settings (PRD section 10 "Workspace", F7, F15). Admins only change them.
 // This query is the one source of the licensed states and the approval length: the submit form, building blocks,
@@ -25,6 +27,8 @@ export type WorkspaceSettings = {
   isDemo: boolean
   licensedStates: string[]
   approvalDays: number
+  /** IANA time zone of the business dates: expiry, effective dates, due days, the export range (lib/workspace-time). */
+  timeZone: string
   /** Default days from raising an issue to its due date, by severity. */
   issueDueDays: Record<RiskLevel, number>
 }
@@ -51,9 +55,12 @@ export function useApprovalDays(): number {
 /** Admins only; the server checks. Rejects with an ApiError, so the form can show what went wrong. */
 export function useSaveWorkspaceSettings() {
   const queryClient = useQueryClient()
-  return async (change: Partial<Pick<WorkspaceSettings, 'licensedStates' | 'approvalDays'>>) => {
+  return async (change: Partial<Pick<WorkspaceSettings, 'licensedStates' | 'approvalDays' | 'timeZone'>>) => {
     const saved = await api<WorkspaceSettings>('PATCH', '/workspace', change)
     queryClient.setQueryData(KEY, saved)
+    // The session has the zone too; pages that render next count their days in the new one.
+    queryClient.setQueryData<SessionUser | null>(['session'], (viewer) => viewer && { ...viewer, timeZone: saved.timeZone })
+    setWorkspaceTimeZone(saved.timeZone)
   }
 }
 

@@ -17,11 +17,12 @@ from fastapi import APIRouter
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import selectinload
 
+from app import clock
 from app.api import APIModel, SignedIn
 from app.issues import IssueOut
 from app.material_access import Db, group_names_of, issue_visible, now, visible
 from app.materials import LIST_LOAD, WAITING, Deadline, MaterialOut, expire_approvals
-from app.models import Affiliate, Role
+from app.models import Affiliate, Role, Workspace
 from app.models.materials import (
     Channel,
     GroupReview,
@@ -82,7 +83,8 @@ class Dashboard(APIModel):
 async def get_dashboard(viewer: SignedIn, db: Db) -> Dashboard:
     await expire_approvals(db, viewer)
     at = now()
-    today = at.date()
+    workspace = await db.get_one(Workspace, viewer.workspace_id)
+    tz, today = clock.zone(workspace), clock.today(workspace)  # the expiring window counts the workspace's days
     reviews = viewer.role.at_least(Role.REVIEWER)
     my_groups = await group_names_of(db, viewer) if reviews else {}
 
@@ -113,7 +115,7 @@ async def get_dashboard(viewer: SignedIn, db: Db) -> Dashboard:
         queue.append(
             QueueItem(
                 material=MaterialOut.of(m),
-                deadline=Deadline.of(m.submitted_at or m.updated_at, target, at),
+                deadline=Deadline.of(m.submitted_at or m.updated_at, target, at, tz),
                 groups=[r.group.name for r in waiting],
             )
         )

@@ -40,6 +40,10 @@ class Role(enum.StrEnum):
 
 ROLE_ORDER = [Role.VIEWER, Role.SUBMITTER, Role.REVIEWER, Role.MANAGER, Role.ADMIN]
 
+# The time zone of a new workspace, and of the workspaces that were there before the setting (app.clock).
+# Nothing says where the credit union is, so this is the US West Coast.
+DEFAULT_TIME_ZONE = "America/Los_Angeles"
+
 
 class UserStatus(enum.StrEnum):
     INVITED = "invited"  # F16: has no password yet, cannot sign in
@@ -63,6 +67,8 @@ class Workspace(Base):
     issue_due_days_high: Mapped[int] = mapped_column(server_default=text("1"))
     issue_due_days_medium: Mapped[int] = mapped_column(server_default=text("3"))
     issue_due_days_low: Mapped[int] = mapped_column(server_default=text("7"))
+    # IANA name, like America/Los_Angeles. Its days are the business dates: expiry, effective dates, due days (app.clock).
+    time_zone: Mapped[str] = mapped_column(String(64), default=DEFAULT_TIME_ZONE, server_default=DEFAULT_TIME_ZONE)
     created_at: Mapped[datetime] = now_default()
 
 

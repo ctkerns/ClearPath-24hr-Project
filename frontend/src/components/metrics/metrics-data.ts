@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { CHANNELS, PRODUCTS, type Channel, type Material, type Product } from '@/components/materials/material-data'
 import type { ReviewerGroup } from '@/components/settings/group-data'
 import { api } from '@/lib/api'
+import { addDays, dayAt, dayStart, weekday } from '@/lib/workspace-time'
 
 // Metrics dashboard data (PRD F14, the metrics in PRD section 2). GET /api/metrics, for internal users.
 // The server makes one record per final decision and per live violation from the review tables, for the last
@@ -133,23 +134,25 @@ export function summary(decisions: Decision[]) {
   }
 }
 
-export type Bucket = { start: number; label: Date }
+/** `label` is the day the bucket starts ("yyyy-mm-dd"), in the workspace's time zone. */
+export type Bucket = { start: number; label: string }
 
-/** Weeks for the short periods, months for the year. Each bucket starts at its own date. */
+/** The first day of the month after the day's month. */
+const nextMonth = (day: string) => addDays(`${day.slice(0, 8)}01`, 32).slice(0, 8) + '01'
+
+/** Weeks for the short periods, months for the year. Each bucket starts at its own date.
+ * Months start at midnight in the workspace's time zone, so every viewer sees the same months. */
 export function buckets(period: Period, start: number, end: number): Bucket[] {
   const out: Bucket[] = []
   if (period === '12m') {
-    const d = new Date(start)
-    let cursor = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()
-    out.push({ start, label: new Date(d.getFullYear(), d.getMonth(), 1) })
-    while (cursor < end) {
-      out.push({ start: cursor, label: new Date(cursor) })
-      const c = new Date(cursor)
-      cursor = new Date(c.getFullYear(), c.getMonth() + 1, 1).getTime()
+    const first = dayAt(start)
+    out.push({ start, label: `${first.slice(0, 8)}01` })
+    for (let month = nextMonth(first); dayStart(month) < end; month = nextMonth(month)) {
+      out.push({ start: dayStart(month), label: month })
     }
     return out
   }
-  for (let t = start; t < end; t += 7 * DAY) out.push({ start: t, label: new Date(t) })
+  for (let t = start; t < end; t += 7 * DAY) out.push({ start: t, label: dayAt(t) })
   return out
 }
 
@@ -213,11 +216,11 @@ export function queueTarget(groups: ReviewerGroup[], groupName?: string) {
 /** True when every item in the age bucket has waited longer than the target. */
 export const bucketPastTarget = (bucketIndex: number, targetDays: number) => AGE_BUCKET_MIN[bucketIndex] > targetDays
 
-/** Whole business days between two times. */
+/** Whole business days between two times. Weekends are the workspace's (its time zone), like the server's deadlines. */
 export function businessDaysBetween(from: number, to: number) {
   let days = 0
   for (let t = from + DAY; t <= to; t += DAY) {
-    const dow = new Date(t).getDay()
+    const dow = weekday(dayAt(t))
     if (dow !== 0 && dow !== 6) days++
   }
   return days

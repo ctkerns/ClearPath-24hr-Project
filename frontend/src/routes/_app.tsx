@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
 import { sessionQuery } from '@/lib/session'
+import { setWorkspaceTimeZone } from '@/lib/workspace-time'
 import { useTranslation } from 'react-i18next'
 import { activeIndicatorClass, useActiveIndicator } from '@/lib/use-active-indicator'
 import { AppLogo } from '@/components/app-logo'
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/_app')({
   beforeLoad: async ({ location, context }) => {
     const viewer = await context.queryClient.ensureQueryData(sessionQuery)
     if (!viewer) throw redirect({ to: '/sign-in', search: { redirect: location.href } })
+    setWorkspaceTimeZone(viewer.timeZone) // before any page renders a day
     return { viewer }
   },
   component: AppLayout,

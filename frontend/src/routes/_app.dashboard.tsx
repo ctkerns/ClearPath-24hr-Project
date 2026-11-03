@@ -16,6 +16,7 @@ import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { formatDate, formatRelativeTime } from '@/i18n/format'
+import { dueDay } from '@/lib/workspace-time'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/dashboard')({
@@ -169,7 +170,7 @@ function IssueRow({ issue: i, raisedByMe }: { issue: Issue; raisedByMe: boolean 
           <span className="truncate">{i.material?.title ?? t('issues.noMaterial')}</span>
         </span>
         <span className={cn('w-28 shrink-0 text-right text-xs tabular-nums', overdue ? 'font-medium text-risk-high' : 'text-muted-foreground')}>
-          {overdue ? t('issues.overdueShort', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) }) : t('issues.dueOn', { date: formatDate(i.dueAt, { month: 'short', day: 'numeric' }) })}
+          {t(overdue ? 'issues.overdueShort' : 'issues.dueOn', { date: formatDate(dueDay(i.dueAt), { month: 'short', day: 'numeric' }) })}
         </span>
         <span title={t('dashboard.owner', { name: i.owner })}><PersonAvatar name={i.owner} className="shrink-0" /></span>
       </Link>

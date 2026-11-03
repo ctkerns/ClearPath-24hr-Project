@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { Deadline } from '@/components/dashboard/dashboard-data'
 import { formatDate } from '@/i18n/format'
+import { dueDay } from '@/lib/workspace-time'
 import { cn } from '@/lib/utils'
 
 /** How long a review has left before the group deadline. Late is red; today and tomorrow are amber. */
@@ -11,6 +12,6 @@ export function DeadlineLabel({ deadline: d, className }: { deadline: Deadline; 
     d.daysLeft < 0 ? t('dashboard.deadline.late', { count: -d.daysLeft })
       : d.daysLeft === 0 ? t('dashboard.deadline.today')
         : d.daysLeft === 1 ? t('dashboard.deadline.tomorrow')
-          : t('dashboard.deadline.on', { date: formatDate(d.at, { month: 'short', day: 'numeric' }) })
-  return <span title={t('dashboard.deadline.title', { date: formatDate(d.at), count: d.targetDays })} className={cn(tone, className)}>{text}</span>
+          : t('dashboard.deadline.on', { date: formatDate(dueDay(d.at), { month: 'short', day: 'numeric' }) })
+  return <span title={t('dashboard.deadline.title', { date: formatDate(dueDay(d.at)), count: d.targetDays })} className={cn(tone, className)}>{text}</span>
 }

@@ -1,5 +1,8 @@
 """Shared test helpers: the seeded demo accounts, and sign-in as one of them."""
 
+from datetime import UTC, date, datetime
+from zoneinfo import ZoneInfo
+
 from app.seed import DEMO_PASSWORD
 
 ADMIN = "maya.ruiz@demo.clearpathcu.org"
@@ -7,6 +10,14 @@ MANAGER = "alex.chen@demo.clearpathcu.org"
 REVIEWER = "jordan.kim@demo.clearpathcu.org"
 SUBMITTER = "priya.shah@demo.clearpathcu.org"
 AFFILIATE = "erin.walsh@lendwise.example"
+
+# The demo workspace's time zone (seed/data/workspace.json): its days are the business dates (app.clock).
+DEMO_ZONE = ZoneInfo("America/Los_Angeles")
+
+
+def demo_today() -> date:
+    """Today in the demo workspace's time zone: the day the server counts expiry and due days by."""
+    return datetime.now(UTC).astimezone(DEMO_ZONE).date()
 
 
 async def as_user(client, email):

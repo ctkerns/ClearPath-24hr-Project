@@ -26,9 +26,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import clock
 from app.api import conflict, not_found
 from app.audit import OtherActor, record
-from app.material_access import Db, Reviewer, now, visible
+from app.material_access import Db, Reviewer, visible
 from app.models import Workspace
 from app.models.library import CheckLayer, Disclosure, RateSheet, Rule
 from app.models.materials import (
@@ -835,7 +836,7 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     TODO (F6): a High code finding should move the item to Changes requested automatically.
     """
     texts = [plain_text(f) for f in version.fields]
-    today = now().date()
+    today = clock.today(await db.get_one(Workspace, m.workspace_id))  # the workspace's date, as for expiry
     launch = iso_date(version.details.get("launchDate"))
     lib = await load_library(db, m.workspace_id, max(launch, today) if launch else today)
     states = target_states(version.details, lib.licensed_states)

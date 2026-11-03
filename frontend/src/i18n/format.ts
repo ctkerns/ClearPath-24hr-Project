@@ -18,8 +18,31 @@ export function formatCurrency(value: number, currency = 'USD') {
   return new Intl.NumberFormat(locale(), { style: 'currency', currency }).format(value)
 }
 
+const DAY = /^(\d{4})-(\d{2})-(\d{2})$/
+
+/** True for a calendar day without a time, like "2027-02-01": an expiry or effective date (a Postgres `date`). */
+export const isDay = (value: unknown): value is string => typeof value === 'string' && DAY.test(value)
+
+/**
+ * A calendar day "2027-02-01" as a Date at midnight UTC, for formatting and day arithmetic in UTC.
+ * Every date-only value goes through here. `new Date("2027-02-01")` is midnight UTC too, but formatted in the
+ * viewer's time zone it shows Jan 31 west of UTC, so a day is always formatted with timeZone: 'UTC'.
+ */
+export function parseDay(day: string) {
+  const [, y, m, d] = DAY.exec(day) ?? []
+  return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)))
+}
+
+/** A day ("2027-02-01") shows as that day for every viewer; a time shows in the viewer's own time zone. */
 export function formatDate(value: Date | string | number, options: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }) {
+  if (isDay(value)) return new Intl.DateTimeFormat(locale(), { ...options, timeZone: 'UTC' }).format(parseDay(value))
   return new Intl.DateTimeFormat(locale(), options).format(new Date(value))
+}
+
+/** The UTC offset of a time zone now, like "GMT-08:00", for the time zone picker. */
+export function formatTimeZoneOffset(timeZone: string, at: number = Date.now()) {
+  const parts = new Intl.DateTimeFormat(locale(), { timeZone, timeZoneName: 'longOffset' }).formatToParts(at)
+  return parts.find((p) => p.type === 'timeZoneName')?.value ?? ''
 }
 
 export function formatDateTime(value: Date | string | number) {
