@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, InternalUser, bad_request
+from app.audit import actor_name
 from app.db import get_db
 from app.models.audit import AuditEvent
 
@@ -34,7 +35,7 @@ class AuditEventOut(APIModel):
     def of(cls, e: AuditEvent) -> "AuditEventOut":
         return cls(
             id=e.id,
-            actor=e.actor.name if e.actor else e.actor_label or "System",
+            actor=actor_name(e),
             actor_id=e.actor_id,
             entity=e.entity,
             entity_id=e.entity_id,

@@ -1,4 +1,5 @@
-"""The demo workspace's audit log. The demo starts with an empty log, so `create` adds nothing.
+"""The demo workspace's audit log. The other areas write its entries: the material history and the issue
+activity are audit entries (seed/materials.py, seed/history.py). So `create` adds nothing here.
 
 The log is append-only (PRD F12): a database trigger blocks every UPDATE and DELETE on audit_events.
 The demo reset (PRD A1) is the one exception. The trigger allows a DELETE only when both are true:

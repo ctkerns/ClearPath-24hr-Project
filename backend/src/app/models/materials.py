@@ -1,7 +1,8 @@
 """Materials and their review (PRD section 6, F2 to F6, F10, F12, section 9).
 
 A material has versions. Its current version has findings, a checklist, and required reviewer groups.
-Comments and the history (audit log) belong to the material, so they stay when a new version comes.
+Comments and the history belong to the material, so they stay when a new version comes. The history is
+the audit log (app.audit, entity "material"), not a table of its own.
 Issues (F12) also live here. Most belong to a material; unapproved content found live may have none (F10).
 
 Rule IDs (for example "REGZ-1026.24") are plain text: the rules library is another area.
@@ -110,16 +111,6 @@ class Decision(enum.StrEnum):
     REJECT = "reject"
     ESCALATE = "escalate"
     RETRACT = "retract"
-
-
-class EventType(enum.StrEnum):
-    SUBMITTED = "submitted"
-    PREREVIEW = "prereview"
-    ROUTED = "routed"
-    DECISION = "decision"
-    COMMENT = "comment"
-    LIVE = "live"
-    ISSUE = "issue"
 
 
 class Material(Base):
@@ -256,24 +247,6 @@ class Comment(Base):
     author: Mapped[User] = relationship()
 
 
-class MaterialEvent(Base):
-    """The audit log of a material (PRD F2). Append-only: the app never changes or deletes a row,
-    except when the demo reset deletes the whole demo workspace."""
-
-    __tablename__ = "material_events"
-
-    id: Mapped[uuid.UUID] = uuid_pk()
-    workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), index=True)
-    material_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("materials.id", ondelete="CASCADE"), index=True)
-    at: Mapped[datetime] = now_default()
-    # The person, or null for a system actor such as "Rule check" or "Monitoring"
-    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
-    actor_name: Mapped[str] = mapped_column(String(200))  # as it was then
-    type: Mapped[EventType] = mapped_column(str_enum(EventType, "type"))
-    # TODO: structured events, so the page writes the text in the reader's language
-    text: Mapped[str] = mapped_column(Text)
-
-
 class LiveItem(Base):
     """Content that monitoring found live, and how it compares with the approved version (PRD F10)."""
 
@@ -384,8 +357,9 @@ class Issue(Base):
     owner: Mapped[User] = relationship(foreign_keys=[owner_id])
     opened_by: Mapped[User | None] = relationship(foreign_keys=[opened_by_id])
     actions: Mapped[list[IssueAction]] = relationship(order_by="IssueAction.position", cascade="all, delete-orphan")
-    activity: Mapped[list[IssueEvent]] = relationship(
-        order_by=lambda: [IssueEvent.at, IssueEvent.id], cascade="all, delete-orphan"
+    # The conversation. What happened to the issue is in the audit log (app.audit, entity "issue").
+    comments: Mapped[list[IssueComment]] = relationship(
+        order_by=lambda: [IssueComment.at, IssueComment.id], cascade="all, delete-orphan"
     )
 
 
@@ -405,16 +379,17 @@ class IssueAction(Base):
     done_by_name: Mapped[str | None] = mapped_column(String(200))  # a person or "Monitoring"
 
 
-class IssueEvent(Base):
-    """The activity log of an issue. Append-only, like the material history."""
+class IssueComment(Base):
+    """A comment on an issue: conversation, not history. Posting one also records an audit entry that points
+    to it ("commented", with the comment id), so the text is stored once, here."""
 
-    __tablename__ = "issue_events"
+    __tablename__ = "issue_comments"
 
     id: Mapped[uuid.UUID] = uuid_pk()
     workspace_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workspaces.id"), index=True)
     issue_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("issues.id", ondelete="CASCADE"), index=True)
+    author_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     at: Mapped[datetime] = now_default()
-    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
-    actor_name: Mapped[str] = mapped_column(String(200))
-    is_comment: Mapped[bool] = mapped_column(server_default=text("false"))
-    text: Mapped[str] = mapped_column(Text)  # last: the name hides sqlalchemy.text in this class
+    body: Mapped[str] = mapped_column(Text)
+
+    author: Mapped[User] = relationship()
