@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, InternalUser, Manager, bad_request, conflict, not_found, require_role
+from app.audit import record
 from app.db import get_db
 from app.models import Role, User
 from app.models.library import (
@@ -281,6 +282,7 @@ async def create_rule(body: NewRule, viewer: Manager, db: Db) -> RuleOut:
     set_rule_fields(rule, body)
     rule.versions = [RuleVersion(version=1, effective_date=body.effective_date, by_id=viewer.id, note=body.note.strip())]
     db.add(rule)
+    record(db, viewer, "rule", rule.id, "created", {"version": 1, "title": rule.title, "note": body.note.strip()})
     return await rule_saved(db, viewer, rule.id)
 
 
@@ -292,6 +294,7 @@ async def edit_rule(rule_id: str, body: RuleInput, viewer: Manager, db: Db) -> R
     await check_disclosure_exists(db, viewer, body)
     set_rule_fields(rule, body)
     new_rule_version(rule, viewer, body.effective_date, body.note.strip())
+    record(db, viewer, "rule", rule.id, "updated", {"version": rule.version, "note": body.note.strip()})
     return await rule_saved(db, viewer, rule.id)
 
 
@@ -411,6 +414,7 @@ async def create_disclosure(body: NewDisclosure, viewer: Manager, db: Db) -> Dis
         DisclosureVersion(version=1, effective_date=d.effective_date, by_id=viewer.id, note=body.note.strip(), text=d.text)
     ]
     db.add(d)
+    record(db, viewer, "disclosure", d.id, "created", {"version": 1, "title": d.title, "note": body.note.strip()})
     return await disclosure_saved(db, viewer, d.id)
 
 
@@ -427,6 +431,7 @@ async def edit_disclosure(disclosure_id: str, body: DisclosureInput, viewer: Man
             version=d.version, effective_date=d.effective_date, by_id=viewer.id, note=body.note.strip(), text=d.text
         ),
     )
+    record(db, viewer, "disclosure", d.id, "updated", {"version": d.version, "note": body.note.strip()})
     return await disclosure_saved(db, viewer, d.id)
 
 
@@ -546,6 +551,7 @@ async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
     )
     db.add(block)
     await db.flush()
+    record(db, viewer, "building_block", block.id, "created", {"kind": block.kind, "text": text, "savedFrom": body.saved_from})
     return await block_saved(db, viewer, block.id)
 
 
@@ -553,6 +559,10 @@ async def save_block(body: NewBlock, viewer: Reviewer, db: Db) -> BlockOut:
 async def edit_block(block_id: uuid.UUID, body: BlockScope, viewer: Manager, db: Db) -> BlockOut:
     """Managers curate where a block applies and when it expires. The text stays as it was approved."""
     block = await load_block(db, viewer, block_id)
+    record(db, viewer, "building_block", block.id, "updated", {
+        "before": {"products": block.products, "states": states_out(block.states), "expiresAt": block.expires_at},
+        "after": body,
+    })
     block.products = list(body.products)
     block.states = states_in(body.states)
     block.expires_at = body.expires_at
@@ -562,7 +572,9 @@ async def edit_block(block_id: uuid.UUID, body: BlockScope, viewer: Manager, db:
 @router.delete("/building-blocks/{block_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_block(block_id: uuid.UUID, viewer: Manager, db: Db) -> None:
     """Materials keep their text; only the library entry goes."""
-    await db.delete(await load_block(db, viewer, block_id))
+    block = await load_block(db, viewer, block_id)
+    record(db, viewer, "building_block", block.id, "deleted", {"kind": block.kind, "text": block.text})
+    await db.delete(block)
     await db.commit()
 
 
@@ -690,6 +702,9 @@ async def upload_rate_sheet(body: RateSheetUpload, viewer: Manager, db: Db) -> R
     db.add(sheet)
     await db.flush()
     sheet_id = sheet.id
+    record(db, viewer, "rate_sheet", sheet_id, "created", {
+        "effectiveDate": sheet.effective_date, "file": sheet.file, "rows": len(sheet.rows)
+    })
     await db.commit()
     saved = await db.scalar(
         select(RateSheet)
@@ -807,7 +822,9 @@ async def apply_change(change_id: str, body: Decision, viewer: Manager, db: Db) 
         rule.text = edit.after
         rule.effective_date = change.effective_date
         new_rule_version(rule, viewer, change.effective_date, note or f"Applied regulatory change: {change.title}")
+        record(db, viewer, "rule", rule.id, "updated", {"version": rule.version, "regChange": change.id})
     decide(change, viewer, RegChangeStatus.APPLIED, note)
+    record(db, viewer, "reg_change", change.id, "applied", {"rules": [e.rule_id for e in change.edits], "note": note})
     await db.commit()
     return RegChangeOut.of(await load_change(db, viewer, change_id))
 
@@ -820,5 +837,6 @@ async def dismiss_change(change_id: str, body: Decision, viewer: Manager, db: Db
     if not note:
         raise bad_request("Say why you dismiss this change")
     decide(change, viewer, RegChangeStatus.DISMISSED, note)
+    record(db, viewer, "reg_change", change.id, "dismissed", {"note": note})
     await db.commit()
     return RegChangeOut.of(await load_change(db, viewer, change_id))
