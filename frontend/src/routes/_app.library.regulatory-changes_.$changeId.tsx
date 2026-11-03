@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, ExternalLink, Lock } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { affectedRules, flaggedMaterials, isUndecided, useRegChanges, type RegChange } from '@/components/library/reg-change-data'
+import { affectedRules, flaggedMaterials, isUndecided, useRegChanges, type RegChange, type RegChangeDecision } from '@/components/library/reg-change-data'
+import { RegChangeDecisionDialog } from '@/components/library/reg-change-decision-dialog'
 import { RegChangeStatusPill } from '@/components/library/reg-change-meta'
 import { useRules, type Rule } from '@/components/library/rule-data'
 import { useMaterials } from '@/components/materials/material-data'
@@ -162,13 +164,15 @@ function RuleEditBlock({ rule, before, after }: { rule?: Rule; before: string; a
 /** Apply and Dismiss, shown to everyone so the next step is clear, but only Managers can use them. */
 function DecisionActions({ change, canDecide }: { change: RegChange; canDecide: boolean }) {
   const { t } = useTranslation()
-  // TODO: wire these to the API; applying writes a new rule version and flags the dependent materials.
+  // The server checks the role too. Applying writes a new rule version (F7).
+  const [decision, setDecision] = useState<RegChangeDecision>()
   return (
     <div className="grid gap-2">
       <div className="flex gap-2">
-        <Button size="sm" disabled={!canDecide} title={canDecide ? undefined : t('regChanges.readOnly')}>{t('regChanges.apply')}</Button>
-        <Button size="sm" variant="outline" disabled={!canDecide} title={canDecide ? undefined : t('regChanges.readOnly')}>{t('regChanges.dismiss')}</Button>
+        <Button size="sm" disabled={!canDecide} title={canDecide ? undefined : t('regChanges.readOnly')} onClick={() => setDecision('apply')}>{t('regChanges.apply')}</Button>
+        <Button size="sm" variant="outline" disabled={!canDecide} title={canDecide ? undefined : t('regChanges.readOnly')} onClick={() => setDecision('dismiss')}>{t('regChanges.dismiss')}</Button>
       </div>
+      <RegChangeDecisionDialog change={change} decision={decision} onClose={() => setDecision(undefined)} />
       {change.reviewingBy && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <PersonAvatar name={change.reviewingBy} className="size-4 text-[8px]" />

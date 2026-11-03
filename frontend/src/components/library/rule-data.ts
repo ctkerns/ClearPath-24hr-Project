@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import type { Channel, Material, Product } from '@/components/materials/material-data'
 import type { RiskLevel } from '@/components/ui/risk-tag'
 
-// Rules library (PRD F7, and company rules from F8). Managers edit it; everyone else reads it (R3).
-// TODO: replace RULES_URL with the real API.
-const RULES_URL = '/demo/rules.json'
+// Rules library (PRD F7, and company rules from F8). Managers edit it; every internal user reads it (R3).
+// GET /api/library/rules. Affiliates cannot read it (R4).
 
 export const RULE_KINDS = ['regulation', 'policy'] as const
 export type RuleKind = (typeof RULE_KINDS)[number]
@@ -34,26 +34,22 @@ export type Rule = {
   products: Product[]
   /** Empty means every channel. */
   channels: Channel[]
-  citation?: { label: string; url: string }
+  /** Company rules have none. */
+  citation: { label: string; url: string } | null
   effectiveDate: string
   owner: string
   severity: RiskLevel
   layer: CheckLayer
   check: RuleCheck
-  /** A regulatory change in the queue affects this rule and waits for a Manager (F7). */
-  pendingChange?: boolean
+  /** A regulatory change in the queue affects this rule and waits for a Manager (F7). The server works it out. */
+  pendingChange: boolean
   versions: { version: number; effectiveDate: string; by: string; note: string }[]
 }
 
 export function useRules() {
   return useQuery({
     queryKey: ['rules'],
-    queryFn: async (): Promise<Rule[]> => {
-      const res = await fetch(RULES_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).rules
-    },
-    staleTime: Infinity,
+    queryFn: () => api<Rule[]>('GET', '/library/rules'),
   })
 }
 

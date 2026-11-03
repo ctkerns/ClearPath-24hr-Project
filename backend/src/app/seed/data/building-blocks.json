@@ -1,27 +1,39 @@
 {
+  "_note": "Demo building blocks (PRD F9). approvedBy is a user name. savedFrom.id is a demo material ID.",
   "blocks": [
     {
       "id": "01a0d8b2-1c00-7a41-9e3d-2f5b8c1a0d01",
       "kind": "headline",
       "text": "Pay off debt faster with one simple loan.",
-      "products": ["personal_loan"],
+      "products": [
+        "personal_loan"
+      ],
       "states": "all",
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-07-14",
       "expiresAt": "2027-01-10",
-      "savedFrom": { "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651", "title": "Personal loan search ad, debt payoff" },
+      "savedFrom": {
+        "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+        "title": "Personal loan search ad, debt payoff"
+      },
       "usedIn": 6
     },
     {
       "id": "01a0d8b2-1c00-7b02-8f11-6a0e4d7c2b02",
       "kind": "claim",
       "text": "One fixed monthly payment, so you always know what you owe.",
-      "products": ["personal_loan", "auto_loan"],
+      "products": [
+        "personal_loan",
+        "auto_loan"
+      ],
       "states": "all",
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-07-14",
       "expiresAt": "2027-01-10",
-      "savedFrom": { "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651", "title": "Personal loan search ad, debt payoff" },
+      "savedFrom": {
+        "id": "01a0d660-7200-7f2e-846a-4b2b8dd2f651",
+        "title": "Personal loan search ad, debt payoff"
+      },
       "usedIn": 9
     },
     {
@@ -33,103 +45,164 @@
       "approvedBy": "Alex Chen",
       "approvedAt": "2026-03-02",
       "expiresAt": "2027-03-02",
-      "savedFrom": { "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a", "title": "Mortgage prequal landing page" },
+      "savedFrom": {
+        "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
+        "title": "Mortgage prequal landing page"
+      },
       "usedIn": 31
     },
     {
       "id": "01a0d8b2-1c00-7d24-b7c5-04d6f8a1be04",
       "kind": "headline",
       "text": "Turn your home's equity into a plan.",
-      "products": ["heloc"],
-      "states": ["CA", "TX", "WA"],
+      "products": [
+        "heloc"
+      ],
+      "states": [
+        "CA",
+        "TX",
+        "WA"
+      ],
       "approvedBy": "Alex Chen",
       "approvedAt": "2026-05-20",
       "expiresAt": "2026-11-20",
-      "savedFrom": { "id": "01a0bf33-d400-758c-8181-f7618b0121bf", "title": "HELOC Facebook carousel" },
+      "savedFrom": {
+        "id": "01a0bf33-d400-758c-8181-f7618b0121bf",
+        "title": "HELOC Facebook carousel"
+      },
       "usedIn": 3
     },
     {
       "id": "01a0d8b2-1c00-7e35-8c06-17e7a9b2cf05",
       "kind": "claim",
       "text": "Earn 1.5% cash back on every purchase, with no annual fee.",
-      "products": ["credit_card"],
+      "products": [
+        "credit_card"
+      ],
       "states": "all",
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-06-03",
       "expiresAt": "2026-11-28",
-      "savedFrom": { "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3", "title": "Cash back card, affiliate post" },
+      "savedFrom": {
+        "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3",
+        "title": "Cash back card, affiliate post"
+      },
       "usedIn": 5
     },
     {
       "id": "01a0d8b2-1c00-7f46-9d17-2af8bac3d006",
       "kind": "cta",
       "text": "Check your rate. It won't affect your credit score.",
-      "products": ["personal_loan", "auto_loan"],
+      "products": [
+        "personal_loan",
+        "auto_loan"
+      ],
       "states": "all",
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-08-11",
       "expiresAt": "2027-02-11",
-      "savedFrom": { "id": "01a10017-2800-7389-b220-910ed92e6d2d", "title": "Auto loan pre-approval email flow" },
+      "savedFrom": {
+        "id": "01a10017-2800-7389-b220-910ed92e6d2d",
+        "title": "Auto loan pre-approval email flow"
+      },
       "usedIn": 12
     },
     {
       "id": "01a0d8b2-1c00-7057-ae28-3b09cbd4e107",
       "kind": "headline",
       "text": "Consolidate your debt into one lower payment.",
-      "products": ["personal_loan"],
-      "states": ["CA", "CO", "AZ"],
+      "products": [
+        "personal_loan"
+      ],
+      "states": [
+        "CA",
+        "CO",
+        "AZ"
+      ],
       "approvedBy": "Alex Chen",
       "approvedAt": "2026-02-18",
       "expiresAt": "2026-10-15",
-      "savedFrom": { "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29", "title": "Debt consolidation, Google search ad" },
+      "savedFrom": {
+        "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29",
+        "title": "Debt consolidation, Google search ad"
+      },
       "usedIn": 2
     },
     {
       "id": "01a0d8b2-1c00-7168-bf39-4c1adce5f208",
       "kind": "cta",
       "text": "See if you prequalify in minutes.",
-      "products": ["mortgage"],
+      "products": [
+        "mortgage"
+      ],
       "states": "all",
       "approvedBy": "Alex Chen",
       "approvedAt": "2026-09-08",
       "expiresAt": "2027-03-08",
-      "savedFrom": { "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a", "title": "Mortgage prequal landing page" },
+      "savedFrom": {
+        "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a",
+        "title": "Mortgage prequal landing page"
+      },
       "usedIn": 4
     },
     {
       "id": "01a0d8b2-1c00-7279-804a-5d2beef60309",
       "kind": "claim",
       "text": "Compare rewards side by side and pick the card that fits how you spend.",
-      "products": ["credit_card"],
-      "states": ["CA", "TX", "WA", "CO", "AZ"],
+      "products": [
+        "credit_card"
+      ],
+      "states": [
+        "CA",
+        "TX",
+        "WA",
+        "CO",
+        "AZ"
+      ],
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-08-25",
       "expiresAt": "2027-02-25",
-      "savedFrom": { "id": "01a0cd1b-6600-73a9-8f0b-78172f5af13f", "title": "Rewards card comparison, CardCompass" },
+      "savedFrom": {
+        "id": "01a0cd1b-6600-73a9-8f0b-78172f5af13f",
+        "title": "Rewards card comparison, CardCompass"
+      },
       "usedIn": 2
     },
     {
       "id": "01a0d8b2-1c00-738a-915b-6e3cf0a7140a",
       "kind": "disclosure",
       "text": "Credit is subject to approval. Rates and terms are based on creditworthiness and may change.",
-      "products": ["personal_loan", "auto_loan", "credit_card", "heloc"],
+      "products": [
+        "personal_loan",
+        "auto_loan",
+        "credit_card",
+        "heloc"
+      ],
       "states": "all",
       "approvedBy": "Alex Chen",
       "approvedAt": "2026-04-01",
       "expiresAt": "2027-04-01",
-      "savedFrom": { "id": "01a10017-2800-7389-b220-910ed92e6d2d", "title": "Auto loan pre-approval email flow" },
+      "savedFrom": {
+        "id": "01a10017-2800-7389-b220-910ed92e6d2d",
+        "title": "Auto loan pre-approval email flow"
+      },
       "usedIn": 18
     },
     {
       "id": "01a0d8b2-1c00-749b-a26c-7f4d01b8250b",
       "kind": "headline",
       "text": "Your money earns more here.",
-      "products": ["savings"],
+      "products": [
+        "savings"
+      ],
       "states": "all",
       "approvedBy": "Maya Ruiz",
       "approvedAt": "2026-08-30",
       "expiresAt": "2027-02-28",
-      "savedFrom": { "id": "01a08795-8c00-7cb9-93fd-75d440fc0a38", "title": "Spring savings promo email" },
+      "savedFrom": {
+        "id": "01a08795-8c00-7cb9-93fd-75d440fc0a38",
+        "title": "Spring savings promo email"
+      },
       "usedIn": 1
     }
   ]

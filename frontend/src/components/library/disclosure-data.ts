@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import type { Product } from '@/components/materials/material-data'
 import type { Rule } from './rule-data'
 
 // Disclosure library (PRD F8): approved disclosure texts, versioned, with the products and states they apply to.
-// Managers edit it; everyone else reads it (R3). TODO: replace DISCLOSURES_URL with the real API.
-const DISCLOSURES_URL = '/demo/disclosures.json'
+// Managers edit it; every internal user reads it (R3). GET /api/library/disclosures.
 
 export type Disclosure = {
   /** Internal reference that rules use (for example in a trigger-term check). Only shown in URLs. */
@@ -27,12 +27,7 @@ export type Disclosure = {
 export function useDisclosures() {
   return useQuery({
     queryKey: ['disclosures'],
-    queryFn: async (): Promise<Disclosure[]> => {
-      const res = await fetch(DISCLOSURES_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).disclosures
-    },
-    staleTime: Infinity,
+    queryFn: () => api<Disclosure[]>('GET', '/library/disclosures'),
   })
 }
 

@@ -1,4 +1,5 @@
 {
+  "_note": "Demo disclosure library (PRD F8). owner and versions[].by are user names; versions are newest first. Rules refer to these IDs.",
   "disclosures": [
     {
       "id": "D-7",

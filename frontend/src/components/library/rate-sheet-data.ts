@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import type { Product } from '@/components/materials/material-data'
 
 // Rate sheet (PRD F8). Rule RATE-01 (F7) checks every rate in a material against the current sheet.
 // Managers upload a CSV; each upload is a full sheet that replaces the one before it (R3).
-// TODO: replace RATE_SHEET_URL with the real API.
-const RATE_SHEET_URL = '/demo/rate-sheet.json'
+// GET and POST /api/library/rate-sheets.
 
 /** Loans and cards quote an APR; savings and certificates quote an APY. */
 export type RateKind = 'apr' | 'apy'
@@ -38,17 +38,30 @@ export type RowChange =
 
 const FIELDS: RowField[] = ['offer', 'min', 'max', 'fees']
 
-/** Newest sheet first, as the demo file stores them. */
+/** Newest sheet first. The first one is the current sheet. */
 export function useRateSheets() {
   return useQuery({
     queryKey: ['rate-sheets'],
-    queryFn: async (): Promise<RateSheet[]> => {
-      const res = await fetch(RATE_SHEET_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).sheets
-    },
-    staleTime: Infinity,
+    queryFn: () => api<RateSheet[]>('GET', '/library/rate-sheets'),
   })
+}
+
+/** The columns a rate sheet CSV needs, in this order. min and max are percents, like 8.99. */
+export const RATE_CSV_COLUMNS = ['key', 'product', 'offer', 'rate', 'min', 'max', 'fees'] as const
+
+export type RateSheetUpload = { effectiveDate: string; file: string; csv: string }
+
+/**
+ * Managers only; the server checks the role and every row of the CSV.
+ * Resolves with the new sheet. Rejects with an ApiError, so the dialog can show what went wrong.
+ */
+export function useUploadRateSheet() {
+  const queryClient = useQueryClient()
+  return async (upload: RateSheetUpload) => {
+    const sheet = await api<RateSheet>('POST', '/library/rate-sheets', upload)
+    await queryClient.invalidateQueries({ queryKey: ['rate-sheets'] })
+    return sheet
+  }
 }
 
 /** What changed in one row since the sheet before. `added` means the offer is new on this sheet. */

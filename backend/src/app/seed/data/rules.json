@@ -1,4 +1,5 @@
 {
+  "_note": "Demo rules library (PRD F7, F8). owner and versions[].by are user names. Materials refer to these rule IDs. pendingChange is not stored: the API works it out from the regulatory changes.",
   "rules": [
     {
       "id": "REGZ-1026.24",
@@ -32,7 +33,6 @@
         ],
         "disclosure": "D-7"
       },
-      "pendingChange": true,
       "versions": [
         {
           "version": 3,
@@ -164,8 +164,7 @@
           "by": "Maya Ruiz",
           "note": "First version."
         }
-      ],
-      "pendingChange": true
+      ]
     },
     {
       "id": "EHL-01",
@@ -408,8 +407,7 @@
           "by": "Maya Ruiz",
           "note": "First version."
         }
-      ],
-      "pendingChange": true
+      ]
     },
     {
       "id": "RATE-01",

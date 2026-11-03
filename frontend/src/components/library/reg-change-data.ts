@@ -1,11 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import type { Material } from '@/components/materials/material-data'
 import { dependentMaterials, type Rule } from './rule-data'
 
 // Regulatory change queue (PRD F7). A feed connector (compliance.ai, Wolters Kluwer) adds the items;
-// that connector is P2 and unverified (F11), so the demo seeds them.
-// TODO: replace REG_CHANGES_URL with the real API.
-const REG_CHANGES_URL = '/demo/regulatory-changes.json'
+// that connector is P2 and unverified (F11), so the demo seeds them. GET /api/library/regulatory-changes.
 
 export const REG_CHANGE_STATUSES = ['waiting', 'in_review', 'applied', 'dismissed'] as const
 export type RegChangeStatus = (typeof REG_CHANGE_STATUSES)[number]
@@ -25,22 +24,36 @@ export type RegChange = {
   status: RegChangeStatus
   edits: RuleEdit[]
   /** The Manager who opened it, while it is in review. */
-  reviewingBy?: string
-  decidedBy?: string
-  decidedAt?: string
-  decisionNote?: string
+  reviewingBy: string | null
+  decidedBy: string | null
+  decidedAt: string | null
+  decisionNote: string | null
 }
 
 export function useRegChanges() {
   return useQuery({
     queryKey: ['regulatory-changes'],
-    queryFn: async (): Promise<RegChange[]> => {
-      const res = await fetch(REG_CHANGES_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).changes
-    },
-    staleTime: Infinity,
+    queryFn: () => api<RegChange[]>('GET', '/library/regulatory-changes'),
   })
+}
+
+export type RegChangeDecision = 'apply' | 'dismiss'
+
+/**
+ * Managers only (R3); the server checks. Apply writes the suggested text into each rule as a new version.
+ * Dismiss needs a reason. Both reload the changes and the rules, because a rule's text and pending flag change.
+ * TODO (F7): the server also flags the dependent materials, when materials are in the database.
+ * Rejects with an ApiError, so the dialog can show what went wrong.
+ */
+export function useDecideRegChange() {
+  const queryClient = useQueryClient()
+  return async (id: string, decision: RegChangeDecision, note: string) => {
+    await api<RegChange>('POST', `/library/regulatory-changes/${encodeURIComponent(id)}/${decision}`, { note: note || null })
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['regulatory-changes'] }),
+      queryClient.invalidateQueries({ queryKey: ['rules'] }),
+    ])
+  }
 }
 
 /** Not decided yet: new, or opened by a Manager. */

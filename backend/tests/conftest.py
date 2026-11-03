@@ -7,7 +7,9 @@ import os
 
 # Must be set before any app module is imported, because app.config reads it at import time.
 BASE_URL = os.environ.get("TEST_DATABASE_SERVER", "postgresql+psycopg://clearpath:clearpath@localhost:5432")
-os.environ["DATABASE_URL"] = f"{BASE_URL}/clearpath_test"
+# Parallel worktrees each set their own name, so their tests do not empty each other's tables.
+TEST_DB = os.environ.get("TEST_DATABASE_NAME", "clearpath_test")
+os.environ["DATABASE_URL"] = f"{BASE_URL}/{TEST_DB}"
 os.environ["COOKIE_SECURE"] = "false"  # the test client uses http://
 
 from pathlib import Path  # noqa: E402
@@ -27,10 +29,10 @@ from app.seed import create_demo  # noqa: E402
 
 @pytest.fixture(scope="session", autouse=True)
 def database():
-    """Creates clearpath_test if it is missing, and applies every migration (tests the migrations too)."""
+    """Creates the test database if it is missing, and applies every migration (tests the migrations too)."""
     with psycopg.connect(f"{BASE_URL.replace('+psycopg', '')}/clearpath", autocommit=True) as conn:
-        if not conn.execute("SELECT 1 FROM pg_database WHERE datname = 'clearpath_test'").fetchone():
-            conn.execute("CREATE DATABASE clearpath_test")
+        if not conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (TEST_DB,)).fetchone():
+            conn.execute(f'CREATE DATABASE "{TEST_DB}"')
     command.upgrade(Config(str(Path(__file__).parents[1] / "alembic.ini")), "head")
 
 

@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { daysUntil, type Product } from '@/components/materials/material-data'
+import { api } from '@/lib/api'
 
 // Pre-approved building blocks (PRD F9). Reviewers save them from approved materials; Managers curate them (R3).
-// TODO: replace BLOCKS_URL with the real API.
-const BLOCKS_URL = '/demo/building-blocks.json'
+// GET /api/library/building-blocks.
 
 export const BLOCK_KINDS = ['headline', 'claim', 'cta', 'disclosure'] as const
 export type BlockKind = (typeof BLOCK_KINDS)[number]
@@ -24,19 +24,14 @@ export type Block = {
   expiresAt: string
   /** The approved material the block was saved from with "Save to library". */
   savedFrom: { id: string; title: string }
-  /** How many materials contain this exact text. */
+  /** How many materials contain this exact text. TODO: the server keeps a seeded count until materials are in the database. */
   usedIn: number
 }
 
 export function useBlocks() {
   return useQuery({
     queryKey: ['building-blocks'],
-    queryFn: async (): Promise<Block[]> => {
-      const res = await fetch(BLOCKS_URL)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return (await res.json()).blocks
-    },
-    staleTime: Infinity,
+    queryFn: () => api<Block[]>('GET', '/library/building-blocks'),
   })
 }
 

@@ -1,9 +1,12 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Lock } from 'lucide-react'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { Lock, Upload } from 'lucide-react'
+import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { changedCount, useRateSheets, validateRateSheetSearch } from '@/components/library/rate-sheet-data'
+import { changedCount, useRateSheets, validateRateSheetSearch, type RateSheet } from '@/components/library/rate-sheet-data'
 import { RateSheetHistory } from '@/components/library/rate-sheet-history'
 import { RateSheetTable } from '@/components/library/rate-sheet-table'
+import { RateSheetUploadDialog } from '@/components/library/rate-sheet-upload-dialog'
+import { Button } from '@/components/ui/button'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { useViewer } from '@/lib/session'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -20,11 +23,19 @@ function RateSheetTab() {
   const { t } = useTranslation()
   const { sheet: sheetId } = Route.useSearch()
   const sheets = useRateSheets()
-  // R3: only Managers and Admins upload a new sheet.
+  // R3: only Managers and Admins upload a new sheet. The server checks too.
   const canEdit = viewer.role === 'manager' || viewer.role === 'admin'
 
   if (sheets.isPending) return <RateSheetSkeleton />
-  if (sheets.isError || !sheets.data.length) return <p className="text-muted-foreground">{t('rateSheet.loadError')}</p>
+  if (sheets.isError) return <p className="text-muted-foreground">{t('rateSheet.loadError')}</p>
+  if (!sheets.data.length) {
+    return (
+      <div className="grid justify-items-start gap-3">
+        <p className="text-muted-foreground">{t('rateSheet.upload.none')}</p>
+        {canEdit && <UploadButton />}
+      </div>
+    )
+  }
 
   const all = sheets.data
   // An unknown sheet in the URL falls back to the current one.
@@ -36,6 +47,7 @@ function RateSheetTab() {
   return (
     <div className="grid gap-6">
       <header className="grid gap-2">
+        {canEdit && <div className="flex justify-end"><UploadButton current={all[0]} /></div>}
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
           <Trans
             i18nKey="rateSheet.meta"
@@ -83,6 +95,28 @@ function RateSheetTab() {
         </aside>
       </div>
     </div>
+  )
+}
+
+/** Opens the upload dialog. After an upload the page shows the new sheet. */
+function UploadButton({ current }: { current?: RateSheet }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate({ from: Route.fullPath })
+  const [open, setOpen] = useState(false)
+  // The list is newest effective date first, so the new sheet is the current one unless its date is older.
+  const isCurrent = (s: RateSheet) => !current || s.effectiveDate >= current.effectiveDate
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        <Upload aria-hidden="true" />
+        {t('rateSheet.upload.action')}
+      </Button>
+      <RateSheetUploadDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onUploaded={(s) => void navigate({ search: isCurrent(s) ? {} : { sheet: s.id } })}
+      />
+    </>
   )
 }
 

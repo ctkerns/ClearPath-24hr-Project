@@ -729,6 +729,19 @@
     "reviewingBy": "{{name}} is reviewing this change.",
     "apply": "Apply to rule",
     "dismiss": "Dismiss",
+    "decide": {
+      "applyTitle": "Apply this change to the rules?",
+      "applyDescription_one": "The suggested text becomes a new version of {{count}} rule. Approved materials that depend on it get flagged for re-review.",
+      "applyDescription_other": "The suggested text becomes a new version of {{count}} rules. Approved materials that depend on them get flagged for re-review.",
+      "dismissTitle": "Dismiss this change?",
+      "dismissDescription": "The rules stay as they are. Say why, so the audit trail shows the reason.",
+      "note": "Note",
+      "noteOptional": "Note (optional)",
+      "notePlaceholder": "For example: our pages already show this notice.",
+      "cancel": "Cancel",
+      "confirmApply": "Apply to rule",
+      "confirmDismiss": "Dismiss change"
+    },
     "readOnly": "Only Managers apply or dismiss regulatory changes. You can read them.",
     "sourceNote": "Seeded for the demo. The feed connector is not set up yet.",
     "rules": {
@@ -757,6 +770,18 @@
     "replaced": "This sheet was replaced by the {{date}} sheet. Reviews check rates against the current sheet only.",
     "viewCurrent": "View the current sheet",
     "readOnly": "Only Managers upload a new rate sheet, as a CSV. You can read it and use it in reviews.",
+    "upload": {
+      "action": "Upload CSV",
+      "none": "No rate sheet has been uploaded yet.",
+      "title": "Upload a new rate sheet",
+      "description": "The new sheet replaces the current one on its effective date. Older sheets stay in the history.",
+      "file": "CSV file",
+      "columns": "Columns, in this order: {{columns}}. Write min and max as percents, like 8.99.",
+      "effectiveDate": "Effective date",
+      "readFailed": "This file could not be read. Choose a CSV file.",
+      "cancel": "Cancel",
+      "submit": "Upload"
+    },
     "loadError": "The rate sheet could not be loaded. Refresh the page to try again.",
     "footnote": "Effective and Source show when each offer last changed, and which upload set it. Rates and fees are inclusive of all ranges a member can be offered.",
     "column": {

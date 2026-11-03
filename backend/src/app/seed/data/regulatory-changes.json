@@ -1,4 +1,5 @@
 {
+  "_note": "Demo regulatory change queue (PRD F7). reviewingBy and decidedBy are user names. edits[].ruleId is a rule ID.",
   "changes": [
     {
       "id": "cfpb-regz-trigger-terms-commentary",
@@ -85,7 +86,7 @@
         }
       ],
       "decidedBy": "Maya Ruiz",
-      "decidedAt": "2026-06-20",
+      "decidedAt": "2026-06-20T15:00:00Z",
       "decisionNote": "Added \"approved in minutes\", which we used in two auto loan ads. \"Pre-approved\" is already on the banned phrase list (POL-04)."
     },
     {
@@ -109,7 +110,7 @@
         }
       ],
       "decidedBy": "Alex Chen",
-      "decidedAt": "2026-04-14",
+      "decidedAt": "2026-04-14T15:00:00Z",
       "decisionNote": "Folded the time limit into the variable-rate sentence. The rate sheet already stores promotion end dates."
     },
     {
@@ -133,7 +134,7 @@
         }
       ],
       "decidedBy": "Maya Ruiz",
-      "decidedAt": "2026-08-25",
+      "decidedAt": "2026-08-25T15:00:00Z",
       "decisionNote": "No change needed. Every email sent through the marketing connector already includes the opt-out link and address, and statements are not reviewed in ClearPath."
     }
   ]
