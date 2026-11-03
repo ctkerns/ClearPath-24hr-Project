@@ -19,6 +19,11 @@
     "openMenu": "Open menu",
     "accountOf": "Account: {{name}}"
   },
+  "notAvailable": {
+    "title": "{{page}} is not available for your role",
+    "body": "This page is for internal staff only. You can still open your materials and issues.",
+    "back": "Go to the dashboard"
+  },
   "status": {
     "draft": "Draft",
     "submitted": "Submitted",
@@ -220,6 +225,8 @@
   },
   "review": {
     "notFound": "This material does not exist, or you do not have access to it.",
+    "backToList": "Go to the materials list",
+    "loadError": "This material did not load. Reload the page to try again.",
     "versionOf": "Version {{version}} of {{count}}",
     "moreActions": "More actions",
     "raiseIssue": "Raise an issue",
@@ -266,8 +273,11 @@
       "lighter": "Lighter path"
     },
     "submittedBy": "{{name}}, {{time}}",
-    "noSeed": "This demo material has no seeded content yet.",
-    "noSeedLink": "Open \"Summer personal loan, Meta feed ad\" to see a full review",
+    "noVersion": {
+      "draft": "This material is a draft.",
+      "title": "This material has no content yet.",
+      "body": "No version has been submitted, so there is no content, review or history to show."
+    },
     "conditions": "Approval conditions",
     "escalatedBy": "Escalated by {{name}}: {{reason}}",
     "groupBy": {
@@ -521,8 +531,8 @@
   },
   "issue": {
     "notFound": "This issue does not exist, or you do not have access to it.",
-    "noSeed": "This demo issue has no seeded details yet.",
-    "noSeedLink": "Open the LendWise disclosure issue, which has full details",
+    "backToList": "Go to the issues list",
+    "loadError": "This issue did not load. Reload the page to try again.",
     "startWork": "Start work",
     "reopen": "Reopen",
     "resolve": {

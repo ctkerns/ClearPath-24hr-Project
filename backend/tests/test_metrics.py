@@ -132,7 +132,7 @@ async def test_review_flow_record(client):
     record = next(d for d in (await metrics(client))["decisions"] if d["channel"] == "meta")
     assert {k: v for k, v in record.items() if k not in ("decidedAt", "turnaroundDays")} == {
         "channel": "meta", "product": "personal_loan", "groups": ["Compliance"], "path": "full", "rounds": 2,
-        "outcome": "approved", "findings": ["REGZ-1026.24", "UDAAP-03", "NCUA-740"], "aiFindings": 1, "aiOutdated": 1,
+        "outcome": "approved", "findings": ["REGZ-1026.24", "UDAAP-03"], "aiFindings": 1, "aiOutdated": 1,
         "humanComments": 2, "humanUncovered": 1, "laterViolation": False,
     }
     assert 0 <= record["turnaroundDays"] < 1

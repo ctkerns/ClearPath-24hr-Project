@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { SeverityLabel } from '@/components/ui/risk-tag'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatRelativeTime } from '@/i18n/format'
+import { ApiError } from '@/lib/api'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
 import { SaveError } from '@/components/save-error'
@@ -37,16 +38,29 @@ function IssuePage() {
   // TODO: the detail API should return the summary fields too, so the page needs one request.
   const issue = issues.data?.find((i) => i.id === issueId)
 
-  if (issues.isPending || detail.isPending) return <PageSkeleton />
-  if (!issue) {
+  // The API answers 404 for an issue that does not exist or that the viewer may not see (R4),
+  // and 422 for an id that is not a UUID. 4xx answers are not retried (main.tsx), so this shows at once.
+  const missing = detail.error instanceof ApiError && detail.error.status >= 400 && detail.error.status < 500
+  if (missing || (issues.isSuccess && !issue)) {
+    // It never says which, so it leaks nothing.
     return (
-      <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
+      <div className="mx-auto grid w-full max-w-7xl justify-items-start gap-3">
         <BackLink />
-        <p className="font-medium">{t('issue.notFound')}</p>
+        <h1 className="font-medium">{t('issue.notFound')}</h1>
+        <Link to="/issues" className="text-sm text-primary hover:underline">{t('issue.backToList')}</Link>
       </div>
     )
   }
-  const d = detail.data ?? null
+  if (issues.isError || detail.isError) {
+    return (
+      <div className="mx-auto grid w-full max-w-7xl justify-items-start gap-3">
+        <BackLink />
+        <p className="font-medium">{t('issue.loadError')}</p>
+      </div>
+    )
+  }
+  if (issues.isPending || detail.isPending || !issue) return <PageSkeleton />
+  const d = detail.data
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6">
@@ -55,14 +69,10 @@ function IssuePage() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-10">
         <div className="grid min-w-0 content-start gap-8">
-          {d ? (
-            <>
-              {d.summary && <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>}
-              <LiveContent detail={d} />
-              <ActionList issue={issue} detail={d} />
-              <Activity issueId={issue.id} detail={d} />
-            </>
-          ) : <NoSeededContent />}
+          {d.summary && <p className="max-w-3xl text-base leading-relaxed">{d.summary}</p>}
+          <LiveContent detail={d} />
+          <ActionList issue={issue} detail={d} />
+          <Activity issueId={issue.id} detail={d} />
         </div>
         <IssuePanel
           issue={issue}
@@ -133,18 +143,6 @@ function Header({ issue: i, onResolve }: { issue: Issue; onResolve: () => void }
         )}
       </div>
     </header>
-  )
-}
-
-function NoSeededContent() {
-  const { t } = useTranslation()
-  return (
-    <div className="grid justify-items-start gap-2 rounded-lg border border-dashed p-6">
-      <p className="font-medium">{t('issue.noSeed')}</p>
-      <Link to="/issues/$issueId" params={{ issueId: '01a19b87-a300-7083-a17b-e83caf805f10' }} className="text-primary hover:underline">
-        {t('issue.noSeedLink')}
-      </Link>
-    </div>
   )
 }
 

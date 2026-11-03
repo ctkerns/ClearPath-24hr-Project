@@ -280,6 +280,7 @@ export function Activity({ issueId, detail }: { issueId: string; detail: IssueDe
 /** Right side: the issue's properties, then the linked material and the rule. */
 export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue: Issue; detail: IssueDetail | null; material?: Material; sourceLabel: string }) {
   const { t } = useTranslation()
+  const viewer = useViewer()
   const overdue = isOverdue(i)
 
   return (
@@ -350,10 +351,18 @@ export function IssuePanel({ issue: i, detail, material, sourceLabel }: { issue:
       {detail?.rule && (
         <section className="grid gap-2">
           <SectionHeading>{t('issue.panel.rule')}</SectionHeading>
-          <Link to="/library/rules/$ruleId" params={{ ruleId: detail.rule.id }} className="group grid gap-0.5 text-sm">
-            <code className="text-xs text-muted-foreground">{detail.rule.id}</code>
-            <span className="group-hover:underline">{detail.rule.title}</span>
-          </Link>
+          {/* Affiliates cannot open the library (R4), so the rule is not a link for them. */}
+          {viewer.role === 'affiliate' ? (
+            <p className="grid gap-0.5 text-sm">
+              <code className="text-xs text-muted-foreground">{detail.rule.id}</code>
+              <span>{detail.rule.title}</span>
+            </p>
+          ) : (
+            <Link to="/library/rules/$ruleId" params={{ ruleId: detail.rule.id }} className="group grid gap-0.5 text-sm">
+              <code className="text-xs text-muted-foreground">{detail.rule.id}</code>
+              <span className="group-hover:underline">{detail.rule.title}</span>
+            </Link>
+          )}
         </section>
       )}
     </aside>

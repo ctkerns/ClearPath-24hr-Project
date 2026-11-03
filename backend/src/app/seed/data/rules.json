@@ -148,7 +148,7 @@
       "kind": "regulation",
       "text": "Ads must include the official advertising statement \"Federally insured by NCUA\" or the official NCUA sign, in a size and print that is clear. Some ads are exempt, for example ads for loans only and short radio ads.",
       "jurisdiction": "federal",
-      "products": [],
+      "products": ["savings"],
       "channels": [],
       "citation": {
         "label": "12 CFR 740.5",

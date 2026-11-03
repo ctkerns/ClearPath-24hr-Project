@@ -15,7 +15,7 @@ import { TrackedText } from '@/components/review/tracked-text'
 import { fileUrl, useMaterialDetail, versionFields, type CommentAnchor, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
 import { SaveError } from '@/components/save-error'
 import { hasRole } from '@/components/settings/user-data'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { useViewer } from '@/lib/session'
 import { useSave } from '@/lib/use-save'
 import { useQueryClient } from '@tanstack/react-query'
@@ -63,15 +63,12 @@ function MaterialPage() {
   const [decision, setDecision] = useState<Decision | null>(null)
   const [raising, setRaising] = useState(false)
 
-  if (list.isPending || detail.isPending) return <PageSkeleton />
-  if (!material) {
-    return (
-      <div className="mx-auto grid max-w-7xl justify-items-start gap-3">
-        <BackLink />
-        <p className="font-medium">{t('review.notFound')}</p>
-      </div>
-    )
-  }
+  // The API answers 404 for a material that does not exist or that the viewer may not see (R4),
+  // and 422 for an id that is not a UUID. 4xx answers are not retried (main.tsx), so this shows at once.
+  const missing = detail.error instanceof ApiError && detail.error.status >= 400 && detail.error.status < 500
+  if (missing || (list.isSuccess && !material)) return <NotFound />
+  if (list.isError || detail.isError) return <LoadError />
+  if (list.isPending || detail.isPending || !material) return <PageSkeleton />
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
@@ -106,10 +103,10 @@ function MaterialPage() {
               version={detail.data.versions.some((x) => x.number === v) ? v! : detail.data.version}
               onVersion={(n) => navigate({ search: { v: n === detail.data?.version ? undefined : n }, replace: true })}
             />
-          ) : <NoSeededContent />}
+          ) : <NoVersion status={material.status} />}
         </TabsContent>
-        <TabsContent value="history" className="pt-4">{detail.data ? <HistoryTab detail={detail.data} /> : <NoSeededContent />}</TabsContent>
-        <TabsContent value="live" className="pt-4">{detail.data ? <LiveTab material={material} detail={detail.data} /> : <NoSeededContent />}</TabsContent>
+        <TabsContent value="history" className="pt-4">{detail.data ? <HistoryTab detail={detail.data} /> : <NoVersion status={material.status} />}</TabsContent>
+        <TabsContent value="live" className="pt-4">{detail.data ? <LiveTab material={material} detail={detail.data} /> : <NoVersion status={material.status} />}</TabsContent>
       </Tabs>
     </div>
   )
@@ -459,6 +456,8 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
   onFinding: (id: string) => void
 }) {
   const { t } = useTranslation()
+  // Affiliates cannot open the library (R4), so the rule ids are not links for them.
+  const ruleLink = useViewer().role !== 'affiliate'
   const open = findings.filter((f) => f.status === 'open')
   const outdated = findings.filter((f) => f.status === 'outdated')
 
@@ -472,6 +471,7 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
           number={numbers.get(f.id)}
           severity={f.severity}
           ruleId={f.ruleId}
+          ruleLink={ruleLink}
           source={f.source}
           flaggedText={f.text}
           explanation={f.explanation}
@@ -484,7 +484,7 @@ function FindingsColumn({ findings, numbers, active, onFinding }: {
         <>
           <SectionHeading className="pt-2">{t('review.outdated', { count: outdated.length })}</SectionHeading>
           {outdated.map((f) => (
-            <FindingCard key={f.id} severity={f.severity} ruleId={f.ruleId} source={f.source} status="outdated" flaggedText={f.text} explanation={f.explanation} />
+            <FindingCard key={f.id} severity={f.severity} ruleId={f.ruleId} ruleLink={ruleLink} source={f.source} status="outdated" flaggedText={f.text} explanation={f.explanation} />
           ))}
         </>
       )}
@@ -696,18 +696,38 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   )
 }
 
-function NoSeededContent() {
+/**
+ * The API sends null for a material with no version yet. That is a draft nobody has submitted;
+ * a demo record without a version can have another status, so only a draft says "draft".
+ */
+function NoVersion({ status }: { status: Material['status'] }) {
   const { t } = useTranslation()
   return (
-    <div className="grid justify-items-start gap-2 rounded-lg border border-dashed p-6">
-      <p className="font-medium">{t('review.noSeed')}</p>
-      <Link
-        to="/materials/$materialId"
-        params={{ materialId: '01a112a1-4000-7d42-94be-d09364e3b51d' }}
-        className="text-primary hover:underline"
-      >
-        {t('review.noSeedLink')}
-      </Link>
+    <div className="grid gap-1 rounded-lg border border-dashed p-6">
+      <p className="font-medium">{t(status === 'draft' ? 'review.noVersion.draft' : 'review.noVersion.title')}</p>
+      <p className="text-sm text-muted-foreground">{t('review.noVersion.body')}</p>
+    </div>
+  )
+}
+
+/** For a material that does not exist, or that the viewer may not see. It never says which, so it leaks nothing (R4). */
+function NotFound() {
+  const { t } = useTranslation()
+  return (
+    <div className="mx-auto grid w-full max-w-7xl justify-items-start gap-3">
+      <BackLink />
+      <h1 className="font-medium">{t('review.notFound')}</h1>
+      <Link to="/materials" className="text-sm text-primary hover:underline">{t('review.backToList')}</Link>
+    </div>
+  )
+}
+
+function LoadError() {
+  const { t } = useTranslation()
+  return (
+    <div className="mx-auto grid w-full max-w-7xl justify-items-start gap-3">
+      <BackLink />
+      <p className="font-medium">{t('review.loadError')}</p>
     </div>
   )
 }

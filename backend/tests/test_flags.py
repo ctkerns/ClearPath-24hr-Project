@@ -137,11 +137,15 @@ async def test_failed_edit_flags_nothing(client, monkeypatch):
 
 async def test_disclosure_edit_flags_its_users(client):
     await as_user(client, MANAGER)
-    uses_text = await approved("Card ad with the NCUA line", product="credit_card", channel="google")
-    no_text = await approved("Card ad without it", product="credit_card", fields=[{"label": "Body", "text": "Earn cash back."}])
-    # D-1 "Federally insured by NCUA." is required by NCUA-740 for every product, so both depend on it;
+    uses_text = await approved("Savings ad with the NCUA line", product="savings", channel="google")
+    no_text = await approved("Savings ad without it", product="savings", fields=[{"label": "Body", "text": "Open an account."}])
+    card = await approved("Card ad with the NCUA line", product="credit_card", channel="google")
+    card_no_text = await approved("Card ad without it", product="credit_card", fields=[{"label": "Body", "text": "Earn cash back."}])
+    # D-1 "Federally insured by NCUA." is required by NCUA-740 for savings ads, so both savings ads depend on it.
+    # Loan and card ads are exempt (12 CFR 740.5): they depend on it only when their content has its text (DEBT does).
+    d1 = await impact(client, "disclosures/D-1")
+    assert {uses_text, no_text, DEBT, card} <= d1 and card_no_text not in d1
     # D-7 is for personal loans only, and only REGZ-1026.24 requires it.
-    assert {DEBT, uses_text, no_text} <= await impact(client, "disclosures/D-1")
     d7 = await impact(client, "disclosures/D-7")
     assert DEBT in d7 and uses_text not in d7 and no_text not in d7
     d = next(x for x in (await client.get("/api/library/disclosures")).json() if x["id"] == "D-7")
