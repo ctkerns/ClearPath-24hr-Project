@@ -15,6 +15,9 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-clearpath}:${POSTGRES_PASSWORD:-clearpath}@postgres:5432/${POSTGRES_DB:-clearpath}
       COOKIE_SECURE: ${COOKIE_SECURE:-false} # set true in .env on a server with HTTPS
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads # uploaded material files stay when the container is rebuilt; `down -v` deletes them
     ports:
       - "127.0.0.1:8000:8000" # for `npm run dev` and http://localhost:8000/api/docs
     depends_on:
@@ -41,3 +44,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:
