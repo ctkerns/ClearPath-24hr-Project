@@ -603,6 +603,151 @@
           "text": "Federally insured by NCUA."
         }
       ]
+    },
+    {
+      "id": "offer-cash-bonus-card",
+      "note": "A $500 cash bonus is not on the rate sheet for credit cards. The rates are inside the rate sheet ranges, so RATE-01 passes.",
+      "product": "credit_card",
+      "channel": "meta",
+      "targetStates": "Nationwide",
+      "fields": [
+        {
+          "label": "Headline",
+          "text": "Get a $500 cash bonus with the ClearPath Visa"
+        },
+        {
+          "label": "Primary text",
+          "text": "0% intro APR for 12 months, then 17.24% to 28.24% variable APR."
+        },
+        {
+          "label": "Disclosure",
+          "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "id": "offer-on-sheet-card",
+      "note": "Every offer is on the rate sheet: the intro APR, the balance transfer fee, the $0 annual fee and the cash back.",
+      "product": "credit_card",
+      "channel": "meta",
+      "targetStates": "Nationwide",
+      "fields": [
+        {
+          "label": "Headline",
+          "text": "0% intro APR for 12 months on balance transfers"
+        },
+        {
+          "label": "Primary text",
+          "text": "Then 17.24% to 28.24% variable APR. Balance transfer fee 3%, minimum $5. No annual fee. Earn 1.5% cash back on every purchase."
+        },
+        {
+          "label": "Disclosure",
+          "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "id": "offer-term-not-on-sheet-loan",
+      "note": "The rate sheet offers personal loans for 12 to 60 months, not 84.",
+      "product": "personal_loan",
+      "channel": "meta",
+      "targetStates": "Nationwide",
+      "fields": [
+        {
+          "label": "Headline",
+          "text": "Personal loans from 8.99% APR"
+        },
+        {
+          "label": "Primary text",
+          "text": "Take up to 84 months to repay."
+        },
+        {
+          "label": "Disclosure",
+          "text": "APR = Annual Percentage Rate. Rates from 8.99% to 24.99% APR, based on creditworthiness. Loan terms from 12 to 60 months. Example: a $10,000 loan at 12.99% APR for 36 months has a monthly payment of $336.87. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "id": "earlier-change-made",
+      "note": "Version 2: the reviewer asked to remove the $500 bonus from version 1, and it is gone. Nothing in the earlier version may be reported.",
+      "product": "credit_card",
+      "channel": "meta",
+      "targetStates": "Nationwide",
+      "earlier": {
+        "number": 1,
+        "fields": [
+          {
+            "label": "Headline",
+            "text": "Get a $500 cash bonus with the ClearPath Visa"
+          },
+          {
+            "label": "Primary text",
+            "text": "0% intro APR for 12 months, then 17.24% to 28.24% variable APR."
+          },
+          {
+            "label": "Disclosure",
+            "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Federally insured by NCUA."
+          }
+        ],
+        "comments": [
+          {
+            "role": "Compliance",
+            "decision": "request_changes",
+            "body": "Remove the $500 cash bonus: it is not on the rate sheet (OFFER-01)."
+          }
+        ]
+      },
+      "fields": [
+        {
+          "label": "Headline",
+          "text": "A card with no annual fee"
+        },
+        {
+          "label": "Primary text",
+          "text": "0% intro APR for 12 months, then 17.24% to 28.24% variable APR."
+        },
+        {
+          "label": "Disclosure",
+          "text": "Cash back is paid as a statement credit each quarter; some purchases do not earn rewards, see the rewards terms. Federally insured by NCUA."
+        }
+      ]
+    },
+    {
+      "id": "earlier-change-not-made",
+      "note": "Version 2: the reviewer asked to remove the claim that everyone qualifies; the new wording still says it.",
+      "product": "personal_loan",
+      "channel": "meta",
+      "targetStates": "Nationwide",
+      "earlier": {
+        "number": 1,
+        "fields": [
+          {
+            "label": "Primary text",
+            "text": "Everyone qualifies for a ClearPath personal loan."
+          },
+          {
+            "label": "Footer",
+            "text": "Federally insured by NCUA."
+          }
+        ],
+        "comments": [
+          {
+            "role": "Compliance",
+            "decision": "request_changes",
+            "body": "Remove the claim that everyone qualifies. Approval depends on credit (UDAAP-03)."
+          }
+        ]
+      },
+      "fields": [
+        {
+          "label": "Primary text",
+          "text": "Fast decisions, and every member qualifies for a ClearPath personal loan."
+        },
+        {
+          "label": "Footer",
+          "text": "Federally insured by NCUA."
+        }
+      ]
     }
   ]
 }

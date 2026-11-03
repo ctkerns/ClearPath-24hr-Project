@@ -359,7 +359,7 @@ async def test_submit_runs_code_checks(client):
     assert rows["RATE-01"]["result"] == "pass" and rows["INJ-00"]["result"] == "pass"
     # The AI rules join the checklist; without an AI key they show as not run (app.ai_review)
     assert {r["ruleId"]: r["result"] for r in d["checklist"] if r["layer"] == "ai"} == {
-        "UDAAP-03": "not_run", "FCRA-02": "not_run", "FAIR-01": "not_run", "CA-FIN-22161": "not_run",
+        "UDAAP-03": "not_run", "FCRA-02": "not_run", "FAIR-01": "not_run", "CA-FIN-22161": "not_run", "OFFER-01": "not_run",
     }
     assert "EHL-01" not in rows and "CANSPAM-01" not in rows and "NCUA-740" not in rows  # mortgage, email, savings rules
     last = d["history"][-2]  # then the AI reviewer's entry

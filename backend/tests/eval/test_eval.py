@@ -10,6 +10,9 @@ AI_ONLY = {
     ("ai-credit-score", "FCRA-02"),
     ("ai-california-lowest-rate", "CA-FIN-22161"),
     ("ai-subtle-injection", "INJ-00"),
+    ("offer-cash-bonus-card", "OFFER-01"),
+    ("offer-term-not-on-sheet-loan", "OFFER-01"),
+    ("earlier-change-not-made", "UDAAP-03"),
 }
 
 

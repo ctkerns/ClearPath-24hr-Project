@@ -68,7 +68,7 @@ CSV = (
 async def test_internal_users_read_the_seeded_library(client, email):
     await as_user(client, email)
     rules = await get(client, "rules")
-    assert len(rules) == 15
+    assert len(rules) == 16
     assert {r["id"] for r in rules if r["pendingChange"]} == {"REGZ-1026.24", "NCUA-740", "CA-FIN-22161"}
     regz = next(r for r in rules if r["id"] == "REGZ-1026.24")
     assert (regz["version"], regz["owner"], regz["check"]["disclosure"]) == (3, "Alex Chen", "D-7")
@@ -160,7 +160,7 @@ async def test_manager_creates_a_rule(client):
     body = res.json()
     assert (body["id"], body["version"], body["owner"], body["pendingChange"]) == ("POL-99", 1, "Alex Chen", False)
     assert [v["note"] for v in body["versions"]] == ["Test edit."]
-    assert len(await get(client, "rules")) == 16
+    assert len(await get(client, "rules")) == 17
     assert (await client.post("/api/library/rules", json=new)).status_code == 409
 
 
@@ -398,7 +398,7 @@ async def test_other_workspace_is_invisible(client):
     client.cookies.clear()
     await as_user(client, MANAGER)
     demo = await rule(client, "RATE-01")
-    assert demo["title"] != "Real rate rule" and len(await get(client, "rules")) == 15
+    assert demo["title"] != "Real rate rule" and len(await get(client, "rules")) == 16
 
 
 async def test_demo_reset_restores_the_library(client):

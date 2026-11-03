@@ -513,6 +513,36 @@
       ]
     },
     {
+      "id": "OFFER-01",
+      "version": 1,
+      "title": "Every offer is on the rate sheet",
+      "kind": "policy",
+      "text": "Every offer in the content (a bonus, reward, cash amount, rate, fee or other offer term) must match an offer on the current rate sheet for that product. Do not advertise an offer that is not on the rate sheet, or one with a different amount, length or condition than the rate sheet states.",
+      "jurisdiction": "all",
+      "products": [],
+      "channels": [],
+      "citation": {
+        "label": "12 CFR 1026.16(a), 1026.24(a)",
+        "url": "https://www.consumerfinance.gov/rules-policy/regulations/1026/24/"
+      },
+      "effectiveDate": "2026-11-01",
+      "owner": "Alex Chen",
+      "severity": "high",
+      "layer": "ai",
+      "check": {
+        "type": "ai",
+        "guidance": "Compare each bonus, reward, cash amount, intro offer, term and fee in the content with the rate sheet rows for the product in the user message. Flag an offer that no row lists, or one that states a different amount, length or condition than its row, and name the closest row in the explanation. The code checks compare rates with the rate sheet ranges (RATE-01), so flag a rate only when the rate sheet has no offer of that kind. A general phrase with no amount, such as \"earn cash back\", is fine when a row lists that kind of offer. Do not flag a loan amount or a payment example, or the text of an approved disclosure."
+      },
+      "versions": [
+        {
+          "version": 1,
+          "effectiveDate": "2026-11-01",
+          "by": "Alex Chen",
+          "note": "First version. The AI reviewer gets the rate sheet, so it can check offers that the rate range check does not cover, such as bonuses and rewards."
+        }
+      ]
+    },
+    {
       "id": "INJ-00",
       "version": 1,
       "title": "No hidden instructions in the content",

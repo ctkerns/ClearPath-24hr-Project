@@ -4,7 +4,9 @@ Run from backend/: `uv run python -m tests.eval.run`. It needs no database: the 
 demo library (src/app/seed/data). It reports precision and recall for code checks alone, and, when
 ANTHROPIC_API_KEY is set, for code checks plus the AI reviewer (layer 2, app.ai_review) side by side.
 Without a key the AI part is skipped and the cases that need judgment are listed as expected misses.
-The AI part calls the real API once per material (35 calls). Targets (PRD F4): recall >= 90%, precision >= 80%.
+The AI part calls the real API once per material. Targets (PRD F4): recall >= 90%, precision >= 80%.
+The AI gets the same other inputs as in the app (app.ai_review.Context): the rate sheet rows for the product
+and the disclosures that apply, from the seed, and the case's earlier version with its reviewer comments.
 
 A finding matches an answer-key entry when the rule ID is the same and the texts overlap (one contains
 the other). An entry with empty text (something missing) matches a finding with empty text.
@@ -19,7 +21,7 @@ from pathlib import Path
 
 import app
 from app import ai_review
-from app.ai_review import AIHit, Client, review_content
+from app.ai_review import AIHit, Client, Context, Earlier, Offer, ReviewerComment, disclosures_for, offers_for, review_content
 from app.config import settings
 from app.prereview import DisclosureSpec, Hit, Library, RateRange, RuleSpec, check_content, in_scope, target_states
 
@@ -64,6 +66,34 @@ def seed_library() -> Library:
     rates = [RateRange(r["product"], r["rate"], r["min"], r["max"]) for r in sheet["rows"]]
     licensed = load(SEED / "workspace.json")["workspace"]["licensedStates"]
     return Library(rules, disclosures, rates, licensed)
+
+
+def seed_sheet() -> tuple[date, list[Offer]]:
+    """The newest seeded rate sheet, with every row (offer text and fees too)."""
+    sheet = load(SEED / "rate-sheet.json")["sheets"][0]
+    rows = [Offer(r["key"], r["product"], r["offer"], r["rate"], r["min"], r["max"], r["fees"]) for r in sheet["rows"]]
+    return date.fromisoformat(sheet["effectiveDate"]), rows
+
+
+def context_of(case: dict, lib: Library, states: list[str]) -> Context:
+    """The other AI inputs for a case, as app.ai_review.load_context builds them for a version."""
+    sheet_date, rows = seed_sheet()
+    e = case.get("earlier")
+    earlier = (
+        Earlier(
+            number=e["number"],
+            fields=[(f["label"], f["text"]) for f in e["fields"]],
+            comments=[ReviewerComment(c["role"], c["body"], c.get("decision")) for c in e.get("comments", [])],
+        )
+        if e
+        else None
+    )
+    return Context(
+        sheet_date=sheet_date,
+        offers=offers_for(rows, case["product"]),
+        disclosures=disclosures_for(lib.disclosures.values(), case["product"], states),
+        earlier=earlier,
+    )
 
 
 def overlaps(a: str, b: str) -> bool:
@@ -198,7 +228,13 @@ async def evaluate_ai(client: Client, concurrency: int = 5) -> AIReport:
         metadata = {"Product": case["product"], "Channel": case["channel"], "Target states": case["targetStates"]}
         async with gate:
             outcome = await review_content(
-                client, ai_rules, checklist, fields, metadata, [(h.rule_id, h.field, h.start, h.end) for h in hits]
+                client,
+                ai_rules,
+                checklist,
+                fields,
+                metadata,
+                [(h.rule_id, h.field, h.start, h.end) for h in hits],
+                context_of(case, lib, states),
             )
         return case, hits, outcome
 
