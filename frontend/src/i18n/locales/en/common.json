@@ -217,7 +217,8 @@
       "approveWithConditions": "Approve with conditions…",
       "requestChanges": "Request changes",
       "reject": "Reject",
-      "escalate": "Escalate (add a group)"
+      "escalate": "Escalate (add a group)…",
+      "retract": "Retract my approval…"
     },
     "textInImage": "Text in image:",
     "findings_one": "{{count}} open finding",
@@ -230,7 +231,6 @@
     "comment": "Comment",
     "requiredGroups": "Required groups",
     "yourGroup": "Your group",
-    "approvedBy": "Approved by {{name}}, {{time}}",
     "requiredBecause": "Required: {{reason}}",
     "checklist": "Checklist · {{failed}} failed, {{passed}} passed",
     "pass": "Passed",
@@ -259,6 +259,75 @@
       "versions": "Versions and side-by-side diff come next.",
       "history": "The audit log comes next.",
       "live": "Live items and linked issues come next."
+    },
+    "conditions": "Approval conditions",
+    "escalatedBy": "Escalated by {{name}}: {{reason}}",
+    "groupBy": {
+      "approved": "Approved by {{name}}, {{time}}",
+      "changes": "Changes requested by {{name}}, {{time}}",
+      "rejected": "Rejected by {{name}}, {{time}}"
+    },
+    "decided": {
+      "approve": "Approved",
+      "approve_conditions": "Approved with conditions",
+      "request_changes": "Requested changes",
+      "reject": "Rejected",
+      "escalate": "Escalated",
+      "retract": "Retracted approval"
+    },
+    "dialog": {
+      "countsFor": "Your decision counts for: {{groups}}.",
+      "stillWaiting": "{{groups}} must still approve. The material stays In review until every required group approves.",
+      "lastGroup": "This is the last required group. Approving creates an approval ID and an expiry date.",
+      "openFindings_one": "{{count}} finding is still open. Approving does not close it, and the finding stays in the record.",
+      "openFindings_other": "{{count}} findings are still open. Approving does not close them, and the findings stay in the record.",
+      "optional": "(optional)",
+      "cancel": "Cancel",
+      "approve": {
+        "title": "Approve",
+        "label": "Comment",
+        "placeholder": "For example: Checked the APR disclosure against D-7 v3.",
+        "help": "The owner and the audit log see this comment.",
+        "confirm": "Approve"
+      },
+      "approve_conditions": {
+        "title": "Approve with conditions",
+        "label": "Conditions",
+        "placeholder": "For example: Run only in states where the HELOC offer is licensed.",
+        "help": "The owner must follow these conditions. Monitoring reports a broken condition as a live problem.",
+        "confirm": "Approve with conditions"
+      },
+      "request_changes": {
+        "title": "Request changes",
+        "label": "What must change",
+        "placeholder": "For example: Add disclosure D-7 v3 after the payment amount.",
+        "help": "The owner gets this message and uploads a new version.",
+        "confirm": "Request changes"
+      },
+      "reject": {
+        "title": "Reject this version",
+        "label": "Reason",
+        "placeholder": "For example: The offer does not exist for this product.",
+        "help": "This version must not run. The owner can still submit a new version.",
+        "confirm": "Reject"
+      },
+      "escalate": {
+        "title": "Escalate",
+        "description": "Add a required group. The material stays In review until that group approves too.",
+        "group": "Group to add",
+        "groupPlaceholder": "Choose a group",
+        "label": "Reason",
+        "placeholder": "For example: The ad mentions home equity, so Mortgage must review it.",
+        "help": "The new group sees this reason in their queue.",
+        "confirm": "Add group"
+      },
+      "retract": {
+        "title": "Retract your approval",
+        "label": "Reason",
+        "placeholder": "For example: The rate sheet changed after I approved.",
+        "help": "Your groups count as waiting again. You can retract only your own approval.",
+        "confirm": "Retract approval"
+      }
     }
   }
 }

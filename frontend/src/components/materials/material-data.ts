@@ -57,6 +57,8 @@ export function useMaterials() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return (await res.json()).materials
     },
+    // Demo decisions change this cache (see review/decide.ts), so never refetch over them. TODO: remove with the real API.
+    staleTime: Infinity,
   })
 }
 

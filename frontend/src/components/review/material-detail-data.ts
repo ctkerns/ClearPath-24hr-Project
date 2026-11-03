@@ -32,9 +32,17 @@ export type MaterialDetail = {
   fields: { label: string; kind?: 'image'; segments: Segment[] }[]
   findings: Finding[]
   checklist: { ruleId: string; title: string; layer: 'code' | 'ai'; result: 'pass' | 'fail'; finding?: string; note?: string }[]
-  groups: { name: string; state: GroupState; members?: string[]; by?: string; at?: string; reason: string }[]
-  comments: { id: string; author: string; role: string; at: string; body: string }[]
+  groups: { name: string; state: GroupState; members?: string[]; by?: string; at?: string; reason: string; escalatedBy?: string }[]
+  /** Set by "Approve with conditions" (PRD F5). */
+  conditions?: string
+  comments: { id: string; author: string; role: string; at: string; body: string; decision?: Decision }[]
 }
+
+/** The decisions from PRD F5, plus retracting your own approval. */
+export type Decision = 'approve' | 'approve_conditions' | 'request_changes' | 'reject' | 'escalate' | 'retract'
+
+/** All reviewer groups in the workspace. TODO: read from the API (Settings, Reviewer groups). */
+export const demoGroups = ['Compliance', 'Legal', 'Mortgage', 'Senior compliance']
 
 export function useMaterialDetail(id: string) {
   return useQuery({
@@ -46,6 +54,8 @@ export function useMaterialDetail(id: string) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return res.json()
     },
+    // Demo decisions live only in this cache, so never refetch over them. TODO: remove with the real API.
+    staleTime: Infinity,
   })
 }
 

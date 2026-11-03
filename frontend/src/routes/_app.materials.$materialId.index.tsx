@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FindingCard } from '@/components/review/finding-card'
 import { FlaggedText } from '@/components/review/flagged-text'
-import { demoViewer, useMaterialDetail, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
+import { approvedByViewer, groupsForViewer } from '@/components/review/decide'
+import { DecisionDialog } from '@/components/review/decision-dialog'
+import { demoViewer, useMaterialDetail, type Decision, type Finding, type MaterialDetail } from '@/components/review/material-detail-data'
 import { useMaterials, type Material } from '@/components/materials/material-data'
 import { ChannelIcon, LiveStatusTag, PersonAvatar } from '@/components/materials/material-meta'
 import { useOptionLabel } from '@/components/materials/use-option-label'
@@ -44,6 +46,7 @@ function MaterialPage() {
   const detail = useMaterialDetail(materialId)
   // TODO: the detail API should return the summary fields too, so the page needs one request.
   const material = list.data?.find((m) => m.id === materialId)
+  const [decision, setDecision] = useState<Decision | null>(null)
 
   if (list.isPending || detail.isPending) return <PageSkeleton />
   if (!material) {
@@ -57,7 +60,10 @@ function MaterialPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
-      <Header material={material} detail={detail.data ?? null} />
+      <Header material={material} detail={detail.data ?? null} onDecide={setDecision} />
+      {detail.data && (
+        <DecisionDialog decision={decision} detail={detail.data} materialId={material.id} onClose={() => setDecision(null)} />
+      )}
 
       <Tabs
         value={tab}
@@ -92,13 +98,12 @@ function BackLink() {
 }
 
 /** Title, statuses, one line of facts, and the actions that the viewer's role allows. */
-function Header({ material: m, detail }: { material: Material; detail: MaterialDetail | null }) {
+function Header({ material: m, detail, onDecide }: { material: Material; detail: MaterialDetail | null; onDecide: (d: Decision) => void }) {
   const { t } = useTranslation()
   const label = useOptionLabel()
   // Decision buttons show only to Reviewers in a required group that still waits, while In review (PRD F5).
-  const canDecide =
-    m.status === 'in_review' &&
-    detail?.groups.some((g) => g.state === 'waiting' && demoViewer.groups.includes(g.name))
+  const canDecide = m.status === 'in_review' && !!detail && groupsForViewer(detail).length > 0
+  const canRetract = !!detail && approvedByViewer(detail).length > 0
 
   return (
     <header className="grid gap-2">
@@ -121,7 +126,7 @@ function Header({ material: m, detail }: { material: Material; detail: MaterialD
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {canDecide ? <DecisionButtons /> : (
+          {canDecide ? <DecisionButtons onDecide={onDecide} /> : (
             <Button asChild variant="outline">
               <Link to="/materials/$materialId/new-version" params={{ materialId: m.id }}><Upload />{t('page.newVersion')}</Link>
             </Button>
@@ -131,7 +136,8 @@ function Header({ material: m, detail }: { material: Material; detail: MaterialD
               <Button variant="outline" size="icon" aria-label={t('review.moreActions')}><Ellipsis /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {canDecide && <DropdownMenuItem>{t('review.decision.escalate')}</DropdownMenuItem>}
+              {canDecide && <DropdownMenuItem onSelect={() => onDecide('escalate')}>{t('review.decision.escalate')}</DropdownMenuItem>}
+              {canRetract && <DropdownMenuItem onSelect={() => onDecide('retract')}>{t('review.decision.retract')}</DropdownMenuItem>}
               <DropdownMenuItem>{t('review.raiseIssue')}</DropdownMenuItem>
               {canDecide && (
                 <>
@@ -149,15 +155,15 @@ function Header({ material: m, detail }: { material: Material; detail: MaterialD
   )
 }
 
-/** Reject, Request changes, Approve (with a menu for Approve with conditions). TODO: open the decision dialog (F5). */
-function DecisionButtons() {
+/** Reject, Request changes, Approve (with a menu for Approve with conditions). Each opens the decision dialog. */
+function DecisionButtons({ onDecide }: { onDecide: (d: Decision) => void }) {
   const { t } = useTranslation()
   return (
     <>
-      <Button variant="destructive-outline">{t('review.decision.reject')}</Button>
-      <Button variant="outline">{t('review.decision.requestChanges')}</Button>
+      <Button variant="destructive-outline" onClick={() => onDecide('reject')}>{t('review.decision.reject')}</Button>
+      <Button variant="outline" onClick={() => onDecide('request_changes')}>{t('review.decision.requestChanges')}</Button>
       <div className="flex">
-        <Button className="rounded-r-none">{t('review.decision.approve')}</Button>
+        <Button className="rounded-r-none" onClick={() => onDecide('approve')}>{t('review.decision.approve')}</Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="icon" className="rounded-l-none border-l border-primary-strong" aria-label={t('review.decision.moreApprove')}>
@@ -165,7 +171,7 @@ function DecisionButtons() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>{t('review.decision.approveWithConditions')}</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDecide('approve_conditions')}>{t('review.decision.approveWithConditions')}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -317,7 +323,12 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
                 <span className="text-muted-foreground">{c.role}</span>
                 <span className="text-muted-foreground">{formatRelativeTime(c.at)}</span>
               </p>
-              <p>{c.body}</p>
+              {c.decision && (
+                <p className={cn('w-fit rounded-sm px-1.5 py-0.5 text-xs font-semibold', decisionTone[c.decision])}>
+                  {t(`review.decided.${c.decision}`)}
+                </p>
+              )}
+              {c.body && <p className="whitespace-pre-line">{c.body}</p>}
             </div>
           </li>
         ))}
@@ -331,6 +342,16 @@ function Conversation({ detail }: { detail: MaterialDetail }) {
       </div>
     </section>
   )
+}
+
+/** Decision entries in the conversation use the same meaning colors as the status pills. */
+const decisionTone: Record<Decision, string> = {
+  approve: 'bg-risk-low-soft text-risk-low',
+  approve_conditions: 'bg-risk-low-soft text-risk-low',
+  request_changes: 'bg-risk-medium-soft text-risk-medium',
+  reject: 'bg-risk-high-soft text-risk-high',
+  escalate: 'bg-info-soft text-info',
+  retract: 'bg-neutral-soft text-neutral',
 }
 
 const groupStateIcon = {
@@ -362,17 +383,28 @@ function ReviewPanel({ material: m, detail, onFinding }: { material: Material; d
                     {mine && <span className="rounded-sm bg-primary-soft px-1 text-[11px] font-semibold text-primary-strong">{t('review.yourGroup')}</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {g.state === 'approved' && g.by && g.at
-                      ? t('review.approvedBy', { name: g.by, time: formatRelativeTime(g.at) })
+                    {g.state !== 'waiting' && g.by && g.at
+                      ? t(`review.groupBy.${g.state}`, { name: g.by, time: formatRelativeTime(g.at) })
                       : t(`materials.groupStateShort.${g.state}`)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{t('review.requiredBecause', { reason: g.reason })}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {g.escalatedBy
+                      ? t('review.escalatedBy', { name: g.escalatedBy, reason: g.reason })
+                      : t('review.requiredBecause', { reason: g.reason })}
+                  </p>
                 </div>
               </li>
             )
           })}
         </ul>
       </section>
+
+      {detail.conditions && (
+        <section className="grid gap-2">
+          <SectionHeading>{t('review.conditions')}</SectionHeading>
+          <p className="rounded-md border-l-[3px] border-l-primary bg-primary-soft px-3 py-2 text-xs whitespace-pre-line">{detail.conditions}</p>
+        </section>
+      )}
 
       <section className="grid gap-2">
         <SectionHeading>{t('review.checklist', { failed, passed: detail.checklist.length - failed })}</SectionHeading>

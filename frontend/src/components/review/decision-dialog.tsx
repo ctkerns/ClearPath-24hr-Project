@@ -1,0 +1,134 @@
+import { CircleAlert } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { approvedByViewer, groupsForViewer, useDecide } from './decide'
+import { demoGroups, type Decision, type MaterialDetail } from './material-detail-data'
+
+/** Which decisions need text before they can be sent. Approve alone takes an optional comment. */
+const textRequired: Record<Decision, boolean> = {
+  approve: false,
+  approve_conditions: true,
+  request_changes: true,
+  reject: true,
+  escalate: true,
+  retract: true,
+}
+
+/**
+ * One dialog for every decision. It says which groups the decision counts for and what happens next,
+ * so nobody approves for a group by accident.
+ */
+export function DecisionDialog({ decision, detail, materialId, onClose }: {
+  decision: Decision | null
+  detail: MaterialDetail
+  materialId: string
+  onClose: () => void
+}) {
+  return (
+    <Dialog open={decision !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        {/* A new key resets the form each time the dialog opens. */}
+        {decision && <DecisionForm key={decision} decision={decision} detail={detail} materialId={materialId} onDone={onClose} />}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DecisionForm({ decision, detail, materialId, onDone }: { decision: Decision; detail: MaterialDetail; materialId: string; onDone: () => void }) {
+  const { t } = useTranslation()
+  const decide = useDecide(materialId)
+  const [text, setText] = useState('')
+  const [group, setGroup] = useState<string>()
+
+  const mine = decision === 'retract' ? approvedByViewer(detail) : groupsForViewer(detail)
+  const openFindings = detail.findings.filter((f) => f.status === 'open').length
+  const othersWaiting = detail.groups.filter((g) => g.state !== 'approved' && !mine.includes(g.name)).map((g) => g.name)
+  const isApprove = decision === 'approve' || decision === 'approve_conditions'
+  const escalateOptions = demoGroups.filter((name) => !detail.groups.some((g) => g.name === name))
+  const ready = (!textRequired[decision] || text.trim().length > 0) && (decision !== 'escalate' || group)
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!ready) return
+    decide({ decision, text: text.trim(), group })
+    onDone()
+  }
+
+  return (
+    <form onSubmit={submit} className="grid gap-4">
+      <DialogHeader>
+        <DialogTitle>{t(`review.dialog.${decision}.title`)}</DialogTitle>
+        <DialogDescription>
+          {decision === 'escalate'
+            ? t('review.dialog.escalate.description')
+            : t('review.dialog.countsFor', { groups: mine.join(', ') })}
+        </DialogDescription>
+      </DialogHeader>
+
+      {/* What happens next. */}
+      {isApprove && (
+        <p className="rounded-md bg-muted px-3 py-2 text-xs">
+          {othersWaiting.length
+            ? t('review.dialog.stillWaiting', { groups: othersWaiting.join(', ') })
+            : t('review.dialog.lastGroup')}
+        </p>
+      )}
+      {isApprove && openFindings > 0 && (
+        <p className="flex gap-2 rounded-md bg-risk-medium-soft px-3 py-2 text-xs text-risk-medium">
+          <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+          {t('review.dialog.openFindings', { count: openFindings })}
+        </p>
+      )}
+
+      {decision === 'escalate' && (
+        <div className="grid gap-1.5">
+          <Label htmlFor="escalate-group">{t('review.dialog.escalate.group')}</Label>
+          <Select value={group} onValueChange={setGroup}>
+            <SelectTrigger id="escalate-group" className="w-full">
+              <SelectValue placeholder={t('review.dialog.escalate.groupPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {escalateOptions.map((name) => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="decision-text">
+          {t(`review.dialog.${decision}.label`)}
+          {!textRequired[decision] && <span className="font-normal text-muted-foreground"> {t('review.dialog.optional')}</span>}
+        </Label>
+        <Textarea
+          id="decision-text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t(`review.dialog.${decision}.placeholder`)}
+          required={textRequired[decision]}
+          className="min-h-24"
+          autoFocus
+        />
+        <p className="text-xs text-muted-foreground">{t(`review.dialog.${decision}.help`)}</p>
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onDone}>{t('review.dialog.cancel')}</Button>
+        <Button type="submit" variant={decision === 'reject' ? 'destructive' : 'default'} disabled={!ready}>
+          {t(`review.dialog.${decision}.confirm`)}
+        </Button>
+      </DialogFooter>
+    </form>
+  )
+}
