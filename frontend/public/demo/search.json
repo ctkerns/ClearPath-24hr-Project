@@ -1,10 +1,10 @@
 {
   "materials": [
-    { "id": "MAT-0142", "title": "Summer personal loan, Meta feed ad", "channel": "Meta ad", "status": "in_review" },
-    { "id": "MAT-0139", "title": "Mortgage prequal landing page", "channel": "WordPress", "status": "live", "approvalId": "CP-2026-0118-v2" },
-    { "id": "MAT-0137", "title": "Balance transfer email", "channel": "Mailchimp", "status": "changes_requested" },
-    { "id": "MAT-0131", "title": "Cash back card, affiliate post", "channel": "Affiliate · Impact", "status": "approved", "approvalId": "CP-2026-0131-v1" },
-    { "id": "MAT-0126", "title": "Debt consolidation, Google search ad", "channel": "Google Ads", "status": "expired", "approvalId": "CP-2026-0090-v4" }
+    { "id": "01a112a1-4000-7d42-94be-d09364e3b51d", "title": "Summer personal loan, Meta feed ad", "channel": "Meta ad", "status": "in_review" },
+    { "id": "01a104b9-ae00-78d3-96ab-b1577e94da6a", "title": "Mortgage prequal landing page", "channel": "WordPress", "status": "live", "approvalId": "CP-2026-0118-v2" },
+    { "id": "01a0fb74-a200-7fa7-ba9e-887219d4a6c8", "title": "Balance transfer email", "channel": "Mailchimp", "status": "changes_requested" },
+    { "id": "01a0dfa5-7e00-7a60-a023-ce47b3e545d3", "title": "Cash back card, affiliate post", "channel": "Affiliate · Impact", "status": "approved", "approvalId": "CP-2026-0131-v1" },
+    { "id": "01a0c878-e000-7cb6-adb8-7744d8a51f29", "title": "Debt consolidation, Google search ad", "channel": "Google Ads", "status": "expired", "approvalId": "CP-2026-0090-v4" }
   ],
   "issues": [
     { "id": "ISS-0031", "title": "Live page is missing disclosure D-4", "material": "Cash back card, affiliate post" },

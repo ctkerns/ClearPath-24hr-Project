@@ -87,7 +87,7 @@ export function sortMaterials(materials: Material[], sort: Sort) {
   const list = [...materials]
   switch (sort) {
     case 'updated': return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    // TODO: sort by createdAt when the API has it. Demo IDs count up in creation order.
+    // TODO: sort by createdAt when the API has it. IDs are UUIDv7, which starts with the creation time, so they sort in creation order.
     case 'created': return list.sort((a, b) => b.id.localeCompare(a.id))
     case 'title': return list.sort((a, b) => a.title.localeCompare(b.title))
     // Soonest expiry first; materials with no expiry go last.
