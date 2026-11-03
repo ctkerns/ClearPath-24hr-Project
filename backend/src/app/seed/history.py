@@ -2,7 +2,7 @@
 
 The demo materials (seed/materials.py) show the review work of today. These rows are the year behind them:
 about 310 decided materials, about 110 later versions with no material change (the lighter path, PRD F6),
-their group reviews, findings, comments on selected text, decisions and history, and about 85 monitoring
+their group reviews, findings, comments on selected text, decisions and history (audit entries), and about 85 monitoring
 issues (PRD F10, F12). They are normal rows with the `seeded` flag, so they also show in the repository
 and the issue list.
 
@@ -29,25 +29,25 @@ from typing import Any, TypeVar
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit import OtherActor, entry
 from app.models import Base, ReviewerGroup, Role, User, UserStatus, Workspace, group_memberships
+from app.models.audit import AuditEvent
 from app.models.materials import (
     Channel,
     Comment,
     Decision,
-    EventType,
     Finding,
     FindingSource,
     FindingStatus,
     GroupReview,
     GroupState,
     Issue,
-    IssueEvent,
+    IssueComment,
     IssueKind,
     IssueSource,
     IssueStatus,
     LiveStatus,
     Material,
-    MaterialEvent,
     MaterialStatus,
     MaterialVersion,
     Outcome,
@@ -207,7 +207,7 @@ class Approval:
     version: MaterialVersion
     at: datetime
     expires: date
-    events: list[MaterialEvent] = field(default_factory=list)
+    events: list[AuditEvent] = field(default_factory=list)
 
 
 class History:
@@ -248,13 +248,10 @@ class History:
             if d.weekday() < 5:
                 return utc(d, self.rng.uniform(13, 22)).replace(second=0, microsecond=0)
 
-    def event(self, m: Material, at: datetime, actor: User | None, type: EventType, text: str, name: str = "") -> MaterialEvent:
-        return self.add(
-            MaterialEvent(
-                id=self.uid(at), workspace_id=self.ws, material_id=m.id, at=at, actor_id=actor.id if actor else None,
-                actor_name=actor.name if actor else name, type=type, text=text,
-            )
-        )
+    def event(self, m: Material, at: datetime, actor: User | str, action: str, text: str, **data: Any) -> AuditEvent:
+        """A line of the material's history: an audit entry. A str actor is a system actor, such as "Routing"."""
+        by = actor if isinstance(actor, User) else OtherActor(self.ws, actor)
+        return self.add(entry(by, "material", m.id, action, {**data, "text": text}, at=at, id=self.uid(at)))
 
     def comment(self, m: Material, number: int, at: datetime, author: User, role: str, body: str, **kw: Any) -> Comment:
         return self.add(
@@ -365,9 +362,10 @@ class History:
                     submitted_by_id=submitter.id, path=ReviewPath.FULL, details={"targetStates": states}, fields=fields,
                 )
             ))
-            self.event(m, at, submitter, EventType.SUBMITTED, f"Submitted version {n + 1} by manual upload.")
+            self.event(m, at, submitter, "submitted", f"Submitted version {n + 1} by manual upload.", version=n + 1)
             routed = ", ".join(f'{g} (rule "{GROUP_REASONS.get(g, g)}")' for g in groups)
-            self.event(m, at + timedelta(minutes=1), None, EventType.ROUTED, f"Required {routed}.", "Routing")
+            self.event(m, at + timedelta(minutes=1), "Routing", "routed", f"Required {routed}.", version=n + 1, path="full",
+                       groups=[{"id": self.groups[g].id, "name": g, "rules": [GROUP_REASONS.get(g, g)]} for g in groups])
         for i, (index, source, rule_id, text, status) in enumerate(plan):
             rule = self.rules[rule_id]
             self.add(
@@ -397,7 +395,7 @@ class History:
             at = submits[n] + (end_of(n) - submits[n]) * rng.uniform(0.2, 0.8)
             at = at.replace(microsecond=0)
             self.comment(m, n + 1, at, author, ", ".join(self.people.groups_of[author.id]), body, anchor_field=label, anchor_text=anchor)
-            self.event(m, at, author, EventType.COMMENT, f"Commented on version {n + 1}.")
+            self.event(m, at, author, "commented", f"Commented on version {n + 1}.", version=n + 1)
 
         # Decisions: changes requested on each version but the last
         for n in range(last):
@@ -406,7 +404,8 @@ class History:
             names = ", ".join(covered)
             text = "Please fix the findings and send a new version."
             self.comment(m, n + 1, changes_at[n], reviewer, names, text, decision=Decision.REQUEST_CHANGES)
-            self.event(m, changes_at[n], reviewer, EventType.DECISION, f"Requested changes for {names} on version {n + 1}: {text}")
+            self.event(m, changes_at[n], reviewer, "changes_requested", f"Requested changes for {names} on version {n + 1}: {text}",
+                       version=n + 1, decision=Decision.REQUEST_CHANGES, groups=covered)
             versions[n].outcome, versions[n].outcome_by = Outcome.CHANGES_REQUESTED, f"{reviewer.name} ({names})"
 
         final = versions[last]
@@ -422,7 +421,8 @@ class History:
             for g in covered:
                 reviews[g].state, reviews[g].decided_by_id, reviews[g].decided_at = GroupState.REJECTED, reviewer.id, decided_at
             self.comment(m, final.number, decided_at, reviewer, names, text, decision=Decision.REJECT)
-            self.event(m, decided_at, reviewer, EventType.DECISION, f"Rejected for {names} on version {final.number}: {text}")
+            self.event(m, decided_at, reviewer, "rejected", f"Rejected for {names} on version {final.number}: {text}",
+                       version=final.number, decision=Decision.REJECT, groups=covered)
             final.outcome, final.outcome_by = Outcome.REJECTED, f"{reviewer.name} ({names})"
             m.submitted_at, m.updated_at = final.submitted_at, decided_at
             return
@@ -449,7 +449,9 @@ class History:
             self.comment(m, final.number, at, reviewer, names, text, decision=decision)
             history = (f"Approved with conditions for {names} on version {final.number}: {text}" if conditions
                        else f"Approved for {names} on version {final.number}.")
-            approval.events.append(self.event(m, at, reviewer, EventType.DECISION, history))
+            approval.events.append(self.event(m, at, reviewer, "approved_with_conditions" if conditions else "approved", history,
+                                              version=final.number, decision=decision, groups=covered,
+                                              **({"conditions": text} if conditions else {})))
             final.outcome_by = f"{reviewer.name} ({names})"
         final.outcome = Outcome.APPROVED
         m.submitted_at, m.updated_at = final.submitted_at, decided_at
@@ -475,8 +477,9 @@ class History:
             )
         )
         group = self.people.default_group
-        self.event(m, at, owner, EventType.SUBMITTED, f"Submitted version {v.number} by manual upload.")
-        self.event(m, at + timedelta(minutes=1), None, EventType.ROUTED, f"Required {group} (lighter path: rate or fee update).", "Routing")
+        self.event(m, at, owner, "submitted", f"Submitted version {v.number} by manual upload.", version=v.number)
+        self.event(m, at + timedelta(minutes=1), "Routing", "routed", f"Required {group} (lighter path: rate or fee update).",
+                   version=v.number, path="lighter", groups=[{"id": self.groups[group].id, "name": group, "rules": []}])
         reviewer = rng.choice(self.people.reviewers[group])
         # The new version replaces the group rows (PRD F6). The old decisions stay in the comments and history.
         for r in reviews.values():
@@ -484,7 +487,8 @@ class History:
         self.add(GroupReview(id=self.uid(at), workspace_id=self.ws, material_id=m.id, group_id=self.groups[group].id,
                              state=GroupState.APPROVED, reason="Lighter path", decided_by_id=reviewer.id, decided_at=decided_at))
         self.comment(m, v.number, decided_at, reviewer, group, "Rate update only, matches the rate sheet.", decision=Decision.APPROVE)
-        event = self.event(m, decided_at, reviewer, EventType.DECISION, f"Approved for {group} on version {v.number}.")
+        event = self.event(m, decided_at, reviewer, "approved", f"Approved for {group} on version {v.number}.",
+                           version=v.number, decision=Decision.APPROVE, groups=[group])
         v.outcome_by = f"{reviewer.name} ({group})"
         m.submitted_at, m.updated_at = at, decided_at
         self.approvals.append(Approval(m, v, decided_at, decided_at.date(), [event]))
@@ -503,8 +507,10 @@ class History:
                 if not any(t.startswith(f"CP-{year}-{numbers[year]:04d}-") for t in taken):
                     break
             a.expires = a.at.date() + timedelta(days=self.approval_days)
-            for e in a.events:
-                e.text += f" Approval ID {approval_id}, expires {a.expires:%b} {a.expires.day}, {a.expires.year}."
+            for e in a.events:  # not saved yet, so the entry can still change
+                assert e.data is not None
+                e.data["text"] += f" Approval ID {approval_id}, expires {a.expires:%b} {a.expires.day}, {a.expires.year}."
+                e.data |= {"approvalId": approval_id, "expiresAt": a.expires.isoformat()}
             a.material.approval_id = approval_id
             last[a.material.id] = a
         today = self.now.date()
@@ -515,7 +521,8 @@ class History:
                 m.status = MaterialStatus.APPROVED
             elif self.rng.random() < 0.3:
                 m.status, m.updated_at = MaterialStatus.EXPIRED, utc(a.expires)
-                self.event(m, utc(a.expires), None, EventType.DECISION, f"Approval {m.approval_id} expired.", "ClearPath")
+                self.event(m, utc(a.expires), "ClearPath", "approval_expired", f"Approval {m.approval_id} expired.",
+                           approvalId=m.approval_id, expiresAt=a.expires.isoformat())
             else:
                 m.status = MaterialStatus.RETIRED  # the campaign ended before the approval did
 
@@ -558,19 +565,26 @@ class History:
                 due_at=found + timedelta(days=1 if severity is Severity.HIGH else 3),
                 resolved_at=resolved_at if done else None,
                 approved_version_id=a.version.id if a else None, present_at_approval=missed, seeded=True,
-                actions=[], activity=[],
+                actions=[], comments=[],
             )
         )
-        opener = reviewer.name if reviewer else "Monitoring"
+        opener: User | OtherActor = reviewer or OtherActor(self.ws, "Monitoring")
         verb = "Raised" if reviewer else "Opened"
-        issue.activity.append(IssueEvent(id=self.uid(found), workspace_id=self.ws, at=found, actor_id=reviewer.id if reviewer else None,
-                                         actor_name=opener, text=f"{verb} this issue and assigned it to {owner.name}."))
+        owner_ref = {"id": owner.id, "name": owner.name}
+        self.add(entry(opener, "issue", issue.id, verb.lower(), {
+            "title": title, "owner": owner_ref, "text": f"{verb} this issue and assigned it to {owner.name}."
+        }, at=found, id=self.uid(found)))
         if done:
-            for text, comment in (("Changed the status to Resolved.", False), ("Fixed the live content.", True)):
-                issue.activity.append(IssueEvent(id=self.uid(resolved_at), workspace_id=self.ws, at=resolved_at, actor_id=owner.id,
-                                                 actor_name=owner.name, text=text, is_comment=comment))
+            # Like the app: the status change, and the note on how it was fixed as a comment it points to
+            status = entry(owner, "issue", issue.id, "status_changed", None, at=resolved_at, id=self.uid(resolved_at))
+            note = IssueComment(id=self.uid(resolved_at), workspace_id=self.ws, author_id=owner.id, at=resolved_at,
+                                body="Fixed the live content.")
+            status.data = {"after": IssueStatus.RESOLVED.value, "commentId": str(note.id), "text": "Changed the status to Resolved."}
+            self.add(status)
+            issue.comments.append(note)
         if m:
-            self.event(m, found, reviewer, EventType.ISSUE, f'{verb} the issue "{title}" and assigned it to {owner.name}.', opener)
+            self.event(m, found, reviewer or "Monitoring", "issue_raised", f'{verb} the issue "{title}" and assigned it to {owner.name}.',
+                       issueId=issue.id, title=title, owner=owner_ref)
 
     def violations(self) -> None:
         rng = self.rng

@@ -14,6 +14,7 @@ from app.security import hash_password
 from app.seed import DEMO_PASSWORD
 from tests.helpers import ADMIN, AFFILIATE, MANAGER, REVIEWER, SUBMITTER, as_user
 from tests.test_integrations import KLAVIYO, LENDING, META, PRIYA, SAM
+from tests.test_issues import DEBT_ISSUE
 from tests.test_library import BLOCK, CSV, WAITING, block_body, disclosure_body, rule_body
 from tests.test_routing import FIRST_RULE, LEGAL, NEW_RULE
 
@@ -21,9 +22,16 @@ VIEWER = "ben.okafor@demo.clearpathcu.org"
 UNKNOWN = "01973a10-0000-7000-8000-000000000000"
 
 
-async def all_events() -> list[AuditEvent]:
+# The demo seed writes the history of its materials and issues as entries. Most tests here leave them out.
+HISTORY = ("material", "issue")
+
+
+async def all_events(history: bool = False) -> list[AuditEvent]:
+    query = select(AuditEvent).order_by(AuditEvent.created_at, AuditEvent.id)
+    if not history:
+        query = query.where(AuditEvent.entity.not_in(HISTORY))
     async with SessionLocal() as db:
-        return list(await db.scalars(select(AuditEvent).order_by(AuditEvent.created_at, AuditEvent.id)))
+        return list(await db.scalars(query))
 
 
 async def write(client, me, method, path, json=None, *, entity, action, entity_id=None):
@@ -252,13 +260,19 @@ async def test_delete_needs_the_setting_and_a_demo_workspace():
 
 
 async def test_seed_reset_works_twice_with_entries(client):
+    """The reset deletes the demo's entries, also the seeded history, and the seed writes that history again."""
     from app.seed import seed
 
+    seeded = [(e.entity, e.entity_id, e.action, e.created_at) for e in await all_events(history=True)]
+    assert seeded and {e for e, *_ in seeded} == set(HISTORY)
     await as_user(client, ADMIN)
     await client.patch("/api/workspace", json={"approvalDays": 120})
+    await client.post(f"/api/issues/{DEBT_ISSUE}/comments", json={"text": "Before the reset."})
     assert len(await all_events()) == 2
     assert "Created" in await seed(reset=True)
     assert await all_events() == []
+    again = [(e.entity, e.entity_id, e.action, e.created_at) for e in await all_events(history=True)]
+    assert again == seeded  # the entry for the comment went too
     await as_user(client, ADMIN)
     assert "Created" in await seed(reset=True)
     await as_user(client, ADMIN)
@@ -306,9 +320,12 @@ async def test_filter_and_pages(client):
 
     first = (await client.get("/api/audit", params={"limit": 2})).json()
     rest = (await client.get("/api/audit", params={"limit": 2, "before": first[-1]["id"]})).json()
-    everything = (await client.get("/api/audit")).json()
-    assert [e["id"] for e in first + rest] == [e["id"] for e in everything]  # 4 entries: 3 changes and the sign-in
-    assert (await client.get("/api/audit", params={"limit": 2, "before": rest[-1]["id"]})).json() == []
+    everything = (await client.get("/api/audit", params={"limit": 200})).json()
+    assert [e["id"] for e in first + rest] == [e["id"] for e in everything[:4]]  # 3 changes and the sign-in
+    # Then only the seeded history of the demo materials and issues, which is older
+    older = (await client.get("/api/audit", params={"limit": 200, "before": rest[-1]["id"]})).json()
+    assert older and {e["entity"] for e in older} == set(HISTORY)
+    assert [e["id"] for e in older] == [e["id"] for e in everything[4:]]
     assert (await client.get("/api/audit", params={"before": UNKNOWN})).status_code == 400
     assert (await client.get("/api/audit", params={"limit": 0})).status_code == 422
 

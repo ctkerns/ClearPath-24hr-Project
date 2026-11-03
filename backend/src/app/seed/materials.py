@@ -1,6 +1,8 @@
 """Seeds the demo materials, their review, and their issues (PRD F2 to F6, F10, F12).
 
 The seed files refer to people, groups and affiliates by name, like the core seed files.
+The material history and the issue activity are audit entries (app.audit), with their past times. Names that are
+no user, such as "Monitoring" or "Rule check", become system actors. Issue comments go to issue_comments.
 """
 
 import uuid
@@ -10,6 +12,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.audit import OtherActor, entry
 from app.config import settings
 from app.models import Affiliate, User, Workspace
 from app.models.materials import (
@@ -17,7 +20,6 @@ from app.models.materials import (
     Channel,
     Comment,
     Decision,
-    EventType,
     Finding,
     FindingSource,
     FindingStatus,
@@ -25,14 +27,13 @@ from app.models.materials import (
     GroupState,
     Issue,
     IssueAction,
-    IssueEvent,
+    IssueComment,
     IssueKind,
     IssueSource,
     IssueStatus,
     LiveItem,
     LiveStatus,
     Material,
-    MaterialEvent,
     MaterialFile,
     MaterialStatus,
     MaterialVersion,
@@ -95,6 +96,48 @@ async def affiliate(ctx: SeedContext, name: str, manager: str) -> Affiliate:
 def person(ctx: SeedContext, name: str | None) -> User | None:
     """A user by name. System actors such as "Monitoring" are not users."""
     return ctx.users.get(name) if name else None
+
+
+def actor(ctx: SeedContext, name: str) -> User | OtherActor:
+    return person(ctx, name) or OtherActor(ctx.workspace.id, name)
+
+
+# The kind of line in the material seed file, and its audit action. A decision's action comes from its text.
+HISTORY_ACTION = {
+    "submitted": "submitted",
+    "prereview": "prereviewed",
+    "routed": "routed",
+    "comment": "commented",
+    "live": "live_checked",
+    "issue": "issue_raised",
+}
+DECISION_ACTION = (
+    ("Approved with conditions", "approved_with_conditions"),
+    ("Approved", "approved"),
+    ("Requested changes", "changes_requested"),
+    ("Rejected", "rejected"),
+    ("Escalated", "escalated"),
+    ("Retracted", "approval_retracted"),
+)
+
+
+def history_action(e: dict[str, Any]) -> str:
+    if e["type"] != "decision":
+        return HISTORY_ACTION[e["type"]]
+    return next((action for start, action in DECISION_ACTION if e["text"].startswith(start)), "decided")
+
+
+def issue_action(text: str) -> str:
+    """The audit action of a seeded issue line. Monitoring lines that are none of the app's actions are "monitored"."""
+    if text.startswith("Changed the status to"):
+        return "status_changed"
+    if text.startswith("Marked done:"):
+        return "action_done"
+    if text.startswith("Sent the correction notice"):
+        return "notice_sent"
+    if text.startswith("Raised this issue"):
+        return "raised"
+    return "opened" if "Opened this issue" in text else "monitored"
 
 
 async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) -> None:
@@ -191,17 +234,11 @@ async def add_detail(ctx: SeedContext, material: Material, d: dict[str, Any]) ->
             )
         )
     for e in d["history"]:
-        db.add(
-            MaterialEvent(
-                workspace_id=ws,
-                material_id=material.id,
-                at=parse_time(e["at"]),
-                actor_id=actor.id if (actor := person(ctx, e["actor"])) else None,
-                actor_name=e["actor"],
-                type=EventType(e["type"]),
-                text=e["text"],
-            )
-        )
+        at = parse_time(e["at"])
+        data: dict[str, Any] = {"text": e["text"]}
+        if e["type"] in ("submitted", "routed", "comment", "decision"):  # the version it was about: the last one by then
+            data["version"] = max((v["number"] for v in d["versions"] if parse_time(v["submittedAt"]) <= at), default=None)
+        db.add(entry(actor(ctx, e["actor"]), "material", material.id, history_action(e), data, at=at))
     for item in d["live"]:
         db.add(
             LiveItem(
@@ -242,7 +279,7 @@ def add_issue(ctx: SeedContext, row: dict[str, Any], d: dict[str, Any] | None) -
         seeded=True,
         summary="",
         actions=[],
-        activity=[],
+        comments=[],
     )
     if d:
         issue.summary = d["summary"]
@@ -268,36 +305,27 @@ def add_issue(ctx: SeedContext, row: dict[str, Any], d: dict[str, Any] | None) -
                 )
             )
         for e in d["activity"]:
-            actor = person(ctx, e["actor"])
-            issue.activity.append(
-                IssueEvent(
-                    workspace_id=ws,
-                    at=parse_time(e["at"]),
-                    actor_id=actor.id if actor else None,
-                    actor_name=e["actor"],
-                    text=e["text"],
-                    is_comment=e.get("comment", False),
-                )
-            )
+            at = parse_time(e["at"])
+            if e.get("comment"):
+                author = ctx.users[e["actor"]]
+                c = IssueComment(id=uuid.uuid7(), workspace_id=ws, author_id=author.id, at=at, body=e["text"])
+                issue.comments.append(c)
+                ctx.db.add(entry(author, "issue", issue.id, "commented", {"commentId": c.id}, at=at))
+            else:
+                ctx.db.add(entry(actor(ctx, e["actor"]), "issue", issue.id, issue_action(e["text"]), {"text": e["text"]}, at=at))
     else:
         # Issues without a detail file get the one event that every issue has: who opened it.
-        actor = opened_by.name if opened_by else "Monitoring"
         verb = "Raised" if source is IssueSource.REVIEWER else "Opened"
-        issue.activity.append(
-            IssueEvent(
-                workspace_id=ws,
-                at=issue.opened_at,
-                actor_id=opened_by.id if opened_by else None,
-                actor_name=actor,
-                text=f"{verb} this issue and assigned it to {owner.name}.",
-            )
-        )
+        text = f"{verb} this issue and assigned it to {owner.name}."
+        by = opened_by or OtherActor(ws, "Monitoring")
+        ctx.db.add(entry(by, "issue", issue.id, verb.lower(), {"text": text}, at=issue.opened_at))
     ctx.db.add(issue)
 
 
 async def delete_all(db: AsyncSession, workspace: Workspace) -> None:
-    """Versions, findings, reviews, comments, history, live items, and issue rows go with their material
-    (ON DELETE CASCADE). Uploaded files go from the disk too."""
+    """Versions, findings, reviews, comments, live items, and issue rows go with their material
+    (ON DELETE CASCADE). Uploaded files go from the disk too. The history is in the audit log: seed.audit
+    deletes it, before this runs."""
     ws = workspace.id
     for file_id in await db.scalars(select(MaterialFile.id).where(MaterialFile.workspace_id == ws)):
         (settings.upload_dir / str(file_id)).unlink(missing_ok=True)

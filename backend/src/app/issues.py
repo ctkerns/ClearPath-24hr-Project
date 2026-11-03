@@ -4,6 +4,10 @@ Everyone reads the issues of the materials they may see (affiliates: only their 
 An issue with no material (unapproved content found live, F10) is for internal users only.
 Any Reviewer or higher opens an issue on any material. The issue owner, or a Manager and higher,
 changes its status and runs its actions. Submitters and higher, and affiliates, comment.
+
+What happens to an issue is in the audit log (entity "issue"); its comments are in issue_comments. The activity
+list shows both, oldest first. Whoever may see the issue sees its activity (issue_visible), not only the
+users who may read the audit log page.
 """
 
 import uuid
@@ -17,19 +21,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
+from app.audit import actor_name, history, record
 from app.material_access import Db, Reviewer, Submitter, can_submit, issue_visible, now, visible
 from app.models import Affiliate, Role, User, UserStatus
+from app.models.audit import AuditEvent
 from app.models.materials import (
     ActionKind,
     Channel,
-    EventType,
     Issue,
-    IssueEvent,
+    IssueComment,
     IssueKind,
     IssueSource,
     IssueStatus,
     Material,
-    MaterialEvent,
     MaterialVersion,
     Outcome,
     Severity,
@@ -113,6 +117,10 @@ class ActivityOut(APIModel):
     comment: bool | None = None
 
 
+# Issue audit actions that the activity list leaves out: the comment itself is in the list.
+NOT_ACTIVITY = {"commented"}
+
+
 class IssueDetail(APIModel):
     id: uuid.UUID
     summary: str
@@ -125,7 +133,12 @@ class IssueDetail(APIModel):
     activity: list[ActivityOut]
 
     @classmethod
-    def of(cls, i: Issue) -> IssueDetail:
+    def of(cls, i: Issue, events: list[AuditEvent]) -> IssueDetail:
+        activity = [
+            ActivityOut(at=e.created_at, actor=actor_name(e), text=(e.data or {}).get("text", ""))
+            for e in events
+            if e.action not in NOT_ACTIVITY
+        ] + [ActivityOut(at=c.at, actor=c.author.name, text=c.body, comment=True) for c in i.comments]
         return cls(
             id=i.id,
             summary=i.summary,
@@ -138,7 +151,8 @@ class IssueDetail(APIModel):
                 for a in i.actions
             ],
             notice=i.notice,
-            activity=[ActivityOut(at=e.at, actor=e.actor_name, text=e.text, comment=e.is_comment or None) for e in i.activity],
+            # sorted is stable: at the same time, an entry comes before the comment it goes with
+            activity=sorted(activity, key=lambda a: a.at),
         )
 
 
@@ -147,7 +161,7 @@ ISSUE_LOAD = (
     selectinload(Issue.owner),
     selectinload(Issue.opened_by),
     selectinload(Issue.actions),
-    selectinload(Issue.activity),
+    selectinload(Issue.comments).selectinload(IssueComment.author),
 )
 
 
@@ -174,9 +188,14 @@ async def list_issues(viewer: SignedIn, db: Db) -> list[IssueOut]:
     return [IssueOut.of(i) for i in rows]
 
 
+async def detail_of(db: AsyncSession, issue: Issue) -> IssueDetail:
+    """The caller loaded the issue with issue_visible(viewer)."""
+    return IssueDetail.of(issue, await history(db, issue.workspace_id, "issue", issue.id))
+
+
 @router.get("/{issue_id}", response_model_exclude_none=True)
 async def get_issue(issue_id: uuid.UUID, viewer: SignedIn, db: Db) -> IssueDetail:
-    return IssueDetail.of(await load_issue(db, viewer, issue_id))
+    return await detail_of(db, await load_issue(db, viewer, issue_id))
 
 
 class NewIssue(APIModel):
@@ -192,10 +211,11 @@ class NewIssue(APIModel):
     present_at_approval: bool = False
 
 
-def log(issue: Issue, actor: User, text: str, comment: bool = False) -> None:
-    issue.activity.append(
-        IssueEvent(workspace_id=issue.workspace_id, at=now(), actor_id=actor.id, actor_name=actor.name, text=text, is_comment=comment)
-    )
+async def add_comment(db: AsyncSession, issue: Issue, author: User, text: str) -> IssueComment:
+    comment = IssueComment(workspace_id=issue.workspace_id, issue_id=issue.id, author_id=author.id, body=text)
+    db.add(comment)
+    await db.flush()  # for its id
+    return comment
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
@@ -244,22 +264,20 @@ async def raise_issue(body: NewIssue, viewer: Reviewer, db: Db) -> IssueOut:
         opened_at=now(),
         due_at=body.due_at,
         actions=[],
-        activity=[],
+        comments=[],
     )
-    log(issue, viewer, f"Raised this issue and assigned it to {owner.name}.")
     db.add(issue)
-    db.add(
-        MaterialEvent(
-            workspace_id=material.workspace_id,
-            material_id=material.id,
-            at=now(),
-            actor_id=viewer.id,
-            actor_name=viewer.name,
-            type=EventType.ISSUE,
-            text=f'Raised the issue "{title}" and assigned it to {owner.name}.',
-        )
-    )
     await db.flush()
+    owner_ref = {"id": owner.id, "name": owner.name}
+    record(db, viewer, "issue", issue.id, "raised", {
+        "materialId": material.id, "title": title, "severity": body.severity, "owner": owner_ref,
+        "dueAt": body.due_at, "text": f"Raised this issue and assigned it to {owner.name}.",
+    })
+    # The material's History shows it too (PRD F2): one entry there, so the History tab reads one thing.
+    record(db, viewer, "material", material.id, "issue_raised", {
+        "issueId": issue.id, "title": title, "owner": owner_ref,
+        "text": f'Raised the issue "{title}" and assigned it to {owner.name}.',
+    })
     await notify_new_issue(db, viewer, issue, material)  # PRD F13
     issue_id = issue.id
     await db.commit()
@@ -276,7 +294,7 @@ def check_can_manage(viewer: User, issue: Issue) -> None:
 async def saved(db: AsyncSession, viewer: User, issue: Issue) -> IssueDetail:
     issue_id = issue.id
     await db.commit()
-    return IssueDetail.of(await load_issue(db, viewer, issue_id))
+    return await detail_of(db, await load_issue(db, viewer, issue_id))
 
 
 class StatusChange(APIModel):
@@ -293,11 +311,14 @@ async def change_status(issue_id: uuid.UUID, body: StatusChange, viewer: SignedI
     note = body.note.strip()
     if body.status is IssueStatus.RESOLVED and not note:
         raise bad_request("Write how the problem was fixed")
+    before = issue.status
     issue.status = body.status
     issue.resolved_at = now() if body.status is IssueStatus.RESOLVED else None
-    log(issue, viewer, f"Changed the status to {STATUS_LABEL[body.status]}.")
+    data: dict[str, Any] = {"before": before, "after": body.status, "text": f"Changed the status to {STATUS_LABEL[body.status]}."}
     if note:
-        log(issue, viewer, note, comment=True)
+        # The note is a comment in the conversation; the entry points to it, so the text is stored once.
+        data["commentId"] = (await add_comment(db, issue, viewer, note)).id
+    record(db, viewer, "issue", issue.id, "status_changed", data)
     return await saved(db, viewer, issue)
 
 
@@ -314,7 +335,9 @@ async def complete_action(issue_id: uuid.UUID, action_id: uuid.UUID, viewer: Sig
     if action.done_at is not None:
         raise conflict("This step is already done")
     action.done_at, action.done_by_id, action.done_by_name = now(), viewer.id, viewer.name
-    log(issue, viewer, f"Marked done: {action.label}.")
+    record(db, viewer, "issue", issue.id, "action_done", {  # PRD F12: the audit log records who ran it
+        "actionId": action.id, "kind": action.kind, "label": action.label, "text": f"Marked done: {action.label}."
+    })
     return await saved(db, viewer, issue)
 
 
@@ -346,19 +369,22 @@ async def send_notice(issue_id: uuid.UUID, body: NoticeInput, viewer: SignedIn, 
     for a in issue.actions:
         if a.kind is ActionKind.NOTICE and a.done_at is None:
             a.done_at, a.done_by_id, a.done_by_name = at, viewer.id, viewer.name
-    log(issue, viewer, f"Sent the correction notice to {issue.notice['to']}.")
+    record(db, viewer, "issue", issue.id, "notice_sent", {
+        "to": issue.notice["to"], "subject": issue.notice["subject"], "text": f"Sent the correction notice to {issue.notice['to']}."
+    })
     return await saved(db, viewer, issue)
 
 
-class IssueComment(APIModel):
+class IssueCommentInput(APIModel):
     text: str = Field(min_length=1, max_length=5000)
 
 
 @router.post("/{issue_id}/comments", status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
-async def comment(issue_id: uuid.UUID, body: IssueComment, viewer: Submitter, db: Db) -> IssueDetail:
+async def comment(issue_id: uuid.UUID, body: IssueCommentInput, viewer: Submitter, db: Db) -> IssueDetail:
     issue = await load_issue(db, viewer, issue_id)
     text = body.text.strip()
     if not text:
         raise bad_request("Write a comment")
-    log(issue, viewer, text, comment=True)
+    c = await add_comment(db, issue, viewer, text)
+    record(db, viewer, "issue", issue.id, "commented", {"commentId": c.id})  # the text is in issue_comments
     return await saved(db, viewer, issue)

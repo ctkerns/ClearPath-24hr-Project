@@ -18,7 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app import issues, prereview
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
-from app.audit import record
+from app.audit import OtherActor, actor_name, history, record
 from app.config import settings
 from app.material_access import (
     Db,
@@ -30,11 +30,11 @@ from app.material_access import (
     visible,
 )
 from app.models import ReviewerGroup, Role, User, UserStatus, Workspace
+from app.models.audit import AuditEvent
 from app.models.materials import (
     Channel,
     Comment,
     Decision,
-    EventType,
     Finding,
     FindingSource,
     FindingStatus,
@@ -46,7 +46,6 @@ from app.models.materials import (
     LiveItem,
     LiveStatus,
     Material,
-    MaterialEvent,
     MaterialFile,
     MaterialStatus,
     MaterialVersion,
@@ -138,7 +137,9 @@ async def expire_approvals(db: AsyncSession, viewer: User) -> None:
             m.live_status = LiveStatus.EXPIRED_APPROVAL  # still live with no valid approval (PRD F10)
         m.status = MaterialStatus.EXPIRED
         m.updated_at = now()
-        db.add(event(m, None, EventType.DECISION, f"Approval {m.approval_id} expired.", actor_name="ClearPath"))
+        record(db, OtherActor(m.workspace_id, "ClearPath"), "material", m.id, "approval_expired", {
+            "approvalId": m.approval_id, "expiresAt": m.expires_at, "text": f"Approval {m.approval_id} expired."
+        })
     if due:
         await db.commit()
 
@@ -206,11 +207,50 @@ class VersionOut(APIModel):
     fields: list[FieldText] | None = None  # older versions only; the current one is in MaterialDetail.fields
 
 
+HistoryType = Literal["submitted", "prereview", "routed", "decision", "comment", "live", "issue"]
+
+# The audit actions on a material (entity "material"), and the kind of line the History tab shows for each.
+HISTORY_TYPE: dict[str, HistoryType] = {
+    "submitted": "submitted",
+    "prereviewed": "prereview",
+    "routed": "routed",
+    "approved": "decision",
+    "approved_with_conditions": "decision",
+    "changes_requested": "decision",
+    "rejected": "decision",
+    "escalated": "decision",
+    "approval_retracted": "decision",
+    "approval_expired": "decision",
+    "decided": "decision",  # a decision copied from the old history table, when its text named no outcome
+    "commented": "comment",
+    "live_checked": "live",
+    "issue_raised": "issue",
+}
+
+
 class EventOut(APIModel):
+    """One line of the History tab: an audit entry of the material (PRD F2)."""
+
     at: datetime
     actor: str
-    type: EventType
+    type: HistoryType
     text: str
+
+    @classmethod
+    def of(cls, e: AuditEvent) -> EventOut:
+        data = e.data or {}
+        text = data.get("text") or routed_text(data)
+        return cls(at=e.created_at, actor=actor_name(e), type=HISTORY_TYPE.get(e.action, "decision"), text=text)
+
+
+def routed_text(data: dict[str, Any]) -> str:
+    """For a "routed" entry written before entries had their text: the groups and their rules."""
+    parts = []
+    for g in data.get("groups", []):
+        rules = g.get("rules") or []
+        names = ", ".join(f'"{n}"' for n in rules)
+        parts.append(f"{g['name']} ({'rules' if len(rules) > 1 else 'rule'} {names})" if rules else g["name"])
+    return f"Required {', '.join(parts)}." if parts else ""
 
 
 class LiveItemOut(APIModel):
@@ -328,9 +368,8 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
     comments = await db.scalars(
         select(Comment).where(Comment.material_id == m.id).options(selectinload(Comment.author)).order_by(Comment.at, Comment.id)
     )
-    history = await db.scalars(
-        select(MaterialEvent).where(MaterialEvent.material_id == m.id).order_by(MaterialEvent.at, MaterialEvent.id)
-    )
+    # The caller loaded m with visible(viewer), so whoever sees the material sees its history (PRD F2, R4).
+    events = await history(db, m.workspace_id, "material", m.id)
     live = await db.scalars(select(LiveItem).where(LiveItem.material_id == m.id).order_by(LiveItem.found_at))
     material_issues = await db.scalars(
         select(Issue)
@@ -391,7 +430,7 @@ async def detail_of(db: AsyncSession, m: Material) -> MaterialDetail | None:
             )
             for v in m.versions
         ],
-        history=[EventOut(at=e.at, actor=e.actor_name, type=e.type, text=e.text) for e in history],
+        history=[EventOut.of(e) for e in events],
         live=[
             LiveItemOut(
                 id=li.id,
@@ -434,21 +473,6 @@ async def get_material(material_id: uuid.UUID, viewer: SignedIn, db: Db) -> Mate
     """The current version with its review, or null when the material has no version yet."""
     await expire_approvals(db, viewer)
     return await detail_of(db, await load_material(db, viewer, material_id))
-
-
-def event(
-    m: Material, actor: User | None, type: EventType, text: str, actor_name: str | None = None
-) -> MaterialEvent:
-    """A new audit log entry (PRD F2). The log is append-only."""
-    return MaterialEvent(
-        workspace_id=m.workspace_id,
-        material_id=m.id,
-        at=now(),
-        actor_id=actor.id if actor else None,
-        actor_name=actor_name or (actor.name if actor else "ClearPath"),
-        type=type,
-        text=text,
-    )
 
 
 # ---- Submitting (PRD F3) ----
@@ -578,9 +602,9 @@ async def add_version(db: AsyncSession, viewer: User, m: Material, body: Submiss
     m.status = MaterialStatus.IN_REVIEW
     m.submitted_at = version.submitted_at
     m.updated_at = version.submitted_at
-    db.add(event(m, viewer, EventType.SUBMITTED, f"Submitted version {number} by manual upload."))
-    db.add(event(m, None, EventType.ROUTED, routing.history_text(), actor_name="Routing"))
-    record(db, viewer, "material", m.id, "routed", {"version": number, **routing.audit()})  # PRD F6
+    record(db, viewer, "material", m.id, "submitted", {"version": number, "text": f"Submitted version {number} by manual upload."})
+    routed = {"version": number, **routing.audit(), "text": routing.history_text()}
+    record(db, OtherActor(m.workspace_id, "Routing"), "material", m.id, "routed", routed)  # PRD F6
     await prereview.run(db, m, version)  # code checks; marks old findings outdated (PRD F4)
     await notify_groups(db, viewer, NotificationType.ASSIGNMENT, m, [g for g, _ in groups])  # PRD F13
 
@@ -661,6 +685,8 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
     history = ""
     comment_role = ", ".join(groups_of_viewer.values())
     comment_body = text
+    action = ""  # the audit action, below
+    data: dict[str, Any] = {"version": version.number, "decision": d}
 
     if d is Decision.RETRACT:
         # PRD F5: only your own approval, at any time. Its groups wait again (section 6).
@@ -678,6 +704,7 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
                 m.live_status = LiveStatus.UNAPPROVED  # live content with no approval (PRD F10)
         version.outcome = version.outcome_by = None
         history = f"Retracted own approval {on}: {text}"
+        action, data["groups"] = "approval_retracted", [r.group.name for r in mine]
 
     elif d is Decision.ESCALATE:
         # PRD F6: add a required group, with a reason. The item stays In review.
@@ -705,6 +732,7 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
             )
         )
         history = f"Escalated: added {group.name} as a required group. {text}"
+        action, data["groups"] = "escalated", [group.name]
         comment_body = f"{group.name}: {text}"
         await notify_groups(db, viewer, NotificationType.ESCALATION, m, [group])  # PRD F13
 
@@ -741,6 +769,14 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
         for r in mine:
             r.state, r.decided_by_id, r.decided_at = state, viewer.id, now()
             r.conditions = text if d is Decision.APPROVE_CONDITIONS else None
+        action, data["groups"] = {
+            Decision.APPROVE: "approved",
+            Decision.APPROVE_CONDITIONS: "approved_with_conditions",
+            Decision.REQUEST_CHANGES: "changes_requested",
+            Decision.REJECT: "rejected",
+        }[d], [r.group.name for r in mine]
+        if d is Decision.APPROVE_CONDITIONS:
+            data["conditions"] = text
         history = {
             Decision.APPROVE: f"Approved for {names} {on}.",
             Decision.APPROVE_CONDITIONS: f"Approved with conditions for {names} {on}: {text}",
@@ -759,24 +795,26 @@ async def decide(material_id: uuid.UUID, body: DecisionInput, viewer: Reviewer, 
             m.expires_at = now().date() + timedelta(days=(await workspace_of(db, viewer)).approval_days)
             version.outcome, version.outcome_by = Outcome.APPROVED, outcome_by
             history += f" Approval ID {m.approval_id}, expires {fmt_day(m.expires_at)}."
+            data |= {"approvalId": m.approval_id, "expiresAt": m.expires_at}
         if override:
-            history += f" Override reason: {override}"
+            history += f" Override reason: {override}"  # PRD F6: the audit log records the override reason
+            data["override"] = override
             comment_body = "\n".join(x for x in (text, f"Override: {override}") if x)
 
     m.updated_at = now()
-    db.add(
-        Comment(
-            workspace_id=m.workspace_id,
-            material_id=m.id,
-            version_number=version.number,
-            author_id=viewer.id,
-            role=comment_role,
-            at=now(),
-            body=comment_body,
-            decision=d,
-        )
+    decision = Comment(
+        workspace_id=m.workspace_id,
+        material_id=m.id,
+        version_number=version.number,
+        author_id=viewer.id,
+        role=comment_role,
+        at=now(),
+        body=comment_body,
+        decision=d,
     )
-    db.add(event(m, viewer, EventType.DECISION, history))
+    db.add(decision)
+    await db.flush()
+    record(db, viewer, "material", m.id, action, data | {"commentId": decision.id, "text": history})
     await notify_decision(db, viewer, m, version, d)  # PRD F13
     return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]
 
@@ -804,20 +842,22 @@ async def add_comment(material_id: uuid.UUID, body: CommentInput, viewer: Submit
         if anchor.text not in fields.get(anchor.field, ""):
             raise bad_request("The selected text is not in the current version")
     groups = await group_names_of(db, viewer)
-    db.add(
-        Comment(
-            workspace_id=m.workspace_id,
-            material_id=m.id,
-            version_number=number,
-            author_id=viewer.id,
-            role=", ".join(groups.values()) or (viewer.title or ""),
-            at=now(),
-            body=text,
-            anchor_field=anchor.field if anchor else None,
-            anchor_text=anchor.text if anchor else None,
-        )
+    comment = Comment(
+        workspace_id=m.workspace_id,
+        material_id=m.id,
+        version_number=number,
+        author_id=viewer.id,
+        role=", ".join(groups.values()) or (viewer.title or ""),
+        at=now(),
+        body=text,
+        anchor_field=anchor.field if anchor else None,
+        anchor_text=anchor.text if anchor else None,
     )
-    db.add(event(m, viewer, EventType.COMMENT, f"Commented on version {number}." if number else "Commented."))
+    db.add(comment)
+    await db.flush()
+    record(db, viewer, "material", m.id, "commented", {
+        "version": number, "commentId": comment.id, "text": f"Commented on version {number}." if number else "Commented."
+    })
     m.updated_at = now()
     await notify_comment(db, viewer, m)  # PRD F13
     return await saved_detail(db, viewer, m.id)  # type: ignore[return-value]

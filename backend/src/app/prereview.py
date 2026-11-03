@@ -26,16 +26,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import conflict, not_found
+from app.audit import OtherActor, record
 from app.material_access import Db, Reviewer, now, visible
 from app.models import Workspace
 from app.models.library import CheckLayer, Disclosure, RateSheet, Rule
 from app.models.materials import (
-    EventType,
     Finding,
     FindingSource,
     FindingStatus,
     Material,
-    MaterialEvent,
     MaterialStatus,
     MaterialVersion,
     Severity,
@@ -856,17 +855,8 @@ async def run(db: AsyncSession, m: Material, version: MaterialVersion) -> None:
     )
     if outdated:
         text += f" Marked {len(outdated)} finding{'s' if len(outdated) != 1 else ''} outdated."
-    db.add(
-        MaterialEvent(
-            workspace_id=m.workspace_id,
-            material_id=m.id,
-            at=now(),
-            actor_id=None,
-            actor_name=AUTHOR,
-            type=EventType.PREREVIEW,
-            text=text,
-        )
-    )
+    data = {"version": version.number, "problems": len(problems), "rules": ids, "outdated": len(outdated), "text": text}
+    record(db, OtherActor(m.workspace_id, AUTHOR), "material", m.id, "prereviewed", data)  # PRD F2, F4
 
 
 # ---- Re-run after a library change ----
