@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { LogOut, Palette, Settings, UserRound } from 'lucide-react'
+import { LogOut, Palette, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { PersonAvatar } from '@/components/materials/material-meta'
+import { demoViewer } from '@/components/review/material-detail-data'
 import { Button } from '@/components/ui/button'
 import { useWorkspace } from '@/lib/workspace'
 import {
@@ -14,25 +16,35 @@ import {
 
 /**
  * Right end of the app bar. Settings lives here, not in the main links.
- * Later: show the signed-in user's initials, name, role and reviewer groups (needs F1).
+ * Shows who is signed in: initials on the button, then name, role, reviewer groups and workspace in the menu.
+ * TODO: read the user from the session (F1) instead of demoViewer.
  * Later: show Settings only to roles that can change at least one settings tab.
  */
 export function UserMenu() {
   const { t } = useTranslation()
   const workspace = useWorkspace()
+  const viewer = demoViewer
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('nav.account')} className="rounded-full">
-          <span className="grid size-7 place-items-center rounded-full bg-primary-soft text-primary-strong">
-            <UserRound className="size-4" />
-          </span>
+        <Button variant="ghost" size="icon" aria-label={t('nav.accountOf', { name: viewer.name })} className="rounded-full">
+          <PersonAvatar name={viewer.name} className="size-7 text-[11px]" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel className="grid gap-0.5">
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="flex items-center gap-2.5 py-2">
+          <PersonAvatar name={viewer.name} className="size-8 text-xs" />
+          <span className="grid min-w-0 gap-0.5">
+            <span className="truncate">{viewer.name}</span>
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {t(`roles.${viewer.role}`)} · {viewer.groups.join(', ')}
+            </span>
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="grid gap-0.5 py-1">
           <span className="text-xs font-normal text-muted-foreground">{t('workspace.label')}</span>
-          <span className="truncate">{workspace.name}</span>
+          <span className="truncate font-normal">{workspace.name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

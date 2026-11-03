@@ -15,7 +15,8 @@
     "designSystem": "Design system",
     "signOut": "Sign out",
     "account": "Account",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "accountOf": "Account: {{name}}"
   },
   "status": {
     "draft": "Draft",
@@ -575,5 +576,13 @@
       "expiring": "Approvals expiring in 30 days",
       "noneExpiring": "No approvals expire in the next 30 days."
     }
+  },
+  "roles": {
+    "viewer": "Viewer",
+    "submitter": "Submitter",
+    "reviewer": "Reviewer",
+    "manager": "Manager",
+    "admin": "Admin",
+    "affiliate": "Affiliate"
   }
 }

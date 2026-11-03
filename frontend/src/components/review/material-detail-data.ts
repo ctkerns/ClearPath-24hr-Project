@@ -117,7 +117,10 @@ export function useMaterialDetail(id: string) {
  * The signed-in person. TODO: read from the session API.
  * The demo user is a Reviewer in the Compliance group, so the decision buttons show.
  */
-export const demoViewer = { name: 'Jordan Kim', role: 'reviewer', groups: ['Compliance'] }
+/** Roles from PRD section 4. */
+export type Role = 'viewer' | 'submitter' | 'reviewer' | 'manager' | 'admin' | 'affiliate'
+
+export const demoViewer: { name: string; role: Role; groups: string[] } = { name: 'Jordan Kim', role: 'reviewer', groups: ['Compliance'] }
 
 /** Fields of any version as plain text. The current version's fields live in detail.fields. */
 export const versionFields = (detail: MaterialDetail, v: VersionSummary) =>
