@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
+import { useSave } from '@/lib/use-save'
 import { useTranslation } from 'react-i18next'
 import { PersonAvatar } from '@/components/materials/material-meta'
 import { Button } from '@/components/ui/button'
@@ -26,6 +28,7 @@ function MembersForm({ groupName, onClose }: { groupName: string; onClose: () =>
   const { t } = useTranslation()
   const users = useUsers()
   const update = useGroupUpdate()
+  const save = useSave(onClose)
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<string[]>([])
 
@@ -39,8 +42,7 @@ function MembersForm({ groupName, onClose }: { groupName: string; onClose: () =>
       onSubmit={(e) => {
         e.preventDefault()
         if (!picked.length) return
-        update.addMembers(groupName, picked)
-        onClose()
+        void save.run(() => update.addMembers(groupName, picked))
       }}
     >
       <DialogHeader>
@@ -79,9 +81,10 @@ function MembersForm({ groupName, onClose }: { groupName: string; onClose: () =>
         </div>
       )}
 
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsGroups.cancel')}</Button>
-        <Button type="submit" disabled={!picked.length}>{picked.length ? t('settingsGroups.add.submit', { count: picked.length }) : t('settingsGroups.members.add')}</Button>
+        <Button type="submit" disabled={!picked.length || save.pending}>{picked.length ? t('settingsGroups.add.submit', { count: picked.length }) : t('settingsGroups.members.add')}</Button>
       </DialogFooter>
     </form>
   )

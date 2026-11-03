@@ -113,7 +113,8 @@ export function useRoutingUpdate() {
     setChangeType(type: NoMaterialChangeType, on: boolean) {
       set((s) => ({ ...s, noMaterialChangeTypes: { ...s.noMaterialChangeTypes, [type]: on } }))
     },
-    /** The default group is required, so this always moves the flag; it never clears it. */
+    /** The default group is required, so this always moves the flag; it never clears it.
+     * TODO: local only. The next reload of the groups from the API undoes it, until routing moves to the server. */
     setDefaultGroup(groupId: string) {
       queryClient.setQueryData<ReviewerGroup[]>(['reviewer-groups'], (list) => list?.map((g) => ({ ...g, isDefault: g.id === groupId })))
     },

@@ -15,11 +15,12 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.config import settings
 from app.db import get_db
 from app.models import Role, Session, User, UserStatus
+from app.schemas import APIModel
 from app.security import hash_password, needs_rehash, verify_password
 
 COOKIE_NAME = "clearpath_session"
@@ -36,7 +37,7 @@ class SignInRequest(BaseModel):
     password: str = Field(max_length=1024)  # a limit, so nobody can send a huge password to hash
 
 
-class CurrentUser(BaseModel):
+class CurrentUser(APIModel):
     id: uuid.UUID
     email: str
     name: str
@@ -44,6 +45,7 @@ class CurrentUser(BaseModel):
     role: Role
     workspace_id: uuid.UUID
     is_demo: bool  # true in the demo workspace (PRD A1)
+    groups: list[str]  # reviewer group names: what this user can approve for (PRD F6)
 
     @classmethod
     def of(cls, user: User) -> "CurrentUser":
@@ -55,6 +57,7 @@ class CurrentUser(BaseModel):
             role=user.role,
             workspace_id=user.workspace_id,
             is_demo=user.workspace.is_demo,
+            groups=[g.name for g in user.groups],
         )
 
 
@@ -89,7 +92,7 @@ async def current_user(
         select(User)
         .join(Session, Session.user_id == User.id)
         .where(Session.token_hash == _hash_token(token), Session.expires_at > func.now())
-        .options(joinedload(User.workspace))
+        .options(joinedload(User.workspace), selectinload(User.groups))
     )
     # A user who is deactivated after sign-in loses access on their next request.
     if user is None or user.status is not UserStatus.ACTIVE:
@@ -103,7 +106,7 @@ async def sign_in(
 ) -> CurrentUser:
     """Checks the email and password, then starts a session. Every failure returns the same 401."""
     user = await db.scalar(
-        select(User).where(func.lower(User.email) == body.email.strip().lower()).options(joinedload(User.workspace))
+        select(User).where(func.lower(User.email) == body.email.strip().lower()).options(joinedload(User.workspace), selectinload(User.groups))
     )
     password_ok = verify_password(user.password_hash if user and user.password_hash else _DUMMY_HASH, body.password)
     if user is None or user.password_hash is None or not password_ok or user.status is not UserStatus.ACTIVE:

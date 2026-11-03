@@ -107,7 +107,7 @@ function GroupPage() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => update.removeMember(group.name, m.id)}
+                        onClick={() => void update.removeMember(group.name, m.id).catch(console.error)}
                         aria-label={t('settingsGroups.members.remove', { name: m.name })}
                         title={t('settingsGroups.members.remove', { name: m.name })}
                       >
@@ -159,13 +159,13 @@ function GroupPage() {
             <Detail label={t('settingsGroups.field.queue')}>{queue.length}</Detail>
             <Detail label={t('settingsGroups.field.created')}>
               <span className="grid gap-0.5">
-                <span className="flex items-center gap-1.5"><PersonAvatar name={group.createdBy} className="size-5 text-[9px]" />{group.createdBy}</span>
+                <span className="flex items-center gap-1.5"><PersonAvatar name={group.createdBy ?? '?'} className="size-5 text-[9px]" />{group.createdBy ?? '—'}</span>
                 <span className="text-xs text-muted-foreground">{formatDate(group.createdAt)}</span>
               </span>
             </Detail>
             <Detail label={t('settingsGroups.field.updated')}>
               <span className="grid gap-0.5">
-                <span className="flex items-center gap-1.5"><PersonAvatar name={group.updatedBy} className="size-5 text-[9px]" />{group.updatedBy}</span>
+                <span className="flex items-center gap-1.5"><PersonAvatar name={group.updatedBy ?? '?'} className="size-5 text-[9px]" />{group.updatedBy ?? '—'}</span>
                 <span className="text-xs text-muted-foreground">{formatDate(group.updatedAt)}</span>
               </span>
             </Detail>

@@ -40,7 +40,7 @@ export function validateListSearch(raw: Record<string, unknown>, filterKeys: rea
   return search
 }
 
-export function applyFilters<T>(items: T[], search: ListSearch, fields: FilterField<T>[], searchText: (item: T) => (string | undefined)[]) {
+export function applyFilters<T>(items: T[], search: ListSearch, fields: FilterField<T>[], searchText: (item: T) => (string | null | undefined)[]) {
   const q = search.q?.trim().toLowerCase()
   return items.filter((item) => {
     for (const field of fields) {

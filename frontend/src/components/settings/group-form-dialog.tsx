@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
+import { useSave } from '@/lib/use-save'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -35,6 +37,7 @@ function GroupForm({ group, onClose, onCreated }: { group?: ReviewerGroup; onClo
   const { t } = useTranslation()
   const groups = useReviewerGroups()
   const update = useGroupUpdate()
+  const save = useSave(onClose)
   const [name, setName] = useState(group?.name ?? '')
   const [description, setDescription] = useState(group?.description ?? '')
   const [target, setTarget] = useState(String(group?.targetBusinessDays ?? DEFAULT_TARGET))
@@ -52,9 +55,10 @@ function GroupForm({ group, onClose, onCreated }: { group?: ReviewerGroup; onClo
         e.preventDefault()
         if (!ready) return
         const input = { name: name.trim(), description: description.trim(), targetBusinessDays: days }
-        if (group) update.edit(group.id, input)
-        else onCreated?.(update.create(input))
-        onClose()
+        void save.run(async () => {
+          if (group) await update.edit(group.id, input)
+          else onCreated?.(await update.create(input))
+        })
       }}
     >
       <DialogHeader>
@@ -83,9 +87,10 @@ function GroupForm({ group, onClose, onCreated }: { group?: ReviewerGroup; onClo
         <p className="text-xs text-muted-foreground">{t('settingsGroups.form.targetHint')}</p>
       </div>
 
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsGroups.cancel')}</Button>
-        <Button type="submit" disabled={!ready}>{group ? t('settingsGroups.form.save') : t('settingsGroups.form.create')}</Button>
+        <Button type="submit" disabled={!ready || save.pending}>{group ? t('settingsGroups.form.save') : t('settingsGroups.form.create')}</Button>
       </DialogFooter>
     </form>
   )

@@ -1,58 +1,37 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Role } from '@/components/review/material-detail-data'
-import { useViewer } from '@/lib/session'
-import { uuidv7 } from '@/lib/uuid'
-import type { WorkspaceUser } from './user-data'
-import { nameFromEmail, nowIso, usesGroups } from './users-filters'
+import { api } from '@/lib/api'
 
-export type NewInvite = { emails: string[]; role: Role; groups: string[]; affiliate?: string; affiliateManager?: string }
+export type NewInvite = { emails: string[]; role: Role; groups: string[]; affiliate?: string; affiliateManagerId?: string }
 
 /**
- * Admin changes to workspace users (PRD section 4, F16), in the demo cache.
- * TODO: replace with API calls. The server checks that the caller is an Admin, sends the invite emails,
- * ends the sessions of a deactivated user, and records every change in the audit log.
+ * Admin changes to workspace users (PRD section 4, F16). Each one calls the API, then reloads the user list.
+ * The server checks that the caller is an Admin, ends the sessions of a deactivated user,
+ * and removes the groups of a user whose role goes below Reviewer.
+ * TODO: the server sends the invite emails (F16) and records every change in the audit log.
+ * Each function returns a promise that rejects with an ApiError, so a dialog can show what went wrong.
  */
 export function useUserUpdate() {
-  const viewer = useViewer()
   const queryClient = useQueryClient()
-  const write = (change: (users: WorkspaceUser[]) => WorkspaceUser[]) =>
-    queryClient.setQueryData<WorkspaceUser[]>(['users'], (users) => (users ? change(users) : users))
-  const patch = (id: string, change: (u: WorkspaceUser) => WorkspaceUser) => write((users) => users.map((u) => (u.id === id ? change(u) : u)))
+  const after = <T,>(call: Promise<T>) =>
+    call.then(async (result) => {
+      // Groups show members, so both lists change together.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['users'] }),
+        queryClient.invalidateQueries({ queryKey: ['reviewer-groups'] }),
+      ])
+      return result
+    })
 
   return {
-    /** One role per user. Below Reviewer, groups no longer apply, so they are removed. */
-    setRole(id: string, role: Role) {
-      patch(id, (u) => ({ ...u, role, groups: usesGroups(role) ? u.groups : [] }))
-    },
-    setGroups(id: string, groups: string[]) {
-      patch(id, (u) => ({ ...u, groups }))
-    },
-    resendInvite(id: string) {
-      patch(id, (u) => ({ ...u, invitedAt: nowIso(), invitedBy: viewer.name }))
-    },
+    /** One role per user. Below Reviewer, the server removes the groups. */
+    setRole: (id: string, role: Role) => after(api('PATCH', `/users/${id}`, { role })),
+    setGroups: (id: string, groups: string[]) => after(api('PUT', `/users/${id}/groups`, { groups })),
+    resendInvite: (id: string) => after(api('POST', `/users/${id}/resend-invite`)),
     /** An invite that nobody accepted leaves no history, so cancelling removes the person. */
-    cancelInvite(id: string) {
-      write((users) => users.filter((u) => u.id !== id))
-    },
+    cancelInvite: (id: string) => after(api('DELETE', `/users/${id}`)),
     /** Deactivated people cannot sign in. Their materials, decisions and audit history stay. */
-    setActive(id: string, active: boolean) {
-      patch(id, (u) => ({ ...u, status: active ? 'active' : 'deactivated' }))
-    },
-    invite(input: NewInvite) {
-      const at = nowIso()
-      const added: WorkspaceUser[] = input.emails.map((email) => ({
-        id: uuidv7(),
-        name: nameFromEmail(email),
-        email,
-        role: input.role,
-        groups: usesGroups(input.role) ? input.groups : [],
-        title: '',
-        status: 'invited',
-        invitedAt: at,
-        invitedBy: viewer.name,
-        ...(input.role === 'affiliate' ? { affiliate: input.affiliate, affiliateManager: input.affiliateManager } : {}),
-      }))
-      write((users) => [...users, ...added])
-    },
+    setActive: (id: string, active: boolean) => after(api('PATCH', `/users/${id}`, { status: active ? 'active' : 'deactivated' })),
+    invite: (input: NewInvite) => after(api('POST', '/users/invites', input)),
   }
 }

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import auth
+from app import auth, groups, users
 from app.db import engine, get_db
 
 
@@ -40,6 +40,8 @@ async def same_origin_only(request: Request, call_next):
 
 
 app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(groups.router)
 
 
 class Health(BaseModel):

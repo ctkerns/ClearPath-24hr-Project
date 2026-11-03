@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
+import { useSave } from '@/lib/use-save'
 import { useTranslation } from 'react-i18next'
 import type { Role } from '@/components/review/material-detail-data'
 import { Button } from '@/components/ui/button'
@@ -34,6 +36,7 @@ export function UserActionDialog({ kind, user, onClose }: {
 function RoleForm({ user, onClose }: { user: WorkspaceUser; onClose: () => void }) {
   const { t } = useTranslation()
   const { setRole } = useUserUpdate()
+  const save = useSave(onClose)
   const [role, setValue] = useState<Role>(user.role)
   const losesGroups = !usesGroups(role) && user.groups.length > 0
   const needsGroups = usesGroups(role) && !usesGroups(user.role)
@@ -43,8 +46,7 @@ function RoleForm({ user, onClose }: { user: WorkspaceUser; onClose: () => void 
       className="grid gap-4"
       onSubmit={(e) => {
         e.preventDefault()
-        setRole(user.id, role)
-        onClose()
+        void save.run(() => setRole(user.id, role))
       }}
     >
       <DialogHeader>
@@ -78,9 +80,10 @@ function RoleForm({ user, onClose }: { user: WorkspaceUser; onClose: () => void 
       {losesGroups && <p className="text-xs text-risk-medium">{t('settingsUsers.roleDialog.losesGroups', { name: user.name, groups: user.groups.join(', ') })}</p>}
       {needsGroups && <p className="text-xs text-muted-foreground">{t('settingsUsers.roleDialog.needsGroups')}</p>}
 
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsUsers.cancel')}</Button>
-        <Button type="submit" disabled={role === user.role}>{t('settingsUsers.roleDialog.submit')}</Button>
+        <Button type="submit" disabled={role === user.role || save.pending}>{t('settingsUsers.roleDialog.submit')}</Button>
       </DialogFooter>
     </form>
   )
@@ -90,6 +93,7 @@ function GroupsForm({ user, onClose }: { user: WorkspaceUser; onClose: () => voi
   const groupNames = useGroupNames()
   const { t } = useTranslation()
   const { setGroups } = useUserUpdate()
+  const save = useSave(onClose)
   const [groups, setValue] = useState(user.groups)
   const same = groups.length === user.groups.length && groups.every((g) => user.groups.includes(g))
 
@@ -98,8 +102,7 @@ function GroupsForm({ user, onClose }: { user: WorkspaceUser; onClose: () => voi
       className="grid gap-4"
       onSubmit={(e) => {
         e.preventDefault()
-        setGroups(user.id, groups)
-        onClose()
+        void save.run(() => setGroups(user.id, groups))
       }}
     >
       <DialogHeader>
@@ -108,9 +111,10 @@ function GroupsForm({ user, onClose }: { user: WorkspaceUser; onClose: () => voi
       </DialogHeader>
       <GroupChecklist groups={groupNames} value={groups} onChange={setValue} idPrefix="user-group" />
       {!groups.length && <p className="text-xs text-risk-medium">{t('settingsUsers.groupsDialog.none', { name: user.name })}</p>}
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsUsers.cancel')}</Button>
-        <Button type="submit" disabled={same}>{t('settingsUsers.groupsDialog.submit')}</Button>
+        <Button type="submit" disabled={same || save.pending}>{t('settingsUsers.groupsDialog.submit')}</Button>
       </DialogFooter>
     </form>
   )
@@ -119,6 +123,7 @@ function GroupsForm({ user, onClose }: { user: WorkspaceUser; onClose: () => voi
 function ConfirmForm({ kind, user, onClose }: { kind: 'deactivate' | 'cancel'; user: WorkspaceUser; onClose: () => void }) {
   const { t } = useTranslation()
   const { setActive, cancelInvite } = useUserUpdate()
+  const save = useSave(onClose)
   const key = kind === 'deactivate' ? 'deactivateDialog' : 'cancelDialog'
 
   return (
@@ -126,18 +131,17 @@ function ConfirmForm({ kind, user, onClose }: { kind: 'deactivate' | 'cancel'; u
       className="grid gap-4"
       onSubmit={(e) => {
         e.preventDefault()
-        if (kind === 'deactivate') setActive(user.id, false)
-        else cancelInvite(user.id)
-        onClose()
+        void save.run(() => (kind === 'deactivate' ? setActive(user.id, false) : cancelInvite(user.id)))
       }}
     >
       <DialogHeader>
         <DialogTitle>{t(`settingsUsers.${key}.title`, { name: user.name })}</DialogTitle>
         <DialogDescription>{t(`settingsUsers.${key}.description`, { name: user.name, email: user.email })}</DialogDescription>
       </DialogHeader>
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsUsers.keep')}</Button>
-        <Button type="submit" variant="destructive">{t(`settingsUsers.${key}.submit`)}</Button>
+        <Button type="submit" variant="destructive" disabled={save.pending}>{t(`settingsUsers.${key}.submit`)}</Button>
       </DialogFooter>
     </form>
   )

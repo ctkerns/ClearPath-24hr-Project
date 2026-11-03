@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "ClearPath",
-    "product": "Review"
+    "product": "Review",
+    "saveFailed": "ClearPath could not save this. Try again in a minute."
   },
   "nav": {
     "main": "Main",

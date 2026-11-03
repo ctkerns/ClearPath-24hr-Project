@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { SaveError } from '@/components/save-error'
+import { useSave } from '@/lib/use-save'
 import { useTranslation } from 'react-i18next'
 import type { Role } from '@/components/review/material-detail-data'
 import { Button } from '@/components/ui/button'
@@ -29,13 +31,14 @@ function InviteForm({ users, onClose }: { users: WorkspaceUser[]; onClose: () =>
   const groupNames = useGroupNames()
   const { t } = useTranslation()
   const { invite } = useUserUpdate()
+  const save = useSave(onClose)
   const [text, setText] = useState('')
   const [role, setRole] = useState<Role>('submitter')
   const [groups, setGroups] = useState<string[]>([])
   const [company, setCompany] = useState('')
   // Each affiliate has one internal affiliate manager (PRD section 4): an active internal user who can submit.
   const managers = users.filter((u) => u.status === 'active' && u.role !== 'affiliate' && hasRole(u.role, 'submitter'))
-  const [manager, setManager] = useState(() => managers.find((u) => u.title === 'Affiliate manager')?.name ?? managers[0]?.name ?? '')
+  const [manager, setManager] = useState(() => managers.find((u) => u.title === 'Affiliate manager')?.id ?? managers[0]?.id ?? '')
 
   const emails = parseInviteEmails(text, users)
   const affiliate = role === 'affiliate'
@@ -47,8 +50,9 @@ function InviteForm({ users, onClose }: { users: WorkspaceUser[]; onClose: () =>
       onSubmit={(e) => {
         e.preventDefault()
         if (!ready) return
-        invite({ emails: emails.valid, role, groups, affiliate: company.trim(), affiliateManager: manager })
-        onClose()
+        void save.run(() =>
+          invite({ emails: emails.valid, role, groups, ...(affiliate ? { affiliate: company.trim(), affiliateManagerId: manager } : {}) }),
+        )
       }}
     >
       <DialogHeader>
@@ -108,7 +112,7 @@ function InviteForm({ users, onClose }: { users: WorkspaceUser[]; onClose: () =>
             <Select value={manager} onValueChange={setManager}>
               <SelectTrigger id="invite-manager" className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {managers.map((u) => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                {managers.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -116,9 +120,10 @@ function InviteForm({ users, onClose }: { users: WorkspaceUser[]; onClose: () =>
         </div>
       )}
 
+      <SaveError error={save.error} />
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t('settingsUsers.cancel')}</Button>
-        <Button type="submit" disabled={!ready}>
+        <Button type="submit" disabled={!ready || save.pending}>
           {t('settingsUsers.invite.submit', { count: Math.max(emails.valid.length, 1) })}
         </Button>
       </DialogFooter>

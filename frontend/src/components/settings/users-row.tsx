@@ -93,9 +93,9 @@ function UserMenu({ user: u, actions: a, onDialog }: { user: WorkspaceUser; acti
         {a.changeRole && <DropdownMenuItem onSelect={() => onDialog('role')}>{t('settingsUsers.action.role')}</DropdownMenuItem>}
         {a.changeGroups && <DropdownMenuItem onSelect={() => onDialog('groups')}>{t('settingsUsers.action.groups')}</DropdownMenuItem>}
         {hasEdits && hasStatus && <DropdownMenuSeparator />}
-        {a.resend && <DropdownMenuItem onSelect={() => update.resendInvite(u.id)}>{t('settingsUsers.action.resend')}</DropdownMenuItem>}
+        {a.resend && <DropdownMenuItem onSelect={() => void update.resendInvite(u.id).catch(console.error)}>{t('settingsUsers.action.resend')}</DropdownMenuItem>}
         {a.cancel && <DropdownMenuItem variant="destructive" onSelect={() => onDialog('cancel')}>{t('settingsUsers.action.cancel')}</DropdownMenuItem>}
-        {a.reactivate && <DropdownMenuItem onSelect={() => update.setActive(u.id, true)}>{t('settingsUsers.action.reactivate')}</DropdownMenuItem>}
+        {a.reactivate && <DropdownMenuItem onSelect={() => void update.setActive(u.id, true).catch(console.error)}>{t('settingsUsers.action.reactivate')}</DropdownMenuItem>}
         {a.deactivate && <DropdownMenuItem variant="destructive" onSelect={() => onDialog('deactivate')}>{t('settingsUsers.action.deactivate')}</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>

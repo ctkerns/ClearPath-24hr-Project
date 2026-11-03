@@ -37,7 +37,7 @@ def database():
 async def demo_data(database):
     """Each test starts with only the seeded demo workspace."""
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE sessions, users, workspaces CASCADE"))
+        await conn.execute(text("TRUNCATE sessions, group_memberships, reviewer_groups, affiliates, users, workspaces CASCADE"))
     async with SessionLocal() as db, db.begin():
         await create_demo(db)
     yield

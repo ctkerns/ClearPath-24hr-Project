@@ -19,7 +19,8 @@ async def test_sign_in_sets_secure_cookie_and_me_returns_user(client):
     assert res.status_code == 200
     assert res.json()["email"] == ADMIN
     assert res.json()["role"] == "admin"
-    assert res.json()["is_demo"] is True
+    assert res.json()["isDemo"] is True
+    assert res.json()["groups"] == ["Compliance"]
 
     cookie = res.headers["set-cookie"]
     assert "HttpOnly" in cookie

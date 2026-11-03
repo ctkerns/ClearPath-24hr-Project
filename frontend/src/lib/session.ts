@@ -14,18 +14,8 @@ export type SessionUser = {
   role: Role
   workspaceId: string
   isDemo: boolean
-  /** Reviewer groups. TODO: from the API, when the reviewer groups table exists. Now from /demo/users.json. */
+  /** Names of the reviewer groups this user approves for (PRD F6). */
   groups: string[]
-}
-
-type MeResponse = {
-  id: string
-  name: string
-  email: string
-  title: string | null
-  role: Role
-  workspace_id: string
-  is_demo: boolean
 }
 
 /** A row of the "Try the demo" panel on the sign-in page. */
@@ -44,18 +34,6 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   { name: 'Erin Walsh', email: 'erin.walsh@lendwise.example', role: 'affiliate', title: 'Partner marketing', affiliate: 'LendWise' },
 ]
 
-/** Reviewer groups of a user, from the demo users file. TODO: remove when the API returns groups. */
-async function demoGroups(userId: string): Promise<string[]> {
-  try {
-    const res = await fetch('/demo/users.json')
-    if (!res.ok) return []
-    const { users } = (await res.json()) as { users: { id: string; groups: string[] }[] }
-    return users.find((u) => u.id === userId)?.groups ?? []
-  } catch {
-    return []
-  }
-}
-
 /**
  * Who is signed in, or null. Route guards load it with queryClient.ensureQueryData(sessionQuery).
  * Sign-in and sign-out reload the page, so the cached value never goes out of date.
@@ -66,17 +44,7 @@ export const sessionQuery = queryOptions({
     const res = await fetch('/api/auth/me')
     if (res.status === 401) return null
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const me = (await res.json()) as MeResponse
-    return {
-      id: me.id,
-      name: me.name,
-      email: me.email,
-      title: me.title,
-      role: me.role,
-      workspaceId: me.workspace_id,
-      isDemo: me.is_demo,
-      groups: await demoGroups(me.id),
-    }
+    return (await res.json()) as SessionUser
   },
   staleTime: Infinity,
   retry: false,

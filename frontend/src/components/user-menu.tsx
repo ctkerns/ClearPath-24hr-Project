@@ -36,7 +36,8 @@ export function UserMenu() {
           <span className="grid min-w-0 gap-0.5">
             <span className="truncate">{viewer.name}</span>
             <span className="truncate text-xs font-normal text-muted-foreground">
-              {t(`roles.${viewer.role}`)} · {viewer.groups.join(', ')}
+              {/* Only Reviewer and above have groups, so the separator shows only when there is a group. */}
+              {[t(`roles.${viewer.role}`), viewer.groups.join(', ')].filter(Boolean).join(' · ')}
             </span>
           </span>
         </DropdownMenuLabel>
