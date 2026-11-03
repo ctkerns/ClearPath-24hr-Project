@@ -22,10 +22,10 @@ export function AppMark({ className }: { className?: string }) {
 export function AppLogo({ className }: { className?: string }) {
   const { t } = useTranslation()
   return (
-    <span className={cn('flex items-center font-semibold whitespace-nowrap', className)}>
-      <AppMark className="mr-1" />
+    <span className={cn('flex items-center text-[17px] font-semibold whitespace-nowrap', className)}>
+      <AppMark className="mr-1.5 size-6.5" />
       {t('app.name')}
-      <span aria-hidden="true" className="mx-1 h-4 w-px bg-input" />
+      <span aria-hidden="true" className="mx-1.5 h-5 w-px bg-input" />
       <span className="font-normal text-muted-foreground">{t('app.product')}</span>
     </span>
   )
