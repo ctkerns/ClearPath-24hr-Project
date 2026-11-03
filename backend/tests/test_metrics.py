@@ -187,14 +187,14 @@ async def add_unmatched_issue() -> uuid.UUID:
 async def test_issue_without_material(client):
     issue_id = str(await add_unmatched_issue())
     await as_user(client, VIEWER)
-    row = next(i for i in (await client.get("/api/issues")).json() if i["id"] == issue_id)
+    row = next(i for i in (await client.get("/api/issues")).json()["items"] if i["id"] == issue_id)
     assert "material" not in row and (row["channel"], row["kind"]) == ("meta", "unapproved")
     assert (await client.get(f"/api/issues/{issue_id}")).status_code == 200
     violation = next(v for v in (await metrics(client))["violations"] if v["kind"] == "unapproved" and v["channel"] == "meta" and "product" not in v)
     assert "daysToFix" not in violation
     # Internal users only (PRD R4)
     await as_user(client, AFFILIATE)
-    assert issue_id not in {i["id"] for i in (await client.get("/api/issues")).json()}
+    assert issue_id not in {i["id"] for i in (await client.get("/api/issues")).json()["items"]}
     assert (await client.get(f"/api/issues/{issue_id}")).status_code == 404
     assert (await client.post(f"/api/issues/{issue_id}/comments", json={"text": "x"})).status_code == 404
     # The owner, or a Manager, works on it like any other issue.
@@ -268,7 +268,7 @@ async def test_history_numbers(client):
     assert all(d["groups"] == ["Compliance"] and d["rounds"] == 1 and d["turnaroundDays"] <= 1.5 for d in lighter)
 
     # The past materials are normal rows: the repository lists them.
-    rows = (await client.get("/api/materials")).json()
+    rows = (await client.get("/api/materials")).json()["items"]
     assert 250 <= len(rows) <= 450
     assert len({m["approvalId"] for m in rows if m.get("approvalId")}) == sum(1 for m in rows if m.get("approvalId"))
 
@@ -277,7 +277,7 @@ async def test_history_numbers(client):
 async def test_history_is_deterministic(client):
     await as_user(client, VIEWER)
     first = await metrics(client)
-    titles = sorted((m["title"], m["status"]) for m in (await client.get("/api/materials")).json())
+    titles = sorted((m["title"], m["status"]) for m in (await client.get("/api/materials")).json()["items"])
     tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
     async with engine.begin() as conn:
         await conn.execute(text(f"TRUNCATE {tables} CASCADE"))
@@ -285,4 +285,4 @@ async def test_history_is_deterministic(client):
         await create_demo(db, history=True)
     await as_user(client, VIEWER)
     assert await metrics(client) == first
-    assert sorted((m["title"], m["status"]) for m in (await client.get("/api/materials")).json()) == titles
+    assert sorted((m["title"], m["status"]) for m in (await client.get("/api/materials")).json()["items"]) == titles

@@ -1,43 +1,28 @@
-import { validateListSearch, type ListSearch } from '@/components/list/list-filters'
-import { dueBucket, type Issue } from './issue-data'
+import { validatePagedSearch } from '@/components/list/list-filters'
+import { CHANNELS } from '@/components/materials/material-data'
+import { DUE_BUCKETS, ISSUE_SOURCES, ISSUE_STATUSES, SEVERITIES } from './issue-data'
 
 // Issues list configuration: filter keys, sorts and quick views. Labels and menus are in use-issue-list.tsx.
+// The server filters, searches, sorts and pages (GET /api/issues, backend/src/app/issue_list.py):
+// these keys and values are its query parameters. The due buckets are counted on the server too.
 
 export const ISSUE_FILTER_KEYS = ['status', 'severity', 'due', 'source', 'channel', 'owner', 'affiliate'] as const
 export type IssueFilterKey = (typeof ISSUE_FILTER_KEYS)[number]
 
+/** "due" and "severity" put resolved issues last, so the work to do stays at the top. */
 export const ISSUE_SORTS = ['due', 'opened', 'severity', 'title'] as const
 export type IssueSort = (typeof ISSUE_SORTS)[number]
 
-export const validateIssuesSearch = (raw: Record<string, unknown>) => validateListSearch(raw, ISSUE_FILTER_KEYS, ISSUE_SORTS)
-
-export function issueValues(issue: Issue, key: IssueFilterKey): string[] {
-  switch (key) {
-    case 'status': return [issue.status]
-    case 'severity': return [issue.severity]
-    case 'due': { const b = dueBucket(issue); return b ? [b] : [] }
-    case 'source': return [issue.source]
-    case 'channel': return [issue.channel]
-    case 'owner': return [issue.owner]
-    case 'affiliate': return issue.affiliate ? [issue.affiliate] : []
-  }
+/** The fixed values from the PRD. People and affiliates come from the server's counts. */
+export const ISSUE_FIXED: Partial<Record<IssueFilterKey, readonly string[]>> = {
+  status: ISSUE_STATUSES,
+  severity: SEVERITIES,
+  due: DUE_BUCKETS,
+  source: ISSUE_SOURCES,
+  channel: CHANNELS,
 }
 
-export const issueSearchText = (i: Issue) => [i.title, i.material?.title, i.affiliate, i.owner]
-
-const severityRank = { high: 0, medium: 1, low: 2 }
-/** Resolved issues always go last, so the work to do stays at the top. */
-const resolvedLast = (a: Issue, b: Issue) => Number(a.status === 'resolved') - Number(b.status === 'resolved')
-
-export function sortIssues(issues: Issue[], search: ListSearch) {
-  const list = [...issues]
-  switch ((search.sort ?? 'due') as IssueSort) {
-    case 'due': return list.sort((a, b) => resolvedLast(a, b) || a.dueAt.localeCompare(b.dueAt))
-    case 'opened': return list.sort((a, b) => b.openedAt.localeCompare(a.openedAt))
-    case 'severity': return list.sort((a, b) => resolvedLast(a, b) || severityRank[a.severity] - severityRank[b.severity] || a.dueAt.localeCompare(b.dueAt))
-    case 'title': return list.sort((a, b) => a.title.localeCompare(b.title))
-  }
-}
+export const validateIssuesSearch = (raw: Record<string, unknown>) => validatePagedSearch(raw, ISSUE_FILTER_KEYS, ISSUE_SORTS, ISSUE_FIXED)
 
 export const ISSUE_PRESETS = [
   { key: 'all', filters: {} },

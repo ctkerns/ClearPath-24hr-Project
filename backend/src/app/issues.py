@@ -12,16 +12,19 @@ users who may read the audit log page.
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app import issue_list
 from app.api import APIModel, SignedIn, bad_request, conflict, not_found
 from app.audit import actor_name, history, record
+from app.issue_list import IssueFilters
+from app.listing import Facets, total_of
 from app.material_access import Db, Reviewer, Submitter, can_submit, issue_visible, now, visible
 from app.models import Affiliate, Role, User, UserStatus
 from app.models.audit import AuditEvent
@@ -156,6 +159,13 @@ class IssueDetail(APIModel):
         )
 
 
+# The list needs only the summary: not the actions and comments of each issue
+LIST_LOAD = (
+    selectinload(Issue.material).selectinload(Material.affiliate).selectinload(Affiliate.manager),
+    selectinload(Issue.owner),
+    selectinload(Issue.opened_by),
+)
+
 ISSUE_LOAD = (
     selectinload(Issue.material).selectinload(Material.affiliate).selectinload(Affiliate.manager),
     selectinload(Issue.owner),
@@ -177,15 +187,26 @@ async def load_issue(db: AsyncSession, viewer: User, issue_id: uuid.UUID) -> Iss
     return issue
 
 
+class IssuePage(APIModel):
+    """One page of the list, the number of issues that match, and the counts for the filter menus."""
+
+    items: list[IssueOut]
+    total: int
+    facets: Facets | None = None
+
+
 @router.get("", response_model_exclude_none=True)
-async def list_issues(viewer: SignedIn, db: Db) -> list[IssueOut]:
-    rows = await db.scalars(
-        select(Issue)
-        .where(*issue_visible(viewer))
-        .options(*ISSUE_LOAD)
-        .order_by(Issue.opened_at.desc())
+async def list_issues(viewer: SignedIn, db: Db, p: Annotated[IssueFilters, Query()]) -> IssuePage:
+    """Filters, search, sort and paging are in app.issue_list; the parameters are in app.listing."""
+    at = now()  # one time for the due buckets of the rows and of the counts
+    query = issue_list.page_query(viewer, p, at)
+    rows = list(await db.scalars(query.options(*LIST_LOAD)))
+    unpaged = p.offset == 0 and (p.limit is None or len(rows) < p.limit)
+    return IssuePage(
+        items=[IssueOut.of(i) for i in rows],
+        total=len(rows) if unpaged else await total_of(db, query.limit(None).offset(None)),
+        facets=await issue_list.facets_of(db, viewer, p, at) if p.facets else None,
     )
-    return [IssueOut.of(i) for i in rows]
 
 
 async def detail_of(db: AsyncSession, issue: Issue) -> IssueDetail:

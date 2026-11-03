@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '@/lib/api'
 import { useViewer } from '@/lib/session'
+import { useDebounced } from '@/lib/use-debounced'
 import { useMainNavLinks } from '@/components/main-nav-links'
 import type { Channel } from '@/components/materials/material-data'
 import type { BlockKind } from '@/components/library/block-data'
@@ -47,16 +48,6 @@ type SearchResults = {
 
 /** The server ignores shorter queries. */
 const MIN_QUERY = 2
-
-/** `value`, after it has not changed for `ms`, so search does not run on every key press. */
-function useDebounced<T>(value: T, ms: number) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(id)
-  }, [value, ms])
-  return debounced
-}
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
 

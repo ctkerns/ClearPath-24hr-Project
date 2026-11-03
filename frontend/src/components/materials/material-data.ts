@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { FileText, Globe, Handshake, Mail, Megaphone, Search, type LucideIcon } from 'lucide-react'
+import type { ListPage } from '@/components/list/list-filters'
 import type { MaterialStatus } from '@/components/ui/status-pill'
 
-// Materials repository data (PRD F2). GET /api/materials.
+// Materials repository data (PRD F2). GET /api/materials returns { items, total, facets? }.
 // The server filters by role: an Affiliate gets only their own company's materials (PRD R4).
 
 export const STATUSES = [
@@ -50,10 +51,27 @@ export type Material = {
   updatedAt: string
 }
 
+/**
+ * Every material the viewer may see, unfiltered. For the screens that still read the whole list (dashboard, metrics,
+ * groups, rules, issue and material pages). The Materials list pages on the server instead: useMaterialPage.
+ */
 export function useMaterials() {
   return useQuery({
     queryKey: ['materials'],
-    queryFn: () => api<Material[]>('GET', '/materials'),
+    queryFn: () => api<ListPage<Material>>('GET', '/materials'),
+    select: (page) => page.items,
+  })
+}
+
+/**
+ * One page of the Materials list, filtered, searched and sorted on the server, with the counts for the filter menus.
+ * `params` is the query string from serverParams. The last page stays on screen while the next one loads.
+ */
+export function useMaterialPage(params: string) {
+  return useQuery({
+    queryKey: ['materials', 'page', params],
+    queryFn: () => api<ListPage<Material>>('GET', `/materials?${params}`),
+    placeholderData: keepPreviousData,
   })
 }
 

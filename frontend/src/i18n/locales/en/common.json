@@ -129,6 +129,8 @@
       "monitoring": "Live problems"
     },
     "searchPlaceholder": "Filter by title or approval ID…",
+    "count_one": "{{count}} material",
+    "count_other": "{{count}} materials",
     "sort": {
       "updated": "Last updated",
       "created": "Newest first",
@@ -206,9 +208,8 @@
       "product": "Product",
       "status": "Current status",
       "any": "Any",
-      "onlyShown_one": "Only the {{count}} material shown in the list",
-      "onlyShown_other": "Only the {{count}} materials shown in the list",
-      "tooMany": "The list shows more than {{max}} materials. Narrow the filters to export only those.",
+      "onlyShown_one": "Only the {{count}} material that matches the list's filters",
+      "onlyShown_other": "Only the {{count}} materials that match the list's filters",
       "audited": "The audit log records who ran the export and with which filters.",
       "cancel": "Cancel",
       "submit": "Download ZIP",
@@ -456,7 +457,11 @@
     "valuesCount_other": "{{count}} values",
     "removeFilter": "Remove {{field}} filter",
     "clearFilters": "Clear filters",
-    "clearAll": "Clear filters and search"
+    "clearAll": "Clear filters and search",
+    "pages": "Pages",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "previous": "Previous page",
+    "next": "Next page"
   },
   "issues": {
     "preset": {
@@ -466,6 +471,8 @@
       "resolved": "Resolved"
     },
     "searchPlaceholder": "Filter by issue or material…",
+    "count_one": "{{count}} issue",
+    "count_other": "{{count}} issues",
     "sort": {
       "due": "Due date",
       "opened": "Newest first",

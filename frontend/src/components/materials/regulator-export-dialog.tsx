@@ -13,9 +13,10 @@ import { useSave } from '@/lib/use-save'
 import { CHANNELS, PRODUCTS, STATUSES } from './material-data'
 import { useOptionLabel } from './use-option-label'
 
-/** Must match MAX_MATERIAL_IDS in backend/src/app/export.py. */
-const MAX_IDS = 500
 const ANY = 'any'
+
+/** The Materials list's search and filters (its URL search params, without sort and page), and how many match. */
+export type ShownList = { filters: Record<string, string>; count: number }
 
 /** A date as yyyy-mm-dd in UTC, for the date fields. The server reads the range as UTC days. */
 function utcDay(offsetDays = 0) {
@@ -26,20 +27,21 @@ function utcDay(offsetDays = 0) {
 
 /**
  * The regulator export (PRD F15): a date range on the version submitted date, optional filters, and optionally
- * only the materials that the list shows now. Internal users only; the server checks it too (PRD section 4).
+ * only the materials that match the list's search and filters, on every page. The server applies the same
+ * filters as the list (listFilters). Internal users only; the server checks it too (PRD section 4).
  */
-export function RegulatorExportDialog({ shownIds, open, onClose }: { shownIds: string[]; open: boolean; onClose: () => void }) {
+export function RegulatorExportDialog({ shown, open, onClose }: { shown: ShownList; open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         {/* Mounted only while open, so each time starts from clean defaults. */}
-        {open && <ExportForm shownIds={shownIds} onClose={onClose} />}
+        {open && <ExportForm shown={shown} onClose={onClose} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function ExportForm({ shownIds, onClose }: { shownIds: string[]; onClose: () => void }) {
+function ExportForm({ shown, onClose }: { shown: ShownList; onClose: () => void }) {
   const { t } = useTranslation()
   const label = useOptionLabel()
   const { pending, error, run } = useSave(onClose)
@@ -49,7 +51,7 @@ function ExportForm({ shownIds, onClose }: { shownIds: string[]; onClose: () => 
   const [product, setProduct] = useState(ANY)
   const [status, setStatus] = useState(ANY)
   const [onlyShown, setOnlyShown] = useState(false)
-  const tooMany = shownIds.length > MAX_IDS
+  const listFiltered = Object.keys(shown.filters).length > 0
   const badRange = !!from && !!to && to < from
   const ready = !!from && !!to && !badRange
 
@@ -72,7 +74,7 @@ function ExportForm({ shownIds, onClose }: { shownIds: string[]; onClose: () => 
             channel: channel === ANY ? undefined : channel,
             product: product === ANY ? undefined : product,
             status: status === ANY ? undefined : status,
-            materialIds: onlyShown && !tooMany ? shownIds : undefined,
+            listFilters: onlyShown && listFiltered ? shown.filters : undefined,
           }),
         )
       }}
@@ -111,15 +113,12 @@ function ExportForm({ shownIds, onClose }: { shownIds: string[]; onClose: () => 
         ))}
       </div>
 
-      {shownIds.length > 0 && (
-        tooMany ? (
-          <p className="text-xs text-muted-foreground">{t('materials.export.tooMany', { max: MAX_IDS })}</p>
-        ) : (
-          <Label className="flex items-center gap-2 font-normal">
-            <Checkbox checked={onlyShown} onCheckedChange={(c) => setOnlyShown(c === true)} />
-            {t('materials.export.onlyShown', { count: shownIds.length })}
-          </Label>
-        )
+      {/* Only when the list is filtered: otherwise it shows every material anyway. */}
+      {listFiltered && (
+        <Label className="flex items-center gap-2 font-normal">
+          <Checkbox checked={onlyShown} onCheckedChange={(c) => setOnlyShown(c === true)} />
+          {t('materials.export.onlyShown', { count: shown.count })}
+        </Label>
       )}
 
       <p className="text-xs text-muted-foreground">{t('materials.export.audited')}</p>
