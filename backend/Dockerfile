@@ -19,5 +19,7 @@ ENV FORWARDED_ALLOW_IPS="*"
 EXPOSE 8000
 # Bring the database up to the newest migration, create the demo data if it is missing, then start the API.
 # "exec" makes the API the main process, so `docker compose stop` stops it cleanly.
-# "::" listens on IPv6 and IPv4: Railway's private network uses IPv6.
-CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && exec fastapi run src/app/main.py --host :: --port 8000"]
+# HOST is the listen address. The default "::" is IPv6, for Railway's private network.
+# Docker Compose sets HOST=0.0.0.0 (IPv4), because there "::" accepts IPv6 only and Caddy connects over IPv4.
+ENV HOST="::"
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed && exec fastapi run src/app/main.py --host \"$HOST\" --port 8000"]
